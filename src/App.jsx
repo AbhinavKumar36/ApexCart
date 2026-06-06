@@ -10,6 +10,7 @@ import Inventory from './components/Inventory';
 import POS from './components/POS';
 import History from './components/History';
 import Settings from './components/Settings';
+import Chatbot from './components/Chatbot';
 
 export default function App() {
   // Authentication states
@@ -434,6 +435,12 @@ export default function App() {
           }
         }
       `}</style>
+      <Chatbot 
+        products={products} 
+        sales={sales} 
+        role={role} 
+        username={currentUser} 
+      />
     </div>
   );
 }
