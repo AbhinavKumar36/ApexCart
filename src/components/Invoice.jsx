@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { Printer, X, CheckCircle2, ShieldCheck } from 'lucide-react';
 
-export default function Invoice({ invoice, onClose }) {
+export default function Invoice({ invoice, onClose, storeSettings }) {
   const printRef = useRef(null);
 
   const handlePrint = () => {
@@ -28,9 +28,9 @@ export default function Invoice({ invoice, onClose }) {
           <div ref={printRef} style={styles.receipt} className="print-area">
             {/* Store Header */}
             <div style={styles.storeHeader}>
-              <h2 style={styles.storeName}>APEXCART MALLS</h2>
-              <p style={styles.storeSub}>Enterprise Logistics Center #4092</p>
-              <p style={styles.storeContact}>TEL: +1 (555) 019-2834 | GSTIN: 29AAAAA0000A1Z5</p>
+              <h2 style={styles.storeName}>{storeSettings?.storeName?.toUpperCase() || 'APEXCART SUPERMARKET'}</h2>
+              <p style={styles.storeSub}>{storeSettings?.storeAddress || 'Enterprise Logistics Center #4092'}</p>
+              <p style={styles.storeContact}>TEL: {storeSettings?.storePhone || 'N/A'} | GSTIN: 29AAAAA0000A1Z5</p>
             </div>
 
             <div style={styles.separator} />
@@ -79,13 +79,13 @@ export default function Invoice({ invoice, onClose }) {
                       <span style={styles.itemSku}>{item.id}</span>
                     </td>
                     <td style={{ ...styles.td, textAlign: 'center', fontWeight: '700' }}>{item.quantity}</td>
-                    <td style={{ ...styles.td, textAlign: 'right' }}>${item.price.toFixed(2)}</td>
+                    <td style={{ ...styles.td, textAlign: 'right' }}>{storeSettings?.currencySymbol || '$'}{item.price.toFixed(2)}</td>
                     <td style={{ ...styles.td, textAlign: 'center' }}>{item.gst}%</td>
                     <td style={{ ...styles.td, textAlign: 'center', color: item.discount > 0 ? 'var(--color-danger)' : 'inherit' }}>
                       {item.discount}%
                     </td>
                     <td style={{ ...styles.td, textAlign: 'right', fontWeight: '800' }}>
-                      ${item.lineTotal.toFixed(2)}
+                      {storeSettings?.currencySymbol || '$'}{item.lineTotal.toFixed(2)}
                     </td>
                   </tr>
                 ))}
@@ -98,20 +98,20 @@ export default function Invoice({ invoice, onClose }) {
             <div style={styles.balanceContainer}>
               <div style={styles.balanceRow}>
                 <span>Subtotal</span>
-                <span>${invoice.subtotal.toFixed(2)}</span>
+                <span>{storeSettings?.currencySymbol || '$'}{invoice.subtotal.toFixed(2)}</span>
               </div>
               <div style={styles.balanceRow}>
                 <span>Tax (GST)</span>
-                <span>+${invoice.totalGST.toFixed(2)}</span>
+                <span>+{storeSettings?.currencySymbol || '$'}{invoice.totalGST.toFixed(2)}</span>
               </div>
               <div style={styles.balanceRow}>
                 <span>Discount</span>
-                <span style={{ color: 'var(--color-danger)' }}>-${invoice.totalDiscount.toFixed(2)}</span>
+                <span style={{ color: 'var(--color-danger)' }}>-{storeSettings?.currencySymbol || '$'}{invoice.totalDiscount.toFixed(2)}</span>
               </div>
               <div style={styles.balanceDivider} />
               <div style={styles.grandTotalRow}>
                 <span>GRAND TOTAL</span>
-                <span>${invoice.totalPrice.toFixed(2)}</span>
+                <span>{storeSettings?.currencySymbol || '$'}{invoice.totalPrice.toFixed(2)}</span>
               </div>
             </div>
 

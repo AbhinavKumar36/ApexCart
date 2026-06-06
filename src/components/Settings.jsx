@@ -1,21 +1,21 @@
 import React, { useState, useRef } from 'react';
 import { 
-  KeyRound, 
+  Sliders, 
   Database, 
   Download, 
   Upload, 
   ShieldAlert, 
   CheckCircle,
-  Eye,
-  EyeOff,
   Sun,
-  Moon
+  Moon,
+  Store,
+  DollarSign,
+  AlertCircle
 } from 'lucide-react';
-import { DEFAULT_CREDENTIALS, INITIAL_PRODUCTS } from '../data/mockData';
 
 export default function Settings({ 
-  credentials, 
-  setCredentials, 
+  storeSettings, 
+  setStoreSettings, 
   theme, 
   toggleTheme, 
   onResetData, 
@@ -24,16 +24,17 @@ export default function Settings({
   products,
   sales
 }) {
-  // Credentials Form State
-  const [usernameInput, setUsernameInput] = useState(credentials.username);
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [showPass, setShowPass] = useState(false);
+  // Store Settings Form State
+  const [storeName, setStoreName] = useState(storeSettings.storeName);
+  const [storeAddress, setStoreAddress] = useState(storeSettings.storeAddress);
+  const [storePhone, setStorePhone] = useState(storeSettings.storePhone);
+  const [currencySymbol, setCurrencySymbol] = useState(storeSettings.currencySymbol);
+  const [lowStockThreshold, setLowStockThreshold] = useState(storeSettings.lowStockThreshold);
+  const [expiryWarningDays, setExpiryWarningDays] = useState(storeSettings.expiryWarningDays);
 
   // Status alerts
-  const [credError, setCredError] = useState('');
-  const [credSuccess, setCredSuccess] = useState('');
+  const [configError, setConfigError] = useState('');
+  const [configSuccess, setConfigSuccess] = useState('');
   
   // Danger actions confirm states
   const [showResetConfirm, setShowResetConfirm] = useState(false);
@@ -41,53 +42,35 @@ export default function Settings({
 
   const fileInputRef = useRef(null);
 
-  // Handle password/username change
-  const handleUpdateCredentials = (e) => {
+  // Handle configuration update
+  const handleSaveConfig = (e) => {
     e.preventDefault();
-    setCredError('');
-    setCredSuccess('');
+    setConfigError('');
+    setConfigSuccess('');
 
-    // Verification
-    if (currentPassword !== credentials.password) {
-      setCredError('Incorrect current password.');
+    if (!storeName.trim()) {
+      setConfigError('Store Name cannot be empty.');
       return;
     }
 
-    if (!usernameInput.trim()) {
-      setCredError('Username cannot be empty.');
-      return;
-    }
+    setStoreSettings({
+      storeName: storeName.trim(),
+      storeAddress: storeAddress.trim(),
+      storePhone: storePhone.trim(),
+      currencySymbol: currencySymbol.trim(),
+      lowStockThreshold: parseInt(lowStockThreshold, 10) || 5,
+      expiryWarningDays: parseInt(expiryWarningDays, 10) || 30
+    });
 
-    if (newPassword) {
-      if (newPassword !== confirmPassword) {
-        setCredError('New passwords do not match.');
-        return;
-      }
-      // Save credentials with new password
-      setCredentials({
-        username: usernameInput.trim(),
-        password: newPassword
-      });
-    } else {
-      // Save credentials with new username only
-      setCredentials(prev => ({
-        ...prev,
-        username: usernameInput.trim()
-      }));
-    }
-
-    setCredSuccess('Credentials updated successfully!');
-    setCurrentPassword('');
-    setNewPassword('');
-    setConfirmPassword('');
+    setConfigSuccess('Store configuration updated successfully!');
   };
 
   // Export Data to JSON
   const handleExportData = () => {
     const dataBackup = {
-      version: '1.0',
+      version: '1.1',
       timestamp: new Date().toISOString(),
-      credentials,
+      storeSettings,
       products,
       sales
     };
@@ -110,123 +93,148 @@ export default function Settings({
     reader.onload = (event) => {
       try {
         const parsed = JSON.parse(event.target.result);
-        if (parsed.version && parsed.products && parsed.sales && parsed.credentials) {
-          onImportData(parsed.products, parsed.sales, parsed.credentials);
+        if (parsed.products && parsed.sales && parsed.storeSettings) {
+          onImportData(parsed.products, parsed.sales);
+          setStoreSettings(parsed.storeSettings);
           alert('Data backup imported and restored successfully!');
+        } else if (parsed.products && parsed.sales) {
+          onImportData(parsed.products, parsed.sales);
+          alert('Data backup (partial) imported successfully!');
         } else {
-          alert('Invalid backup file format. Missing essential fields.');
+          alert('Invalid backup file format. Missing products/sales fields.');
         }
       } catch (err) {
         alert('Error parsing JSON backup file.');
       }
     };
     reader.readAsText(file);
-    // Clear input
     e.target.value = '';
   };
 
   return (
     <div style={styles.container} className="animate-fade">
       <div>
-        <h1 style={styles.pageTitle}>System Administration</h1>
-        <p style={styles.pageSubtitle}>Update passwords, manage local backups, and toggle visual display themes.</p>
+        <h1 style={styles.pageTitle}>System Control Settings</h1>
+        <p style={styles.pageSubtitle}>Update store headers, set stock warning alerts, manage database dumps, and toggle theme modes.</p>
       </div>
 
       <div style={styles.grid}>
-        {/* Change Credentials Form */}
-        <div style={styles.sectionCard} className="card">
+        {/* Store Profile & Configuration form */}
+        <div style={{ ...styles.sectionCard, gridColumn: 'span 2' }} className="card">
           <div style={styles.cardHeader}>
-            <KeyRound size={20} color="var(--color-primary)" />
-            <h2 style={styles.cardTitle}>Change Credentials</h2>
+            <Store size={20} color="var(--color-primary)" />
+            <h2 style={styles.cardTitle}>Supermarket Configuration Profile</h2>
           </div>
           
-          {credError && (
+          {configError && (
             <div style={styles.alertError} className="animate-fade">
               <ShieldAlert size={16} />
-              <span>{credError}</span>
+              <span>{configError}</span>
             </div>
           )}
 
-          {credSuccess && (
+          {configSuccess && (
             <div style={styles.alertSuccess} className="animate-fade">
               <CheckCircle size={16} />
-              <span>{credSuccess}</span>
+              <span>{configSuccess}</span>
             </div>
           )}
 
-          <form onSubmit={handleUpdateCredentials} style={styles.form}>
-            <div style={styles.inputGroup}>
-              <label style={styles.label}>System Operator Username</label>
-              <input
-                type="text"
-                required
-                value={usernameInput}
-                onChange={(e) => setUsernameInput(e.target.value)}
-                className="input-field"
-              />
+          <form onSubmit={handleSaveConfig} style={styles.form}>
+            <div style={styles.formRowGrid}>
+              <div style={styles.inputGroup}>
+                <label style={styles.label}>Retail Store / Mall Name</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. ApexCart Superstore"
+                  value={storeName}
+                  onChange={(e) => setStoreName(e.target.value)}
+                  className="input-field"
+                />
+              </div>
+
+              <div style={styles.inputGroup}>
+                <label style={styles.label}>Contact Phone Number</label>
+                <input
+                  type="text"
+                  placeholder="e.g. +1 (555) 019-2834"
+                  value={storePhone}
+                  onChange={(e) => setStorePhone(e.target.value)}
+                  className="input-field"
+                />
+              </div>
             </div>
 
             <div style={styles.inputGroup}>
-              <label style={styles.label}>Confirm Current Password</label>
-              <div style={styles.passWrapper}>
-                <input
-                  type={showPass ? 'text' : 'password'}
-                  required
-                  placeholder="Verify identity password"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  className="input-field"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPass(!showPass)}
-                  style={styles.eyeBtn}
-                >
-                  {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
-              </div>
+              <label style={styles.label}>Retail Outlet Street Address</label>
+              <input
+                type="text"
+                placeholder="e.g. 123 Galleria Mall, Cyber City, Tech Zone"
+                value={storeAddress}
+                onChange={(e) => setStoreAddress(e.target.value)}
+                className="input-field"
+              />
             </div>
 
             <div style={styles.separator} />
 
-            <div style={styles.inputGroup}>
-              <label style={styles.label}>New Password (Optional)</label>
-              <input
-                type={showPass ? 'text' : 'password'}
-                placeholder="Leave blank to keep current"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                className="input-field"
-              />
-            </div>
-
-            {newPassword && (
-              <div style={styles.inputGroup} className="animate-fade">
-                <label style={styles.label}>Confirm New Password</label>
+            <h3 style={styles.subHeading}>System Warning Thresholds & Rules</h3>
+            <div style={styles.formRowGrid}>
+              <div style={styles.inputGroup}>
+                <label style={styles.label}>Currency Symbol</label>
                 <input
-                  type={showPass ? 'text' : 'password'}
-                  placeholder="Re-enter new password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  type="text"
+                  required
+                  maxLength={3}
+                  value={currencySymbol}
+                  onChange={(e) => setCurrencySymbol(e.target.value)}
+                  className="input-field"
+                  style={{ maxWidth: '80px', textAlign: 'center' }}
+                />
+              </div>
+
+              <div style={styles.inputGroup}>
+                <label style={styles.label}>Global Low Stock Threshold</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="500"
+                  required
+                  value={lowStockThreshold}
+                  onChange={(e) => setLowStockThreshold(parseInt(e.target.value, 10) || 5)}
                   className="input-field"
                 />
               </div>
-            )}
+
+              <div style={styles.inputGroup}>
+                <label style={styles.label}>Expiry Warning Window (Days)</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="180"
+                  required
+                  value={expiryWarningDays}
+                  onChange={(e) => setExpiryWarningDays(parseInt(e.target.value, 10) || 30)}
+                  className="input-field"
+                />
+              </div>
+            </div>
 
             <button type="submit" style={styles.saveBtn} className="btn btn-primary">
-              Update Admin Profile
+              Save Store Configurations
             </button>
           </form>
         </div>
 
-        {/* Visual Settings card */}
+        {/* Theme Toggling card */}
         <div style={styles.sectionCard} className="card">
           <div style={styles.cardHeader}>
             {theme === 'dark' ? <Moon size={20} color="var(--color-primary)" /> : <Sun size={20} color="var(--color-warning)" />}
             <h2 style={styles.cardTitle}>Theme & Interface</h2>
           </div>
           <div style={styles.themeControls}>
-            <p style={styles.themeText}>Choose standard lighting for store screen configurations.</p>
+            <p style={styles.themeText}>Choose lighting configurations for supermarket operator screens.</p>
             <button onClick={toggleTheme} style={styles.themeToggleBtn} className="btn btn-secondary">
               {theme === 'dark' ? (
                 <>
@@ -243,14 +251,14 @@ export default function Settings({
           </div>
         </div>
 
-        {/* Database & Backups card */}
+        {/* Database backup card */}
         <div style={styles.sectionCard} className="card">
           <div style={styles.cardHeader}>
             <Database size={20} color="var(--color-primary)" />
             <h2 style={styles.cardTitle}>Data Backup & recovery</h2>
           </div>
           <div style={styles.backupBox}>
-            <p style={styles.backupText}>Export current local storage ledger or import a previous system dump file.</p>
+            <p style={styles.backupText}>Export current store inventory ledger or restore from previous system backup.</p>
             
             <div style={styles.backupButtons}>
               <button onClick={handleExportData} style={styles.backupBtn} className="btn btn-secondary">
@@ -278,8 +286,8 @@ export default function Settings({
           </div>
         </div>
 
-        {/* Danger Zone */}
-        <div style={{ ...styles.sectionCard, borderColor: 'rgba(239, 68, 68, 0.3)' }} className="card">
+        {/* Danger Zone card */}
+        <div style={{ ...styles.sectionCard, gridColumn: 'span 2', borderColor: 'rgba(239, 68, 68, 0.3)' }} className="card">
           <div style={styles.cardHeader}>
             <ShieldAlert size={20} color="var(--color-danger)" />
             <h2 style={{ ...styles.cardTitle, color: 'var(--color-danger)' }}>Danger Zone</h2>
@@ -288,7 +296,7 @@ export default function Settings({
             <div style={styles.dangerRow}>
               <div style={styles.dangerInfo}>
                 <span style={styles.dangerActionName}>Reset Database to Mock Data</span>
-                <span style={styles.dangerActionDesc}>Wipes active inventory and sales logs to seed the original supermarket items catalog.</span>
+                <span style={styles.dangerActionDesc}>Wipes active database tables and seeds mock groceries, beverages, electronics, and perishables.</span>
               </div>
               {showResetConfirm ? (
                 <div style={styles.confirmButtons}>
@@ -312,8 +320,8 @@ export default function Settings({
 
             <div style={styles.dangerRow}>
               <div style={styles.dangerInfo}>
-                <span style={styles.dangerActionName}>Clear All Databases</span>
-                <span style={styles.dangerActionDesc}>Wipes out all stored products, categories, and past billing histories entirely.</span>
+                <span style={styles.dangerActionName}>Clear All Database Ledgers</span>
+                <span style={styles.dangerActionDesc}>Wipes out all stored products, categories, sales records, and settings completely.</span>
               </div>
               {showClearConfirm ? (
                 <div style={styles.confirmButtons}>
@@ -358,7 +366,7 @@ const styles = {
   },
   grid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
+    gridTemplateColumns: 'repeat(2, 1fr)',
     gap: '1.5rem',
   },
   sectionCard: {
@@ -381,7 +389,12 @@ const styles = {
   form: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '1rem',
+    gap: '1.25rem',
+  },
+  formRowGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+    gap: '1.25rem',
   },
   inputGroup: {
     display: 'flex',
@@ -395,28 +408,22 @@ const styles = {
     textTransform: 'uppercase',
     letterSpacing: '0.5px',
   },
-  passWrapper: {
-    position: 'relative',
-    display: 'flex',
-    alignItems: 'center',
-  },
-  eyeBtn: {
-    position: 'absolute',
-    right: '0.75rem',
-    background: 'none',
-    border: 'none',
-    color: 'var(--color-text-muted)',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
+  subHeading: {
+    fontSize: '0.875rem',
+    fontWeight: '800',
+    color: 'var(--color-primary)',
+    textTransform: 'uppercase',
+    letterSpacing: '0.5px',
+    marginTop: '0.5rem',
   },
   separator: {
     borderTop: '1px dashed var(--color-border)',
-    margin: '0.5rem 0',
+    margin: '0.25rem 0',
   },
   saveBtn: {
     marginTop: '0.5rem',
     padding: '0.75rem',
+    fontWeight: '700',
   },
   alertError: {
     display: 'flex',
@@ -454,6 +461,9 @@ const styles = {
   themeToggleBtn: {
     width: 'fit-content',
     padding: '0.6rem 1.2rem',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
   },
   backupBox: {
     display: 'flex',
@@ -473,6 +483,10 @@ const styles = {
     fontSize: '0.8125rem',
     padding: '0.6rem 1.1rem',
     flex: '1 1 auto',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '0.35rem',
   },
   dangerBox: {
     display: 'flex',

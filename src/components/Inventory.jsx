@@ -10,10 +10,11 @@ import {
   PackageOpen
 } from 'lucide-react';
 
-export default function Inventory({ products, setProducts, categories }) {
+export default function Inventory({ products, setProducts, categories, storeSettings }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [stockFilter, setStockFilter] = useState('All'); // All, In Stock, Low Stock, Out of Stock
+  const [expiryFilter, setExpiryFilter] = useState('All'); // All, Expired, Expiring Soon, Safe
   
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -30,14 +31,20 @@ export default function Inventory({ products, setProducts, categories }) {
     costPrice: 0.0,
     gst: 5.0,
     discount: 0.0,
-    minStock: 5
+    minStock: 5,
+    mfgDate: '',
+    expiryDate: ''
   });
 
   // Open modal for add or edit
   const openModal = (product = null) => {
     if (product) {
       setEditingProduct(product);
-      setFormData({ ...product });
+      setFormData({ 
+        mfgDate: '',
+        expiryDate: '',
+        ...product 
+      });
     } else {
       setEditingProduct(null);
       // Generate a new temporary SKU
@@ -53,7 +60,9 @@ export default function Inventory({ products, setProducts, categories }) {
         costPrice: 3.00,
         gst: 5.0,
         discount: 0.0,
-        minStock: 5
+        minStock: 5,
+        mfgDate: '',
+        expiryDate: ''
       });
     }
     setIsModalOpen(true);
@@ -89,6 +98,8 @@ export default function Inventory({ products, setProducts, categories }) {
     }
   };
 
+  const today = '2026-06-06';
+
   // Filter products
   const filteredProducts = products.filter(product => {
     const matchesSearch = 
@@ -100,14 +111,36 @@ export default function Inventory({ products, setProducts, categories }) {
       
     let matchesStock = true;
     if (stockFilter === 'In Stock') {
-      matchesStock = product.quantity > product.minStock;
+      matchesStock = product.quantity > (storeSettings?.lowStockThreshold || product.minStock);
     } else if (stockFilter === 'Low Stock') {
-      matchesStock = product.quantity > 0 && product.quantity <= product.minStock;
+      matchesStock = product.quantity > 0 && product.quantity <= (storeSettings?.lowStockThreshold || product.minStock);
     } else if (stockFilter === 'Out of Stock') {
       matchesStock = product.quantity === 0;
     }
 
-    return matchesSearch && matchesCategory && matchesStock;
+    let matchesExpiry = true;
+    if (product.expiryDate) {
+      const isExp = product.expiryDate < today;
+      const exp = new Date(product.expiryDate);
+      const td = new Date(today);
+      const diffDays = Math.ceil((exp - td) / (1000 * 60 * 60 * 24));
+      const warningDays = storeSettings?.expiryWarningDays || 30;
+      const isSoon = !isExp && diffDays <= warningDays;
+
+      if (expiryFilter === 'Expired') {
+        matchesExpiry = isExp;
+      } else if (expiryFilter === 'Expiring Soon') {
+        matchesExpiry = isSoon;
+      } else if (expiryFilter === 'Safe') {
+        matchesExpiry = !isExp && !isSoon;
+      }
+    } else {
+      if (expiryFilter !== 'All' && expiryFilter !== 'Safe') {
+        matchesExpiry = false; // non-perishable can only be safe or all
+      }
+    }
+
+    return matchesSearch && matchesCategory && matchesStock && matchesExpiry;
   });
 
   return (
@@ -166,6 +199,21 @@ export default function Inventory({ products, setProducts, categories }) {
             <option value="Out of Stock">Out of Stock</option>
           </select>
         </div>
+
+        {/* Expiry Status Filter */}
+        <div style={styles.filterGroup}>
+          <select 
+            value={expiryFilter} 
+            onChange={(e) => setExpiryFilter(e.target.value)}
+            style={styles.select}
+            className="select-field"
+          >
+            <option value="All">All Expiry Status</option>
+            <option value="Expired">Expired</option>
+            <option value="Expiring Soon">Expiring Soon</option>
+            <option value="Safe">Safe / No Expiry</option>
+          </select>
+        </div>
       </div>
 
       {/* Catalog Table */}
@@ -193,28 +241,62 @@ export default function Inventory({ products, setProducts, categories }) {
               </thead>
               <tbody>
                 {filteredProducts.map((p) => {
-                  const isLow = p.quantity <= p.minStock && p.quantity > 0;
+                  const isLow = p.quantity <= (storeSettings?.lowStockThreshold || p.minStock) && p.quantity > 0;
                   const isOut = p.quantity === 0;
                   const margin = p.price - p.costPrice;
                   const marginPercent = p.costPrice > 0 ? Math.round((margin / p.costPrice) * 100) : 0;
+                  
+                  // Expiry calculations
+                  let expiryBadge = null;
+                  let isExpired = false;
+                  let isExpiringSoon = false;
+                  let diffDays = 0;
+                  if (p.expiryDate) {
+                    if (p.expiryDate < today) {
+                      isExpired = true;
+                      expiryBadge = <span className="badge badge-danger" style={{ marginTop: '0.2rem', fontSize: '0.65rem' }}>Expired</span>;
+                    } else {
+                      const exp = new Date(p.expiryDate);
+                      const td = new Date(today);
+                      const diffTime = exp - td;
+                      diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                      
+                      const warningDays = storeSettings?.expiryWarningDays || 30;
+                      if (diffDays <= warningDays) {
+                        isExpiringSoon = true;
+                        expiryBadge = <span className="badge badge-warning" style={{ marginTop: '0.2rem', fontSize: '0.65rem' }}>Expiring ({diffDays}d)</span>;
+                      }
+                    }
+                  }
                   
                   return (
                     <tr key={p.id} style={styles.tr}>
                       <td style={styles.tdSku}>{p.id}</td>
                       <td style={styles.tdDetails}>
-                        <span style={styles.prodName}>{p.name}</span>
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                          <span style={styles.prodName}>{p.name}</span>
+                          {p.expiryDate && (
+                            <div style={styles.dateAlerts}>
+                              <span style={styles.mfgLabel}>Mfg: {p.mfgDate || 'N/A'}</span>
+                              <span style={styles.expiryLabel}> • Exp: {p.expiryDate}</span>
+                            </div>
+                          )}
+                        </div>
                       </td>
                       <td style={styles.tdCategory}>{p.category}</td>
                       <td style={styles.tdStock}>
                         <div style={styles.stockStatus}>
                           <span style={styles.stockNumber}>{p.quantity} units</span>
-                          {isOut ? (
-                            <span className="badge badge-danger">Out of Stock</span>
-                          ) : isLow ? (
-                            <span className="badge badge-warning">Low Stock</span>
-                          ) : (
-                            <span className="badge badge-success">In Stock</span>
-                          )}
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem', alignItems: 'flex-start' }}>
+                            {isOut ? (
+                              <span className="badge badge-danger">Out of Stock</span>
+                            ) : isLow ? (
+                              <span className="badge badge-warning">Low Stock</span>
+                            ) : (
+                              <span className="badge badge-success">In Stock</span>
+                            )}
+                            {expiryBadge}
+                          </div>
                         </div>
                       </td>
                       <td style={styles.tdPrice}>${p.costPrice.toFixed(2)}</td>
@@ -397,6 +479,30 @@ export default function Inventory({ products, setProducts, categories }) {
                     required
                     value={formData.minStock}
                     onChange={(e) => setFormData({ ...formData, minStock: parseInt(e.target.value, 10) || 1 })}
+                    style={styles.formInput}
+                    className="input-field"
+                  />
+                </div>
+
+                {/* Mfg Date */}
+                <div style={styles.formGroup}>
+                  <label style={styles.formLabel}>Mfg Date (Optional)</label>
+                  <input
+                    type="date"
+                    value={formData.mfgDate || ''}
+                    onChange={(e) => setFormData({ ...formData, mfgDate: e.target.value })}
+                    style={styles.formInput}
+                    className="input-field"
+                  />
+                </div>
+
+                {/* Expiry Date */}
+                <div style={styles.formGroup}>
+                  <label style={styles.formLabel}>Expiry Date (Optional)</label>
+                  <input
+                    type="date"
+                    value={formData.expiryDate || ''}
+                    onChange={(e) => setFormData({ ...formData, expiryDate: e.target.value })}
                     style={styles.formInput}
                     className="input-field"
                   />
@@ -792,6 +898,20 @@ const styles = {
   },
   deleteConfirmBtn: {
     padding: '0.65rem 1.25rem',
+  },
+  dateAlerts: {
+    display: 'flex',
+    fontSize: '0.72rem',
+    color: 'var(--color-text-muted)',
+    marginTop: '0.15rem',
+    fontWeight: '600',
+  },
+  mfgLabel: {
+    fontStyle: 'normal',
+  },
+  expiryLabel: {
+    fontWeight: '700',
+    color: 'var(--color-text-secondary)',
   }
 };
 

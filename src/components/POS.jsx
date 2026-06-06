@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import Invoice from './Invoice';
 
-export default function POS({ products, setProducts, sales, setSales, categories }) {
+export default function POS({ products, setProducts, sales, setSales, categories, storeSettings }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
   
@@ -28,9 +28,16 @@ export default function POS({ products, setProducts, sales, setSales, categories
   // Invoice state
   const [activeInvoice, setActiveInvoice] = useState(null);
 
+  const today = '2026-06-06';
+
   // Add to cart
   const addToCart = (product) => {
     if (product.quantity <= 0) return; // Out of stock
+
+    if (product.expiryDate && product.expiryDate < today) {
+      alert(`❌ SAFETY BLOCK: Cannot add "${product.name}" to cart. The product expired on ${product.expiryDate}!`);
+      return;
+    }
 
     setCart(prev => {
       const existing = prev.find(item => item.product.id === product.id);
@@ -237,6 +244,13 @@ export default function POS({ products, setProducts, sales, setSales, categories
             const isOut = p.quantity === 0;
             const isLow = p.quantity <= p.minStock && p.quantity > 0;
             
+            const isExpired = p.expiryDate && p.expiryDate < today;
+            const exp = p.expiryDate ? new Date(p.expiryDate) : null;
+            const td = new Date(today);
+            const diffDays = exp ? Math.ceil((exp - td) / (1000 * 60 * 60 * 24)) : 999;
+            const warningDays = storeSettings?.expiryWarningDays || 30;
+            const isExpiringSoon = p.expiryDate && !isExpired && diffDays <= warningDays;
+
             // Cart current count
             const cartItem = cart.find(item => item.product.id === p.id);
             const cartQty = cartItem ? cartItem.quantity : 0;
@@ -245,16 +259,21 @@ export default function POS({ products, setProducts, sales, setSales, categories
             return (
               <div 
                 key={p.id} 
-                onClick={() => !isOut && remainingStock > 0 && addToCart(p)}
+                onClick={() => (!isOut || isExpired) && remainingStock > 0 && addToCart(p)}
                 style={{
                   ...styles.prodCard,
-                  opacity: isOut || remainingStock === 0 ? 0.65 : 1,
+                  opacity: isOut || isExpired || remainingStock === 0 ? 0.65 : 1,
                   cursor: isOut || remainingStock === 0 ? 'not-allowed' : 'pointer',
-                  borderColor: cartQty > 0 ? 'var(--color-primary)' : 'var(--color-border)',
+                  borderColor: isExpired ? 'var(--color-danger)' : cartQty > 0 ? 'var(--color-primary)' : 'var(--color-border)',
                 }}
                 className="card glow-hover"
               >
-                {cartQty > 0 && (
+                {isExpired && (
+                  <div style={{ ...styles.cartBadge, backgroundColor: 'var(--color-danger)' }}>
+                    <span>Expired</span>
+                  </div>
+                )}
+                {!isExpired && cartQty > 0 && (
                   <div style={styles.cartBadge}>
                     <span>{cartQty} in Cart</span>
                   </div>
@@ -267,13 +286,21 @@ export default function POS({ products, setProducts, sales, setSales, categories
                 </div>
 
                 <div style={styles.prodFooter}>
-                  <span style={styles.prodPrice}>${p.price.toFixed(2)}</span>
+                  <span style={styles.prodPrice}>
+                    {storeSettings?.currencySymbol || '$'}{p.price.toFixed(2)}
+                  </span>
                   <div style={styles.stockLabel}>
                     {isOut ? (
                       <span className="badge badge-danger">Out of Stock</span>
-                    ) : remainingStock <= p.minStock ? (
+                    ) : isExpired ? (
+                      <span className="badge badge-danger" style={{ fontSize: '0.65rem' }}>Expired</span>
+                    ) : isExpiringSoon ? (
                       <span className="badge badge-warning" style={{ fontSize: '0.65rem' }}>
-                        {remainingStock} Units left
+                        Expiring ({diffDays}d)
+                      </span>
+                    ) : remainingStock <= (storeSettings?.lowStockThreshold || p.minStock) ? (
+                      <span className="badge badge-warning" style={{ fontSize: '0.65rem' }}>
+                        {remainingStock} left
                       </span>
                     ) : (
                       <span className="badge badge-success" style={{ fontSize: '0.65rem' }}>
@@ -342,7 +369,7 @@ export default function POS({ products, setProducts, sales, setSales, categories
                   <div style={styles.cartItemDetails}>
                     <span style={styles.cartItemName}>{item.product.name}</span>
                     <div style={styles.cartItemPricing}>
-                      <span>${item.product.price.toFixed(2)} ea</span>
+                      <span>{storeSettings?.currencySymbol || '$'}{item.product.price.toFixed(2)} ea</span>
                       <span style={styles.bullet}>•</span>
                       <span style={styles.taxTag}>GST {item.product.gst}%</span>
                       {item.product.discount > 0 && (
@@ -371,7 +398,7 @@ export default function POS({ products, setProducts, sales, setSales, categories
                       </button>
                     </div>
                     
-                    <span style={styles.cartItemTotal}>${totalLine.toFixed(2)}</span>
+                    <span style={styles.cartItemTotal}>{storeSettings?.currencySymbol || '$'}{totalLine.toFixed(2)}</span>
                     
                     <button 
                       onClick={() => removeFromCart(item.product.id)}
@@ -390,20 +417,20 @@ export default function POS({ products, setProducts, sales, setSales, categories
         <div style={styles.summaryBox}>
           <div style={styles.summaryRow}>
             <span>Subtotal</span>
-            <span>${subtotal.toFixed(2)}</span>
+            <span>{storeSettings?.currencySymbol || '$'}{subtotal.toFixed(2)}</span>
           </div>
           <div style={styles.summaryRow}>
             <span>Taxes (GST)</span>
-            <span>+${totalGST.toFixed(2)}</span>
+            <span>+{storeSettings?.currencySymbol || '$'}{totalGST.toFixed(2)}</span>
           </div>
           <div style={styles.summaryRow}>
             <span>Discounts Applied</span>
-            <span style={{ color: 'var(--color-danger)' }}>-${totalDiscount.toFixed(2)}</span>
+            <span style={{ color: 'var(--color-danger)' }}>-{storeSettings?.currencySymbol || '$'}{totalDiscount.toFixed(2)}</span>
           </div>
           <div style={styles.totalDivider} />
           <div style={styles.grandTotalRow}>
             <span>Grand Total</span>
-            <span>${grandTotal.toFixed(2)}</span>
+            <span>{storeSettings?.currencySymbol || '$'}{grandTotal.toFixed(2)}</span>
           </div>
         </div>
 
@@ -428,6 +455,7 @@ export default function POS({ products, setProducts, sales, setSales, categories
         <Invoice 
           invoice={activeInvoice} 
           onClose={() => setActiveInvoice(null)} 
+          storeSettings={storeSettings}
         />
       )}
     </div>

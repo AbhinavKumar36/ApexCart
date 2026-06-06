@@ -11,20 +11,44 @@ import {
   Inbox
 } from 'lucide-react';
 
-export default function Dashboard({ products, sales, setProducts, setActiveTab, role }) {
+export default function Dashboard({ products, sales, setProducts, setActiveTab, role, storeSettings }) {
   // Calculations
   const totalRevenue = sales.reduce((acc, sale) => acc + sale.totalPrice, 0);
   const totalBills = sales.length;
   const totalProducts = products.length;
   
-  const lowStockItems = products.filter(p => p.quantity <= p.minStock);
+  const lowStockItems = products.filter(p => p.quantity <= (storeSettings?.lowStockThreshold || p.minStock));
   const lowStockCount = lowStockItems.length;
+
+  const today = '2026-06-06';
+  const expiredProducts = products.filter(p => p.expiryDate && p.expiryDate < today);
+  const expiringSoonProducts = products.filter(p => {
+    if (!p.expiryDate || p.expiryDate < today) return false;
+    const exp = new Date(p.expiryDate);
+    const td = new Date(today);
+    const diffDays = Math.ceil((exp - td) / (1000 * 60 * 60 * 24));
+    const warningDays = storeSettings?.expiryWarningDays || 30;
+    return diffDays <= warningDays;
+  });
+
+  const expiredCount = expiredProducts.length;
+  const expiringSoonCount = expiringSoonProducts.length;
+  const totalPerishablesAlerts = expiredCount + expiringSoonCount;
 
   // Restock handler directly from dashboard
   const handleQuickRestock = (productId, amount) => {
     setProducts(prevProducts => 
       prevProducts.map(p => 
         p.id === productId ? { ...p, quantity: p.quantity + amount } : p
+      )
+    );
+  };
+
+  // Clearance markdown discount handler
+  const handleClearanceDiscount = (productId, discountAmount) => {
+    setProducts(prevProducts => 
+      prevProducts.map(p => 
+        p.id === productId ? { ...p, discount: discountAmount } : p
       )
     );
   };
@@ -43,7 +67,6 @@ export default function Dashboard({ products, sales, setProducts, setActiveTab, 
   })).sort((a, b) => b.count - a.count);
 
   // Sparkline sales calculations for last 7 days
-  // Generating simulated chart points based on sales or mock daily numbers
   const dailySales = [
     { day: 'Mon', amount: 120 },
     { day: 'Tue', amount: 340 },
@@ -75,8 +98,8 @@ export default function Dashboard({ products, sales, setProducts, setActiveTab, 
       {/* Top Welcome Title */}
       <div style={styles.welcomeRow}>
         <div>
-          <h1 style={styles.pageTitle}>Logistics Dashboard</h1>
-          <p style={styles.pageSubtitle}>Real-time metrics and store inventory operations control.</p>
+          <h1 style={styles.pageTitle}>{storeSettings?.storeName || 'Logistics Dashboard'}</h1>
+          <p style={styles.pageSubtitle}>{storeSettings?.storeAddress || 'Real-time metrics and store inventory operations control.'}</p>
         </div>
         <button onClick={() => setActiveTab('pos')} className="btn btn-primary" style={styles.posShortcut}>
           <ShoppingBag size={18} />
@@ -95,7 +118,9 @@ export default function Dashboard({ products, sales, setProducts, setActiveTab, 
             </div>
           </div>
           <div style={styles.kpiValRow}>
-            <span style={styles.kpiValue}>${totalRevenue.toFixed(2)}</span>
+            <span style={styles.kpiValue}>
+              {storeSettings?.currencySymbol || '$'}{totalRevenue.toFixed(2)}
+            </span>
             <span style={styles.kpiChange}>
               <TrendingUp size={14} /> +12.4%
             </span>
@@ -133,29 +158,30 @@ export default function Dashboard({ products, sales, setProducts, setActiveTab, 
           <span style={styles.kpiSubtext}>Check catalog status in real-time</span>
         </div>
 
-        {/* KPI 4 */}
+        {/* KPI 4 - Combined Alerts */}
         <div style={{
           ...styles.kpiCard,
-          borderColor: lowStockCount > 0 ? 'var(--color-danger)' : 'var(--color-border)',
+          borderColor: (lowStockCount > 0 || expiredCount > 0) ? 'var(--color-danger)' : 'var(--color-border)',
         }} className="card">
           <div style={styles.kpiHeader}>
-            <span style={styles.kpiTitle}>Stock Alerts</span>
+            <span style={styles.kpiTitle}>Security & Alerts</span>
             <div style={{ 
               ...styles.kpiIconBox, 
-              backgroundColor: lowStockCount > 0 ? 'var(--color-danger-light)' : 'var(--color-success-light)' 
+              backgroundColor: (lowStockCount > 0 || expiredCount > 0) ? 'var(--color-danger-light)' : 'var(--color-success-light)' 
             }}>
-              <AlertTriangle size={20} color={lowStockCount > 0 ? 'var(--color-danger)' : 'var(--color-success)'} />
+              <AlertTriangle size={20} color={(lowStockCount > 0 || expiredCount > 0) ? 'var(--color-danger)' : 'var(--color-success)'} />
             </div>
           </div>
           <div style={styles.kpiValRow}>
             <span style={{ 
               ...styles.kpiValue,
-              color: lowStockCount > 0 ? 'var(--color-danger)' : 'var(--color-text-primary)'
-            }}>{lowStockCount}</span>
-            <span style={styles.kpiSubtext2}>Items below threshold</span>
+              color: (lowStockCount > 0 || expiredCount > 0) ? 'var(--color-danger)' : 'var(--color-text-primary)'
+            }}>
+              Low: {lowStockCount} | Exp: {expiredCount}
+            </span>
           </div>
           <span style={styles.kpiSubtext}>
-            {lowStockCount > 0 ? 'Needs immediate replenishment!' : 'All items sufficiently stocked'}
+            {expiringSoonCount} items expiring in {storeSettings?.expiryWarningDays || 30} days
           </span>
         </div>
       </div>
@@ -280,7 +306,7 @@ export default function Dashboard({ products, sales, setProducts, setActiveTab, 
                         {item.quantity === 0 ? 'OUT OF STOCK' : `${item.quantity} units left`}
                       </span>
                       <span style={styles.divider}>•</span>
-                      <span style={styles.alertMin}>Limit: {item.minStock}</span>
+                      <span style={styles.alertMin}>Limit: {storeSettings?.lowStockThreshold || item.minStock}</span>
                     </div>
                   </div>
                   {role !== 'staff' && (
@@ -309,6 +335,83 @@ export default function Dashboard({ products, sales, setProducts, setActiveTab, 
           )}
         </div>
 
+        {/* Perishables Expiry Console */}
+        <div style={styles.alertsCard} className="card">
+          <div style={styles.cardHeader}>
+            <h2 style={styles.cardTitle}>Perishables Expiry Console</h2>
+            <span style={styles.cardInfo}>Perishable goods status & markdown clearance</span>
+          </div>
+          
+          {expiredProducts.length === 0 && expiringSoonProducts.length === 0 ? (
+            <div style={styles.emptyAlerts}>
+              <Inbox size={40} color="var(--color-text-muted)" />
+              <p style={styles.emptyAlertsText}>No perishable expiration alerts.</p>
+            </div>
+          ) : (
+            <div style={styles.alertsList}>
+              {/* Expired Products */}
+              {expiredProducts.map((item) => (
+                <div key={item.id} style={{ ...styles.alertItem, borderColor: 'rgba(239, 68, 68, 0.3)' }}>
+                  <div style={styles.alertInfo}>
+                    <span style={{ ...styles.alertName, color: 'var(--color-danger)' }}>{item.name}</span>
+                    <div style={styles.alertSub}>
+                      <span style={styles.alertSku}>{item.id}</span>
+                      <span style={styles.divider}>•</span>
+                      <span style={{ color: 'var(--color-danger)', fontWeight: '700' }}>EXPIRED: {item.expiryDate}</span>
+                    </div>
+                  </div>
+                  <span className="badge badge-danger">Dispose</span>
+                </div>
+              ))}
+              
+              {/* Expiring Soon Products */}
+              {expiringSoonProducts.map((item) => {
+                const exp = new Date(item.expiryDate);
+                const td = new Date(today);
+                const diffDays = Math.ceil((exp - td) / (1000 * 60 * 60 * 24));
+                return (
+                  <div key={item.id} style={{ ...styles.alertItem, borderColor: 'rgba(245, 158, 11, 0.3)' }}>
+                    <div style={styles.alertInfo}>
+                      <span style={styles.alertName}>{item.name}</span>
+                      <div style={styles.alertSub}>
+                        <span style={styles.alertSku}>{item.id}</span>
+                        <span style={styles.divider}>•</span>
+                        <span style={{ color: 'var(--color-warning)', fontWeight: '700' }}>Expires: {item.expiryDate} ({diffDays}d left)</span>
+                        {item.discount > 0 && (
+                          <>
+                            <span style={styles.divider}>•</span>
+                            <span style={{ color: 'var(--color-success)', fontWeight: '700' }}>Markdown: {item.discount}%</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    {role !== 'staff' && (
+                      <div style={styles.alertActions}>
+                        <button 
+                          onClick={() => { handleClearanceDiscount(item.id, 30); alert(`Applied 30% markdown to ${item.name}`); }} 
+                          style={styles.actionBtn} 
+                          title="Apply 30% discount"
+                          className="dashboard-action-btn"
+                        >
+                          <span>Disc 30%</span>
+                        </button>
+                        <button 
+                          onClick={() => { handleClearanceDiscount(item.id, 50); alert(`Applied 50% markdown to ${item.name}`); }} 
+                          style={styles.actionBtn} 
+                          title="Apply 50% discount"
+                          className="dashboard-action-btn"
+                        >
+                          <span>Disc 50%</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
         {/* Recent Invoices Feed */}
         <div style={styles.recentFeedCard} className="card">
           <div style={styles.cardHeader}>
@@ -333,7 +436,7 @@ export default function Dashboard({ products, sales, setProducts, setActiveTab, 
                     <span style={styles.feedSubtitle}>{sale.customerName || 'Walk-in Customer'} • {sale.items.length} items</span>
                   </div>
                   <div style={styles.feedValue}>
-                    <span>+${sale.totalPrice.toFixed(2)}</span>
+                    <span>+{storeSettings?.currencySymbol || '$'}{sale.totalPrice.toFixed(2)}</span>
                     <span style={styles.feedTime}>{sale.time}</span>
                   </div>
                 </div>

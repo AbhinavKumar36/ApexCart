@@ -21,6 +21,17 @@ export default function App() {
   // Database states
   const [products, setProducts] = useState([]);
   const [sales, setSales] = useState([]);
+  const [storeSettings, setStoreSettings] = useState(() => {
+    const saved = localStorage.getItem('apexcart_settings');
+    return saved ? JSON.parse(saved) : {
+      storeName: "ApexCart Supermarket",
+      storeAddress: "123 Galleria Mall, Cyber City",
+      storePhone: "+1 (555) 019-2834",
+      currencySymbol: "$",
+      lowStockThreshold: 10,
+      expiryWarningDays: 30
+    };
+  });
   
   // Connection & loading states
   const [isLoading, setIsLoading] = useState(true);
@@ -39,6 +50,7 @@ export default function App() {
   useEffect(() => {
     let unsubProducts = () => {};
     let unsubSales = () => {};
+    let unsubSettings = () => {};
     let connectionTimeout;
 
     const unsubAuth = onAuthStateChanged(auth, async (user) => {
@@ -108,6 +120,27 @@ export default function App() {
           setIsLoading(false);
         });
 
+        // 4. Sync Settings Document via Firestore Snapshot
+        unsubSettings = onSnapshot(doc(db, 'settings', 'general'), (docSnap) => {
+          if (docSnap.exists()) {
+            const settingsData = docSnap.data();
+            setStoreSettings(settingsData);
+            localStorage.setItem('apexcart_settings', JSON.stringify(settingsData));
+          } else {
+            const defaultSettings = {
+              storeName: "ApexCart Supermarket",
+              storeAddress: "123 Galleria Mall, Cyber City",
+              storePhone: "+1 (555) 019-2834",
+              currencySymbol: "$",
+              lowStockThreshold: 10,
+              expiryWarningDays: 30
+            };
+            setDoc(doc(db, 'settings', 'general'), defaultSettings);
+          }
+        }, (error) => {
+          console.error("Settings Firestore sync error:", error);
+        });
+
       } else {
         // Logged out
         setIsAuthenticated(false);
@@ -128,6 +161,16 @@ export default function App() {
       const savedSales = localStorage.getItem('apexcart_sales');
       setSales(savedSales ? JSON.parse(savedSales) : []);
 
+      const savedSettings = localStorage.getItem('apexcart_settings');
+      setStoreSettings(savedSettings ? JSON.parse(savedSettings) : {
+        storeName: "ApexCart Supermarket",
+        storeAddress: "123 Galleria Mall, Cyber City",
+        storePhone: "+1 (555) 019-2834",
+        currencySymbol: "$",
+        lowStockThreshold: 10,
+        expiryWarningDays: 30
+      });
+
       setIsLoading(false);
     }, 4000);
 
@@ -136,6 +179,7 @@ export default function App() {
       unsubAuth();
       unsubProducts();
       unsubSales();
+      unsubSettings();
     };
   }, []);
 
@@ -220,9 +264,15 @@ export default function App() {
     });
   };
 
-  const handleSetCredentials = () => {
-    // Firebase Auth manages credentials, so we don't save credentials in Firestore collection for security.
-    alert('Administrator account details managed via Firebase Auth console.');
+  const handleSetStoreSettings = (nextSettings) => {
+    setStoreSettings(nextSettings);
+    localStorage.setItem('apexcart_settings', JSON.stringify(nextSettings));
+    
+    if (!isOfflineMode) {
+      setDoc(doc(db, 'settings', 'general'), nextSettings).catch(err => 
+        console.error("Settings Firestore sync error:", err)
+      );
+    }
   };
 
   // Handle logout
@@ -314,6 +364,7 @@ export default function App() {
             setProducts={handleSetProducts} 
             setActiveTab={setActiveTab} 
             role={role}
+            storeSettings={storeSettings}
           />
         );
       case 'pos':
@@ -324,6 +375,7 @@ export default function App() {
             sales={sales} 
             setSales={handleSetSales} 
             categories={CATEGORIES} 
+            storeSettings={storeSettings}
           />
         );
       case 'inventory':
@@ -336,6 +388,7 @@ export default function App() {
             products={products} 
             setProducts={handleSetProducts} 
             categories={CATEGORIES} 
+            storeSettings={storeSettings}
           />
         );
       case 'history':
@@ -354,8 +407,8 @@ export default function App() {
         }
         return (
           <Settings 
-            credentials={{ username: currentUser, password: 'Managed via Firebase Auth Console' }} 
-            setCredentials={handleSetCredentials} 
+            storeSettings={storeSettings} 
+            setStoreSettings={handleSetStoreSettings} 
             theme={theme} 
             toggleTheme={toggleTheme} 
             onResetData={handleResetData} 

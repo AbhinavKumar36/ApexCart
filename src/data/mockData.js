@@ -16,7 +16,9 @@ export const INITIAL_PRODUCTS = [
     costPrice: 2.10,
     gst: 5.0, // 5% GST
     discount: 0.0,
-    minStock: 15
+    minStock: 15,
+    mfgDate: '2026-05-27',
+    expiryDate: '2026-06-03' // Expired!
   },
   {
     id: 'P1002',
@@ -27,7 +29,9 @@ export const INITIAL_PRODUCTS = [
     costPrice: 9.50,
     gst: 5.0,
     discount: 5.0, // 5% discount
-    minStock: 8
+    minStock: 8,
+    mfgDate: '2026-02-15',
+    expiryDate: '2027-02-15' // Safe
   },
   {
     id: 'P1003',
@@ -38,7 +42,9 @@ export const INITIAL_PRODUCTS = [
     costPrice: 13.00,
     gst: 5.0,
     discount: 10.0,
-    minStock: 5
+    minStock: 5,
+    mfgDate: '2025-12-20',
+    expiryDate: '2026-12-20' // Safe
   },
   {
     id: 'P1004',
@@ -49,7 +55,9 @@ export const INITIAL_PRODUCTS = [
     costPrice: 4.20,
     gst: 5.0,
     discount: 0.0,
-    minStock: 10
+    minStock: 10,
+    mfgDate: '2025-06-15',
+    expiryDate: '2026-06-15' // Expiring soon
   },
 
   // Dairy & Eggs
@@ -62,7 +70,9 @@ export const INITIAL_PRODUCTS = [
     costPrice: 3.10,
     gst: 5.0,
     discount: 0.0,
-    minStock: 10
+    minStock: 10,
+    mfgDate: '2026-05-30',
+    expiryDate: '2026-06-09' // Expiring soon
   },
   {
     id: 'P1006',
@@ -73,7 +83,9 @@ export const INITIAL_PRODUCTS = [
     costPrice: 3.50,
     gst: 5.0,
     discount: 0.0,
-    minStock: 8
+    minStock: 8,
+    mfgDate: '2026-05-01',
+    expiryDate: '2026-06-01' // Expired!
   },
   {
     id: 'P1007',
@@ -84,7 +96,9 @@ export const INITIAL_PRODUCTS = [
     costPrice: 2.20,
     gst: 5.0,
     discount: 0.0,
-    minStock: 12
+    minStock: 12,
+    mfgDate: '2026-05-25',
+    expiryDate: '2026-06-25' // Expiring soon
   },
 
   // Beverages
@@ -97,7 +111,9 @@ export const INITIAL_PRODUCTS = [
     costPrice: 4.80,
     gst: 18.0, // 18% GST for soft drinks
     discount: 8.0,
-    minStock: 8
+    minStock: 8,
+    mfgDate: '2026-04-01',
+    expiryDate: '2027-04-01' // Safe
   },
   {
     id: 'P1009',
@@ -108,7 +124,9 @@ export const INITIAL_PRODUCTS = [
     costPrice: 3.40,
     gst: 12.0,
     discount: 0.0,
-    minStock: 6
+    minStock: 6,
+    mfgDate: '2026-04-20',
+    expiryDate: '2026-05-20' // Expired!
   },
   {
     id: 'P1010',
@@ -119,7 +137,9 @@ export const INITIAL_PRODUCTS = [
     costPrice: 8.00,
     gst: 12.0,
     discount: 15.0,
-    minStock: 5
+    minStock: 5,
+    mfgDate: '2026-03-18',
+    expiryDate: '2026-06-18' // Expiring soon
   },
 
   // Electronics
@@ -132,7 +152,9 @@ export const INITIAL_PRODUCTS = [
     costPrice: 28.00,
     gst: 18.0,
     discount: 10.0,
-    minStock: 5
+    minStock: 5,
+    mfgDate: '',
+    expiryDate: ''
   },
   {
     id: 'P1012',
@@ -143,7 +165,9 @@ export const INITIAL_PRODUCTS = [
     costPrice: 16.50,
     gst: 18.0,
     discount: 5.0,
-    minStock: 5
+    minStock: 5,
+    mfgDate: '',
+    expiryDate: ''
   },
 
   // Apparel & Home
@@ -156,7 +180,9 @@ export const INITIAL_PRODUCTS = [
     costPrice: 8.00,
     gst: 12.0,
     discount: 20.0,
-    minStock: 10
+    minStock: 10,
+    mfgDate: '',
+    expiryDate: ''
   },
   {
     id: 'P1014',
@@ -167,7 +193,9 @@ export const INITIAL_PRODUCTS = [
     costPrice: 9.00,
     gst: 12.0,
     discount: 0.0,
-    minStock: 5
+    minStock: 5,
+    mfgDate: '',
+    expiryDate: ''
   },
   {
     id: 'P1015',
@@ -178,7 +206,9 @@ export const INITIAL_PRODUCTS = [
     costPrice: 4.50,
     gst: 12.0,
     discount: 0.0,
-    minStock: 15
+    minStock: 15,
+    mfgDate: '',
+    expiryDate: ''
   }
 ];
 
