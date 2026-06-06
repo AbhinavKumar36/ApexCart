@@ -1,0 +1,806 @@
+import React, { useState } from 'react';
+import { 
+  Plus, 
+  Search, 
+  Filter, 
+  Edit, 
+  Trash2, 
+  X, 
+  AlertTriangle,
+  PackageOpen
+} from 'lucide-react';
+
+export default function Inventory({ products, setProducts, categories }) {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [stockFilter, setStockFilter] = useState('All'); // All, In Stock, Low Stock, Out of Stock
+  
+  // Modal state
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+
+  // Form inputs state
+  const [formData, setFormData] = useState({
+    id: '',
+    name: '',
+    category: '',
+    quantity: 0,
+    price: 0.0,
+    costPrice: 0.0,
+    gst: 5.0,
+    discount: 0.0,
+    minStock: 5
+  });
+
+  // Open modal for add or edit
+  const openModal = (product = null) => {
+    if (product) {
+      setEditingProduct(product);
+      setFormData({ ...product });
+    } else {
+      setEditingProduct(null);
+      // Generate a new temporary SKU
+      const maxId = products
+        .map(p => parseInt(p.id.replace('P', ''), 10))
+        .reduce((max, current) => current > max ? current : max, 1000);
+      setFormData({
+        id: `P${maxId + 1}`,
+        name: '',
+        category: categories[0] || 'Grocery',
+        quantity: 10,
+        price: 4.99,
+        costPrice: 3.00,
+        gst: 5.0,
+        discount: 0.0,
+        minStock: 5
+      });
+    }
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setEditingProduct(null);
+  };
+
+  // Handle CRUD submissions
+  const handleFormSubmit = (e) => {
+    e.preventDefault();
+    if (!formData.name.trim()) return;
+
+    if (editingProduct) {
+      // Edit
+      setProducts(prev => 
+        prev.map(p => p.id === editingProduct.id ? formData : p)
+      );
+    } else {
+      // Add
+      setProducts(prev => [...prev, formData]);
+    }
+    closeModal();
+  };
+
+  // Confirm delete
+  const handleDeleteConfirm = () => {
+    if (deleteTarget) {
+      setProducts(prev => prev.filter(p => p.id !== deleteTarget.id));
+      setDeleteTarget(null);
+    }
+  };
+
+  // Filter products
+  const filteredProducts = products.filter(product => {
+    const matchesSearch = 
+      product.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      product.id.toLowerCase().includes(searchTerm.toLowerCase());
+      
+    const matchesCategory = 
+      selectedCategory === 'All' || product.category === selectedCategory;
+      
+    let matchesStock = true;
+    if (stockFilter === 'In Stock') {
+      matchesStock = product.quantity > product.minStock;
+    } else if (stockFilter === 'Low Stock') {
+      matchesStock = product.quantity > 0 && product.quantity <= product.minStock;
+    } else if (stockFilter === 'Out of Stock') {
+      matchesStock = product.quantity === 0;
+    }
+
+    return matchesSearch && matchesCategory && matchesStock;
+  });
+
+  return (
+    <div style={styles.container} className="animate-fade">
+      <div style={styles.headerRow}>
+        <div>
+          <h1 style={styles.pageTitle}>Inventory Catalog</h1>
+          <p style={styles.pageSubtitle}>Manage items, stocks levels, and store retail values.</p>
+        </div>
+        <button onClick={() => openModal()} style={styles.addBtn} className="btn btn-primary">
+          <Plus size={18} />
+          <span>Add New Product</span>
+        </button>
+      </div>
+
+      {/* Filter Toolbar */}
+      <div style={styles.filterRow} className="glass">
+        {/* Search */}
+        <div style={styles.searchWrapper}>
+          <Search size={18} style={styles.searchIcon} />
+          <input
+            type="text"
+            placeholder="Search by SKU or Product Name..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={styles.searchInput}
+            className="input-field"
+          />
+        </div>
+
+        {/* Category Filter */}
+        <div style={styles.filterGroup}>
+          <Filter size={16} color="var(--color-text-muted)" />
+          <select 
+            value={selectedCategory} 
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            style={styles.select}
+            className="select-field"
+          >
+            <option value="All">All Categories</option>
+            {categories.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+        </div>
+
+        {/* Stock Level Filter */}
+        <div style={styles.filterGroup}>
+          <select 
+            value={stockFilter} 
+            onChange={(e) => setStockFilter(e.target.value)}
+            style={styles.select}
+            className="select-field"
+          >
+            <option value="All">All Stock Levels</option>
+            <option value="In Stock">In Stock</option>
+            <option value="Low Stock">Low Stock</option>
+            <option value="Out of Stock">Out of Stock</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Catalog Table */}
+      <div style={styles.tableCard} className="card">
+        {filteredProducts.length === 0 ? (
+          <div style={styles.emptyCatalog}>
+            <PackageOpen size={48} color="var(--color-text-muted)" />
+            <p style={styles.emptyText}>No products match the selected criteria.</p>
+          </div>
+        ) : (
+          <div style={styles.tableWrapper}>
+            <table style={styles.table}>
+              <thead>
+                <tr style={styles.tableHeaderRow}>
+                  <th style={styles.th}>SKU</th>
+                  <th style={styles.th}>Product Details</th>
+                  <th style={styles.th}>Category</th>
+                  <th style={styles.th}>Stock Status</th>
+                  <th style={styles.th}>Cost Price</th>
+                  <th style={styles.th}>Selling Price</th>
+                  <th style={styles.th}>GST/Discount</th>
+                  <th style={styles.th}>Profit Margin</th>
+                  <th style={styles.thActions}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredProducts.map((p) => {
+                  const isLow = p.quantity <= p.minStock && p.quantity > 0;
+                  const isOut = p.quantity === 0;
+                  const margin = p.price - p.costPrice;
+                  const marginPercent = p.costPrice > 0 ? Math.round((margin / p.costPrice) * 100) : 0;
+                  
+                  return (
+                    <tr key={p.id} style={styles.tr}>
+                      <td style={styles.tdSku}>{p.id}</td>
+                      <td style={styles.tdDetails}>
+                        <span style={styles.prodName}>{p.name}</span>
+                      </td>
+                      <td style={styles.tdCategory}>{p.category}</td>
+                      <td style={styles.tdStock}>
+                        <div style={styles.stockStatus}>
+                          <span style={styles.stockNumber}>{p.quantity} units</span>
+                          {isOut ? (
+                            <span className="badge badge-danger">Out of Stock</span>
+                          ) : isLow ? (
+                            <span className="badge badge-warning">Low Stock</span>
+                          ) : (
+                            <span className="badge badge-success">In Stock</span>
+                          )}
+                        </div>
+                      </td>
+                      <td style={styles.tdPrice}>${p.costPrice.toFixed(2)}</td>
+                      <td style={styles.tdPrice}>${p.price.toFixed(2)}</td>
+                      <td style={styles.tdTax}>
+                        <div style={styles.taxCapsules}>
+                          <span style={styles.taxBadge}>GST: {p.gst}%</span>
+                          {p.discount > 0 && <span style={styles.discBadge}>Disc: {p.discount}%</span>}
+                        </div>
+                      </td>
+                      <td style={styles.tdMargin}>
+                        <span style={{ 
+                          ...styles.marginVal, 
+                          color: marginPercent > 40 ? 'var(--color-success)' : marginPercent > 15 ? 'var(--color-primary)' : 'var(--color-text-secondary)'
+                        }}>
+                          +${margin.toFixed(2)} ({marginPercent}%)
+                        </span>
+                      </td>
+                      <td style={styles.tdActions}>
+                        <div style={styles.actionButtons}>
+                          <button 
+                            onClick={() => openModal(p)} 
+                            style={styles.editBtn} 
+                            title="Edit details"
+                          >
+                            <Edit size={16} />
+                          </button>
+                          <button 
+                            onClick={() => setDeleteTarget(p)} 
+                            style={styles.deleteBtn} 
+                            title="Delete product"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Add/Edit Modal */}
+      {isModalOpen && (
+        <div style={styles.modalOverlay}>
+          <div style={styles.modalCard} className="glass animate-slide">
+            <div style={styles.modalHeader}>
+              <h2 style={styles.modalTitle}>{editingProduct ? 'Update Inventory Item' : 'New Catalog Item'}</h2>
+              <button onClick={closeModal} style={styles.modalClose}>
+                <X size={20} />
+              </button>
+            </div>
+            
+            <form onSubmit={handleFormSubmit} style={styles.form}>
+              <div style={styles.formGrid}>
+                {/* SKU */}
+                <div style={styles.formGroup}>
+                  <label style={styles.formLabel}>Product SKU</label>
+                  <input
+                    type="text"
+                    value={formData.id}
+                    disabled
+                    style={styles.disabledInput}
+                    className="input-field"
+                  />
+                </div>
+
+                {/* Name */}
+                <div style={styles.formGroupFull}>
+                  <label style={styles.formLabel}>Product Name</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Enter name (e.g. Organic Strawberries)"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    style={styles.formInput}
+                    className="input-field"
+                    autoFocus
+                  />
+                </div>
+
+                {/* Category */}
+                <div style={styles.formGroup}>
+                  <label style={styles.formLabel}>Category</label>
+                  <select
+                    value={formData.category}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                    style={styles.formSelect}
+                    className="select-field"
+                  >
+                    {categories.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
+
+                {/* Initial Quantity */}
+                <div style={styles.formGroup}>
+                  <label style={styles.formLabel}>Stock Quantity</label>
+                  <input
+                    type="number"
+                    min="0"
+                    required
+                    value={formData.quantity}
+                    onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value, 10) || 0 })}
+                    style={styles.formInput}
+                    className="input-field"
+                  />
+                </div>
+
+                {/* Cost Price */}
+                <div style={styles.formGroup}>
+                  <label style={styles.formLabel}>Cost Price ($)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    required
+                    value={formData.costPrice}
+                    onChange={(e) => setFormData({ ...formData, costPrice: parseFloat(e.target.value) || 0 })}
+                    style={styles.formInput}
+                    className="input-field"
+                  />
+                </div>
+
+                {/* Selling Price */}
+                <div style={styles.formGroup}>
+                  <label style={styles.formLabel}>Selling Price ($)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    required
+                    value={formData.price}
+                    onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
+                    style={styles.formInput}
+                    className="input-field"
+                  />
+                </div>
+
+                {/* GST Rate */}
+                <div style={styles.formGroup}>
+                  <label style={styles.formLabel}>Tax (GST %)</label>
+                  <select
+                    value={formData.gst}
+                    onChange={(e) => setFormData({ ...formData, gst: parseFloat(e.target.value) })}
+                    style={styles.formSelect}
+                    className="select-field"
+                  >
+                    <option value={0}>0% Tax (Exempt)</option>
+                    <option value={5}>5% Tax (Grocery/Essentials)</option>
+                    <option value={12}>12% Tax (Standard Foods)</option>
+                    <option value={18}>18% Tax (Soft drinks/Electronics)</option>
+                  </select>
+                </div>
+
+                {/* Discount Rate */}
+                <div style={styles.formGroup}>
+                  <label style={styles.formLabel}>Default Discount (%)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.5"
+                    value={formData.discount}
+                    onChange={(e) => setFormData({ ...formData, discount: parseFloat(e.target.value) || 0 })}
+                    style={styles.formInput}
+                    className="input-field"
+                  />
+                </div>
+
+                {/* Min Stock Limit */}
+                <div style={styles.formGroup}>
+                  <label style={styles.formLabel}>Low Stock Alert Limit</label>
+                  <input
+                    type="number"
+                    min="1"
+                    required
+                    value={formData.minStock}
+                    onChange={(e) => setFormData({ ...formData, minStock: parseInt(e.target.value, 10) || 1 })}
+                    style={styles.formInput}
+                    className="input-field"
+                  />
+                </div>
+              </div>
+
+              <div style={styles.modalFooter}>
+                <button type="button" onClick={closeModal} style={styles.modalCancelBtn} className="btn btn-secondary">
+                  Cancel
+                </button>
+                <button type="submit" style={styles.modalSaveBtn} className="btn btn-primary">
+                  {editingProduct ? 'Save Changes' : 'Add Item'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Alert Overlay */}
+      {deleteTarget && (
+        <div style={styles.modalOverlay}>
+          <div style={styles.alertCard} className="glass glow animate-slide">
+            <div style={styles.alertHeader}>
+              <AlertTriangle size={36} color="var(--color-danger)" />
+              <h2 style={styles.alertTitle}>Remove Catalog Item?</h2>
+            </div>
+            <p style={styles.alertText}>
+              Are you sure you want to delete <strong>{deleteTarget.name}</strong> ({deleteTarget.id})? This action cannot be undone and will delete all references from stock systems.
+            </p>
+            <div style={styles.alertFooter}>
+              <button onClick={() => setDeleteTarget(null)} style={styles.modalCancelBtn} className="btn btn-secondary">
+                No, Keep Product
+              </button>
+              <button onClick={handleDeleteConfirm} style={styles.deleteConfirmBtn} className="btn btn-danger">
+                Yes, Delete SKU
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+const styles = {
+  container: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '2rem',
+  },
+  headerRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: '1rem',
+  },
+  pageTitle: {
+    fontSize: '2rem',
+    fontFamily: 'var(--font-heading)',
+    fontWeight: '800',
+    letterSpacing: '-0.5px',
+    lineHeight: '1.2',
+  },
+  pageSubtitle: {
+    color: 'var(--color-text-secondary)',
+    fontSize: '0.9375rem',
+  },
+  addBtn: {
+    padding: '0.65rem 1.25rem',
+  },
+  filterRow: {
+    display: 'flex',
+    gap: '1rem',
+    padding: '1.25rem',
+    borderRadius: 'var(--radius-lg)',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+  },
+  searchWrapper: {
+    position: 'relative',
+    display: 'flex',
+    alignItems: 'center',
+    flex: 1,
+    minWidth: '260px',
+  },
+  searchIcon: {
+    position: 'absolute',
+    left: '1rem',
+    color: 'var(--color-text-muted)',
+    pointerEvents: 'none',
+  },
+  searchInput: {
+    paddingLeft: '2.75rem',
+  },
+  filterGroup: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    minWidth: '160px',
+  },
+  select: {
+    padding: '0.5rem 1rem',
+    height: '42px',
+  },
+  tableCard: {
+    padding: 0,
+    overflow: 'hidden',
+  },
+  tableWrapper: {
+    overflowX: 'auto',
+    width: '100%',
+  },
+  table: {
+    width: '100%',
+    borderCollapse: 'collapse',
+    textAlign: 'left',
+  },
+  tableHeaderRow: {
+    backgroundColor: 'var(--color-bg-base)',
+    borderBottom: '1px solid var(--color-border)',
+  },
+  th: {
+    padding: '1rem 1.25rem',
+    fontSize: '0.75rem',
+    fontWeight: '800',
+    color: 'var(--color-text-secondary)',
+    textTransform: 'uppercase',
+    letterSpacing: '0.5px',
+  },
+  thActions: {
+    padding: '1rem 1.25rem',
+    fontSize: '0.75rem',
+    fontWeight: '800',
+    color: 'var(--color-text-secondary)',
+    textTransform: 'uppercase',
+    letterSpacing: '0.5px',
+    textAlign: 'right',
+  },
+  tr: {
+    borderBottom: '1px solid var(--color-border)',
+    transition: 'background-color 0.15s ease',
+  },
+  tdSku: {
+    padding: '1rem 1.25rem',
+    fontFamily: 'monospace',
+    fontWeight: '700',
+    fontSize: '0.875rem',
+    color: 'var(--color-text-secondary)',
+  },
+  tdDetails: {
+    padding: '1rem 1.25rem',
+  },
+  prodName: {
+    fontSize: '0.9375rem',
+    fontWeight: '700',
+    color: 'var(--color-text-primary)',
+  },
+  tdCategory: {
+    padding: '1rem 1.25rem',
+    fontSize: '0.875rem',
+    fontWeight: '600',
+    color: 'var(--color-text-secondary)',
+  },
+  tdStock: {
+    padding: '1rem 1.25rem',
+  },
+  stockStatus: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.25rem',
+  },
+  stockNumber: {
+    fontSize: '0.875rem',
+    fontWeight: '700',
+  },
+  tdPrice: {
+    padding: '1rem 1.25rem',
+    fontWeight: '700',
+    fontSize: '0.875rem',
+  },
+  tdTax: {
+    padding: '1rem 1.25rem',
+  },
+  taxCapsules: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.25rem',
+  },
+  taxBadge: {
+    display: 'inline-flex',
+    fontSize: '0.6875rem',
+    fontWeight: '700',
+    color: 'var(--color-text-secondary)',
+    backgroundColor: 'var(--color-bg-base)',
+    padding: '0.15rem 0.4rem',
+    borderRadius: '4px',
+    border: '1px solid var(--color-border)',
+    width: 'fit-content',
+  },
+  discBadge: {
+    display: 'inline-flex',
+    fontSize: '0.6875rem',
+    fontWeight: '700',
+    color: 'var(--color-danger)',
+    backgroundColor: 'var(--color-danger-light)',
+    padding: '0.15rem 0.4rem',
+    borderRadius: '4px',
+    border: '1px solid rgba(239, 68, 68, 0.1)',
+    width: 'fit-content',
+  },
+  tdMargin: {
+    padding: '1rem 1.25rem',
+  },
+  marginVal: {
+    fontSize: '0.8125rem',
+    fontWeight: '700',
+  },
+  tdActions: {
+    padding: '1rem 1.25rem',
+    textAlign: 'right',
+  },
+  actionButtons: {
+    display: 'inline-flex',
+    gap: '0.5rem',
+  },
+  editBtn: {
+    background: 'none',
+    border: 'none',
+    color: 'var(--color-primary)',
+    cursor: 'pointer',
+    padding: '0.4rem',
+    borderRadius: '6px',
+    backgroundColor: 'var(--color-primary-light)',
+    display: 'flex',
+    alignItems: 'center',
+    transition: 'all 0.15s ease',
+  },
+  deleteBtn: {
+    background: 'none',
+    border: 'none',
+    color: 'var(--color-danger)',
+    cursor: 'pointer',
+    padding: '0.4rem',
+    borderRadius: '6px',
+    backgroundColor: 'var(--color-danger-light)',
+    display: 'flex',
+    alignItems: 'center',
+    transition: 'all 0.15s ease',
+  },
+  emptyCatalog: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '1rem',
+    padding: '4rem 0',
+    color: 'var(--color-text-muted)',
+  },
+  emptyText: {
+    fontSize: '1rem',
+    fontWeight: '600',
+  },
+  modalOverlay: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 100,
+    backdropFilter: 'blur(5px)',
+    padding: '1.5rem',
+  },
+  modalCard: {
+    width: '100%',
+    maxWidth: '680px',
+    borderRadius: '20px',
+    overflow: 'hidden',
+    boxShadow: 'var(--shadow-lg)',
+  },
+  modalHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '1.5rem 2rem',
+    borderBottom: '1px solid var(--color-border)',
+  },
+  modalTitle: {
+    fontSize: '1.25rem',
+    fontWeight: '800',
+  },
+  modalClose: {
+    background: 'none',
+    border: 'none',
+    color: 'var(--color-text-muted)',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+  },
+  form: {
+    padding: '2rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1.5rem',
+  },
+  formGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(2, 1fr)',
+    gap: '1.25rem',
+  },
+  formGroup: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.5rem',
+  },
+  formGroupFull: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.5rem',
+    gridColumn: 'span 2',
+  },
+  formLabel: {
+    fontSize: '0.75rem',
+    fontWeight: '700',
+    color: 'var(--color-text-secondary)',
+    textTransform: 'uppercase',
+    letterSpacing: '0.5px',
+  },
+  formInput: {
+    width: '100%',
+  },
+  disabledInput: {
+    width: '100%',
+    cursor: 'not-allowed',
+    opacity: 0.75,
+  },
+  formSelect: {
+    width: '100%',
+    height: '46px',
+  },
+  modalFooter: {
+    display: 'flex',
+    justifyContent: 'flex-end',
+    gap: '1rem',
+    borderTop: '1px solid var(--color-border)',
+    paddingTop: '1.5rem',
+    marginTop: '0.5rem',
+  },
+  modalCancelBtn: {
+    padding: '0.65rem 1.25rem',
+  },
+  modalSaveBtn: {
+    padding: '0.65rem 1.5rem',
+  },
+  alertCard: {
+    width: '100%',
+    maxWidth: '440px',
+    padding: '2rem',
+    borderRadius: '20px',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    textAlign: 'center',
+    gap: '1.25rem',
+    boxShadow: 'var(--shadow-lg)',
+  },
+  alertHeader: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '0.5rem',
+  },
+  alertTitle: {
+    fontSize: '1.25rem',
+    fontWeight: '800',
+  },
+  alertText: {
+    fontSize: '0.875rem',
+    color: 'var(--color-text-secondary)',
+    lineHeight: '1.6',
+  },
+  alertFooter: {
+    display: 'flex',
+    gap: '1rem',
+    width: '100%',
+    justifyContent: 'center',
+    marginTop: '0.5rem',
+  },
+  deleteConfirmBtn: {
+    padding: '0.65rem 1.25rem',
+  }
+};
+
+if (typeof document !== 'undefined') {
+  const style = document.createElement('style');
+  style.innerHTML = `
+    tr:hover {
+      background-color: var(--color-bg-base);
+    }
+  `;
+  document.head.appendChild(style);
+}
