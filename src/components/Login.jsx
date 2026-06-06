@@ -66,7 +66,9 @@ export default function Login({ onLoginSuccess }) {
       if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
         if (
           (email === 'admin@apexcart.com' && password === 'admin123') ||
-          (email === 'staff@apexcart.com' && password === 'staff123')
+          (email === 'staff@apexcart.com' && password === 'staff123') ||
+          (email === 'grocery_staff@apexcart.com' && password === 'staff123') ||
+          (email === 'fresh_staff@apexcart.com' && password === 'staff123')
         ) {
           try {
             console.log("Seeding default account on Firebase Authentication...");
@@ -94,13 +96,15 @@ export default function Login({ onLoginSuccess }) {
         const localUser = email.split('@')[0];
         if (
           (email === 'admin@apexcart.com' && password === 'admin123') ||
-          (email === 'staff@apexcart.com' && password === 'staff123')
+          (email === 'staff@apexcart.com' && password === 'staff123') ||
+          (email === 'grocery_staff@apexcart.com' && password === 'staff123') ||
+          (email === 'fresh_staff@apexcart.com' && password === 'staff123')
         ) {
           setError('');
           setIsAuthenticating(false);
           onLoginSuccess({
             email,
-            uid: localUser === 'admin' ? 'offline-admin-uid' : 'offline-staff-uid',
+            uid: `offline-${localUser}-uid`,
             isOffline: true
           });
           return;
@@ -227,7 +231,9 @@ export default function Login({ onLoginSuccess }) {
             <div style={styles.hintBox}>
               <p style={styles.hintTitle}>Demo Access Accounts:</p>
               <p style={styles.hintValue}>Admin: <strong>admin@apexcart.com</strong> / <strong>admin123</strong></p>
-              <p style={styles.hintValue}>Staff: <strong>staff@apexcart.com</strong> / <strong>staff123</strong></p>
+              <p style={styles.hintValue}>Cashier (All): <strong>staff@apexcart.com</strong> / <strong>staff123</strong></p>
+              <p style={styles.hintValue}>Grocery Stall: <strong>grocery_staff@apexcart.com</strong> / <strong>staff123</strong></p>
+              <p style={styles.hintValue}>Fresh Dairy Stall: <strong>fresh_staff@apexcart.com</strong> / <strong>staff123</strong></p>
             </div>
           </form>
         )}

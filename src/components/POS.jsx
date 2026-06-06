@@ -10,11 +10,13 @@ import {
   Store,
   DollarSign,
   AlertTriangle,
-  Receipt
+  Receipt,
+  CreditCard,
+  QrCode
 } from 'lucide-react';
 import Invoice from './Invoice';
 
-export default function POS({ products, setProducts, sales, setSales, categories, storeSettings }) {
+export default function POS({ products, setProducts, sales, setSales, categories, storeSettings, vendor }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
   
@@ -24,11 +26,15 @@ export default function POS({ products, setProducts, sales, setSales, categories
   // Customer details
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
+
+  // Payment channel details
+  const [paymentMethod, setPaymentMethod] = useState('Cash');
+  const [showUpiModal, setShowUpiModal] = useState(false);
   
   // Invoice state
   const [activeInvoice, setActiveInvoice] = useState(null);
 
-  const today = '2026-06-06';
+  const today = new Date().toISOString().split('T')[0];
 
   // Add to cart
   const addToCart = (product) => {
@@ -127,6 +133,14 @@ export default function POS({ products, setProducts, sales, setSales, categories
     });
     if (stockError) return;
 
+    if (paymentMethod === 'UPI') {
+      setShowUpiModal(true);
+    } else {
+      finalizeCheckout();
+    }
+  };
+
+  const finalizeCheckout = () => {
     // Deduct stock in global state
     setProducts(prevProducts => 
       prevProducts.map(masterProduct => {
@@ -153,6 +167,7 @@ export default function POS({ products, setProducts, sales, setSales, categories
       time: dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
       customerName: customerName.trim() || 'Walk-in Customer',
       customerPhone: customerPhone.trim() || 'N/A',
+      paymentMethod,
       items: cart.map(item => ({
         id: item.product.id,
         name: item.product.name,
@@ -173,8 +188,11 @@ export default function POS({ products, setProducts, sales, setSales, categories
     clearCart();
   };
 
-  // Filter products for POS
+  // Filter products for POS including vendor stall filtering
   const filteredProducts = products.filter(product => {
+    if (vendor !== 'all' && product.vendor !== vendor) {
+      return false;
+    }
     const matchesSearch = 
       product.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
       product.id.toLowerCase().includes(searchTerm.toLowerCase());
@@ -351,6 +369,32 @@ export default function POS({ products, setProducts, sales, setSales, categories
           </div>
         </div>
 
+        {/* Payment Channel Selection */}
+        <div style={styles.paymentSelector}>
+          <span style={styles.paymentLabel}>Payment Channel</span>
+          <div style={styles.paymentButtons}>
+            {['Cash', 'Card', 'UPI'].map(method => (
+              <button
+                key={method}
+                type="button"
+                onClick={() => setPaymentMethod(method)}
+                style={{
+                  ...styles.paySelectBtn,
+                  backgroundColor: paymentMethod === method ? 'var(--color-primary-light)' : 'transparent',
+                  borderColor: paymentMethod === method ? 'var(--color-primary)' : 'var(--color-border)',
+                  color: paymentMethod === method ? 'var(--color-primary)' : 'var(--color-text-secondary)',
+                  fontWeight: paymentMethod === method ? '800' : '600'
+                }}
+              >
+                {method === 'Cash' && <DollarSign size={14} />}
+                {method === 'Card' && <CreditCard size={14} />}
+                {method === 'UPI' && <QrCode size={14} />}
+                <span>{method}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Cart items list */}
         <div style={styles.cartList}>
           {cart.length === 0 ? (
@@ -457,6 +501,51 @@ export default function POS({ products, setProducts, sales, setSales, categories
           onClose={() => setActiveInvoice(null)} 
           storeSettings={storeSettings}
         />
+      )}
+
+      {/* UPI Scan to Pay QR Modal */}
+      {showUpiModal && (
+        <div style={styles.modalOverlay}>
+          <div style={styles.upiModal} className="card glow animate-slide">
+            <h3 style={styles.upiTitle}>Scan QR Code to Pay</h3>
+            <p style={styles.upiSub}>{storeSettings?.storeName || 'ApexCart Supermarket'}</p>
+            
+            <div style={styles.qrContainer}>
+              <img 
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
+                  `upi://pay?pa=apexcart@upi&pn=ApexCart&am=${grandTotal.toFixed(2)}&cu=INR`
+                )}`} 
+                alt="UPI Payment QR Code" 
+                style={styles.qrImage}
+              />
+            </div>
+            
+            <div style={styles.upiDetails}>
+              <span style={styles.upiAmount}>Amount: {storeSettings?.currencySymbol || '$'}{grandTotal.toFixed(2)}</span>
+              <span style={styles.upiVpa}>Merchant: apexcart@upi</span>
+            </div>
+            
+            <div style={styles.upiButtons}>
+              <button 
+                onClick={() => setShowUpiModal(false)}
+                className="btn btn-secondary"
+                style={styles.upiCancelBtn}
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={() => {
+                  setShowUpiModal(false);
+                  finalizeCheckout();
+                }}
+                className="btn btn-primary"
+                style={styles.upiConfirmBtn}
+              >
+                Confirm Payment
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
@@ -791,6 +880,110 @@ const styles = {
     width: '100%',
     padding: '0.85rem',
     marginTop: '1.25rem',
+  },
+  paymentSelector: {
+    padding: '0.25rem 1rem 1rem 1rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.5rem',
+  },
+  paymentLabel: {
+    fontSize: '0.75rem',
+    fontWeight: '800',
+    color: 'var(--color-text-muted)',
+    textTransform: 'uppercase',
+    letterSpacing: '0.5px',
+  },
+  paymentButtons: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(3, 1fr)',
+    gap: '0.5rem',
+  },
+  paySelectBtn: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '0.35rem',
+    padding: '0.5rem 0.25rem',
+    borderRadius: 'var(--radius-sm)',
+    border: '1px solid var(--color-border)',
+    fontSize: '0.8rem',
+    cursor: 'pointer',
+    transition: 'all 0.15s ease',
+  },
+  modalOverlay: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    width: '100vw',
+    height: '100vh',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 9999,
+  },
+  upiModal: {
+    width: '100%',
+    maxWidth: '360px',
+    padding: '2rem',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    textAlign: 'center',
+  },
+  upiTitle: {
+    fontSize: '1.25rem',
+    fontWeight: '800',
+    color: 'var(--color-text-primary)',
+  },
+  upiSub: {
+    fontSize: '0.8rem',
+    color: 'var(--color-text-muted)',
+    marginTop: '0.15rem',
+  },
+  qrContainer: {
+    background: '#ffffff',
+    padding: '1rem',
+    borderRadius: 'var(--radius-md)',
+    margin: '1.25rem 0',
+    display: 'inline-flex',
+    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)',
+  },
+  qrImage: {
+    width: '180px',
+    height: '180px',
+  },
+  upiDetails: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.2rem',
+    marginBottom: '1.5rem',
+  },
+  upiAmount: {
+    fontSize: '1.15rem',
+    fontWeight: '800',
+    color: 'var(--color-primary)',
+  },
+  upiVpa: {
+    fontSize: '0.75rem',
+    color: 'var(--color-text-muted)',
+    fontFamily: 'monospace',
+  },
+  upiButtons: {
+    display: 'flex',
+    width: '100%',
+    gap: '0.75rem',
+  },
+  upiCancelBtn: {
+    flex: 1,
+    padding: '0.65rem',
+    fontSize: '0.875rem',
+  },
+  upiConfirmBtn: {
+    flex: 1,
+    padding: '0.65rem',
+    fontSize: '0.875rem',
   }
 };
 

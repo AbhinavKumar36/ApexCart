@@ -113,6 +113,11 @@ export default function Invoice({ invoice, onClose, storeSettings }) {
                 <span>GRAND TOTAL</span>
                 <span>{storeSettings?.currencySymbol || '$'}{invoice.totalPrice.toFixed(2)}</span>
               </div>
+              {invoice.paymentMethod && (
+                <div style={{ ...styles.balanceRow, marginTop: '0.35rem', justifyContent: 'center', fontSize: '0.72rem', fontWeight: '800', color: 'var(--color-primary)', border: '1px dashed var(--color-primary-glow)', padding: '0.25rem', textTransform: 'uppercase', borderRadius: '4px' }}>
+                  <span>PAID VIA: {invoice.paymentMethod} • TXN SUCCESS</span>
+                </div>
+              )}
             </div>
 
             <div style={styles.separator} />

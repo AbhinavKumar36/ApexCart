@@ -7,14 +7,20 @@ import {
   Trash2, 
   X, 
   AlertTriangle,
-  PackageOpen
+  PackageOpen,
+  Sparkles
 } from 'lucide-react';
 
-export default function Inventory({ products, setProducts, categories, storeSettings }) {
+export default function Inventory({ products, setProducts, categories, storeSettings, vendor }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [stockFilter, setStockFilter] = useState('All'); // All, In Stock, Low Stock, Out of Stock
   const [expiryFilter, setExpiryFilter] = useState('All'); // All, Expired, Expiring Soon, Safe
+
+  // AI Procurement State
+  const [recommendations, setRecommendations] = useState([]);
+  const [isGeneratingRecs, setIsGeneratingRecs] = useState(false);
+  const [showRecsPanel, setShowRecsPanel] = useState(false);
   
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -73,19 +79,29 @@ export default function Inventory({ products, setProducts, categories, storeSett
     setEditingProduct(null);
   };
 
-  // Handle CRUD submissions
+  // Handle CRUD submissions including category-to-vendor mappings
   const handleFormSubmit = (e) => {
     e.preventDefault();
     if (!formData.name.trim()) return;
 
+    const resolvedVendor = 
+      (formData.category === 'Grocery' || formData.category === 'Beverages') ? 'Apex Grocery' :
+      (formData.category === 'Dairy & Eggs') ? 'Apex Fresh' :
+      (formData.category === 'Electronics') ? 'Apex Electronics' : 'Apex Apparel';
+
+    const finalProduct = {
+      ...formData,
+      vendor: resolvedVendor
+    };
+
     if (editingProduct) {
       // Edit
       setProducts(prev => 
-        prev.map(p => p.id === editingProduct.id ? formData : p)
+        prev.map(p => p.id === editingProduct.id ? finalProduct : p)
       );
     } else {
       // Add
-      setProducts(prev => [...prev, formData]);
+      setProducts(prev => [...prev, finalProduct]);
     }
     closeModal();
   };
@@ -98,7 +114,7 @@ export default function Inventory({ products, setProducts, categories, storeSett
     }
   };
 
-  const today = '2026-06-06';
+  const today = new Date().toISOString().split('T')[0];
 
   // Filter products
   const filteredProducts = products.filter(product => {
@@ -143,6 +159,69 @@ export default function Inventory({ products, setProducts, categories, storeSett
     return matchesSearch && matchesCategory && matchesStock && matchesExpiry;
   });
 
+  // AI Restock Recommendation via Gemini connection
+  const handleGenerateAIProcurement = async () => {
+    setIsGeneratingRecs(true);
+    setShowRecsPanel(true);
+    
+    // Filter products that are low stock or out of stock
+    const lowStockItems = products.filter(p => p.quantity <= (storeSettings?.lowStockThreshold || p.minStock));
+    if (lowStockItems.length === 0) {
+      alert("All products are sufficiently stocked! No AI Restock procurement needed.");
+      setIsGeneratingRecs(false);
+      setShowRecsPanel(false);
+      return;
+    }
+
+    const lowStockData = lowStockItems.map(p => ({
+      id: p.id,
+      name: p.name,
+      category: p.category,
+      qty: p.quantity,
+      minStock: p.minStock,
+      vendor: p.vendor || 'General'
+    }));
+
+    const prompt = `
+Analyze this list of low-stock supermarket products. Recommend standard replenishment restock order quantities (as integer values) to bring them safely back into stock (at least twice their minStock limit).
+Return the results ONLY as a valid JSON array of objects. Do not include markdown code fences (like \`\`\`json) or any explanations, just raw JSON array.
+Each object must have exactly these fields: "id", "name", "qty" (current quantity), and "recommendation" (restock quantity as integer).
+
+Low Stock Products Data:
+${JSON.stringify(lowStockData, null, 2)}
+`;
+
+    try {
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+      if (!apiKey || apiKey.includes('placeholder')) {
+        throw new Error("Missing valid API key.");
+      }
+
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }]
+          })
+        }
+      );
+      
+      const resData = await response.json();
+      const text = resData.candidates[0].content.parts[0].text;
+      const cleanJson = text.replace(/```json/g, '').replace(/```/g, '').trim();
+      const parsed = JSON.parse(cleanJson);
+      setRecommendations(parsed);
+    } catch (err) {
+      console.error("Gemini AI procurement recommendations error:", err);
+      alert("AI restock recommendation failed. Verify VITE_GEMINI_API_KEY is configured correctly in your .env configuration.");
+      setShowRecsPanel(false);
+    } finally {
+      setIsGeneratingRecs(false);
+    }
+  };
+
   return (
     <div style={styles.container} className="animate-fade">
       <div style={styles.headerRow}>
@@ -150,10 +229,16 @@ export default function Inventory({ products, setProducts, categories, storeSett
           <h1 style={styles.pageTitle}>Inventory Catalog</h1>
           <p style={styles.pageSubtitle}>Manage items, stocks levels, and store retail values.</p>
         </div>
-        <button onClick={() => openModal()} style={styles.addBtn} className="btn btn-primary">
-          <Plus size={18} />
-          <span>Add New Product</span>
-        </button>
+        <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <button onClick={handleGenerateAIProcurement} className="btn btn-success" style={{ backgroundColor: 'var(--color-success)', borderColor: 'var(--color-success)' }}>
+            <Sparkles size={16} />
+            <span>AI Restock Draft</span>
+          </button>
+          <button onClick={() => openModal()} style={styles.addBtn} className="btn btn-primary">
+            <Plus size={18} />
+            <span>Add New Product</span>
+          </button>
+        </div>
       </div>
 
       {/* Filter Toolbar */}
@@ -283,7 +368,16 @@ export default function Inventory({ products, setProducts, categories, storeSett
                           )}
                         </div>
                       </td>
-                      <td style={styles.tdCategory}>{p.category}</td>
+                      <td style={styles.tdCategory}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.1rem' }}>
+                          <span>{p.category}</span>
+                          {p.vendor && (
+                            <span style={{ fontSize: '0.65rem', color: 'var(--color-primary)', fontWeight: '700', textTransform: 'uppercase' }}>
+                              {p.vendor}
+                            </span>
+                          )}
+                        </div>
+                      </td>
                       <td style={styles.tdStock}>
                         <div style={styles.stockStatus}>
                           <span style={styles.stockNumber}>{p.quantity} units</span>
@@ -541,6 +635,81 @@ export default function Inventory({ products, setProducts, categories, storeSett
                 Yes, Delete SKU
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* AI Procurement Purchase Draft Modal Overlay */}
+      {showRecsPanel && (
+        <div style={styles.recsOverlay}>
+          <div style={styles.recsCard} className="card glow animate-slide">
+            <div style={styles.recsHeader}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Sparkles size={20} color="var(--color-success)" />
+                <h3 style={styles.recsTitle}>AI Procurement Restock Order</h3>
+              </div>
+              <button onClick={() => setShowRecsPanel(false)} style={styles.closeRecsBtn}>×</button>
+            </div>
+            
+            {isGeneratingRecs ? (
+              <div style={styles.recsLoader}>
+                <div style={{ ...styles.spinner, animation: 'spin 1s linear infinite' }} />
+                <p style={{ fontWeight: '600' }}>Drafting restock guidelines with Gemini AI...</p>
+              </div>
+            ) : (
+              <>
+                <p style={{ fontSize: '0.82rem', color: 'var(--color-text-secondary)', marginBottom: '1rem', textAlign: 'left' }}>
+                  Gemini analyzed low-stock SKUs against safety margins. Review the proposed replenishment plan:
+                </p>
+                <div style={styles.recsList}>
+                  <table style={styles.recsTable}>
+                    <thead>
+                      <tr style={{ borderBottom: '1px solid var(--color-border)', textAlign: 'left' }}>
+                        <th style={{ padding: '0.5rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--color-text-muted)' }}>SKU</th>
+                        <th style={{ padding: '0.5rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--color-text-muted)' }}>PRODUCT</th>
+                        <th style={{ padding: '0.5rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--color-text-muted)', textAlign: 'center' }}>STOCK</th>
+                        <th style={{ padding: '0.5rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--color-text-muted)', textAlign: 'right' }}>RESTOCK VALUE</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {recommendations.map(rec => (
+                        <tr key={rec.id} style={{ borderBottom: '1px dashed var(--color-border)', fontSize: '0.8125rem' }}>
+                          <td style={{ padding: '0.5rem', fontFamily: 'monospace' }}>{rec.id}</td>
+                          <td style={{ padding: '0.5rem', fontWeight: '600' }}>{rec.name}</td>
+                          <td style={{ padding: '0.5rem', textAlign: 'center', fontWeight: '700' }}>{rec.qty}</td>
+                          <td style={{ padding: '0.5rem', textAlign: 'right', color: 'var(--color-success)', fontWeight: '800' }}>+{rec.recommendation} units</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                
+                <div style={styles.recsFooter}>
+                  <button 
+                    onClick={() => {
+                      setProducts(prevProducts => 
+                        prevProducts.map(p => {
+                          const rec = recommendations.find(r => r.id === p.id);
+                          if (rec) {
+                            return {
+                              ...p,
+                              quantity: p.quantity + (parseInt(rec.recommendation, 10) || 0)
+                            };
+                          }
+                          return p;
+                        })
+                      );
+                      setShowRecsPanel(false);
+                      alert("🎉 AI procurement restocks approved! Catalog items successfully replenished.");
+                    }}
+                    className="btn btn-primary"
+                    style={{ width: '100%', marginTop: '0.5rem' }}
+                  >
+                    Execute AI Procurement Order
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
@@ -912,6 +1081,74 @@ const styles = {
   expiryLabel: {
     fontWeight: '700',
     color: 'var(--color-text-secondary)',
+  },
+  recsOverlay: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    width: '100vw',
+    height: '100vh',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 9999,
+  },
+  recsCard: {
+    width: '100%',
+    maxWidth: '540px',
+    padding: '2rem',
+    display: 'flex',
+    flexDirection: 'column',
+    position: 'relative',
+    backgroundColor: 'var(--color-bg-surface)',
+    border: '1px solid var(--color-border)',
+    borderRadius: 'var(--radius-lg)',
+  },
+  recsHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: '1rem',
+  },
+  recsTitle: {
+    fontSize: '1.25rem',
+    fontWeight: '800',
+  },
+  closeRecsBtn: {
+    background: 'none',
+    border: 'none',
+    fontSize: '1.5rem',
+    cursor: 'pointer',
+    color: 'var(--color-text-muted)',
+  },
+  recsLoader: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    padding: '3rem 0',
+    gap: '1rem',
+    color: 'var(--color-text-secondary)',
+  },
+  spinner: {
+    width: '40px',
+    height: '40px',
+    border: '4px solid var(--color-border)',
+    borderTopColor: 'var(--color-primary)',
+    borderRadius: '50%',
+  },
+  recsList: {
+    maxHeight: '320px',
+    overflowY: 'auto',
+    marginBottom: '1.5rem',
+  },
+  recsTable: {
+    width: '100%',
+    borderCollapse: 'collapse',
+    fontSize: '0.875rem',
+  },
+  recsFooter: {
+    marginTop: 'auto',
   }
 };
 

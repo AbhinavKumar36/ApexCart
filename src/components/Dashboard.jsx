@@ -11,18 +11,38 @@ import {
   Inbox
 } from 'lucide-react';
 
-export default function Dashboard({ products, sales, setProducts, setActiveTab, role, storeSettings }) {
-  // Calculations
-  const totalRevenue = sales.reduce((acc, sale) => acc + sale.totalPrice, 0);
-  const totalBills = sales.length;
-  const totalProducts = products.length;
+export default function Dashboard({ products, sales, setProducts, setActiveTab, role, storeSettings, vendor }) {
+  // Filter products and sales based on the assigned vendor stall for isolated metrics
+  const filteredProducts = vendor === 'all' 
+    ? products 
+    : products.filter(p => p.vendor === vendor);
+
+  const filteredSales = vendor === 'all'
+    ? sales
+    : sales.filter(s => s.items.some(item => {
+        const prod = products.find(p => p.id === item.id);
+        return prod && prod.vendor === vendor;
+      }));
+
+  const totalRevenue = vendor === 'all'
+    ? sales.reduce((acc, sale) => acc + sale.totalPrice, 0)
+    : sales.reduce((acc, sale) => {
+        const vendorSum = sale.items.reduce((sum, item) => {
+          const prod = products.find(p => p.id === item.id);
+          return prod && prod.vendor === vendor ? sum + item.lineTotal : sum;
+        }, 0);
+        return acc + vendorSum;
+      }, 0);
+
+  const totalBills = filteredSales.length;
+  const totalProducts = filteredProducts.length;
   
-  const lowStockItems = products.filter(p => p.quantity <= (storeSettings?.lowStockThreshold || p.minStock));
+  const lowStockItems = filteredProducts.filter(p => p.quantity <= (storeSettings?.lowStockThreshold || p.minStock));
   const lowStockCount = lowStockItems.length;
 
-  const today = '2026-06-06';
-  const expiredProducts = products.filter(p => p.expiryDate && p.expiryDate < today);
-  const expiringSoonProducts = products.filter(p => {
+  const today = new Date().toISOString().split('T')[0];
+  const expiredProducts = filteredProducts.filter(p => p.expiryDate && p.expiryDate < today);
+  const expiringSoonProducts = filteredProducts.filter(p => {
     if (!p.expiryDate || p.expiryDate < today) return false;
     const exp = new Date(p.expiryDate);
     const td = new Date(today);
@@ -66,16 +86,28 @@ export default function Dashboard({ products, sales, setProducts, setActiveTab, 
     percentage: Math.round((count / totalProducts) * 100)
   })).sort((a, b) => b.count - a.count);
 
-  // Sparkline sales calculations for last 7 days
-  const dailySales = [
-    { day: 'Mon', amount: 120 },
-    { day: 'Tue', amount: 340 },
-    { day: 'Wed', amount: 210 },
-    { day: 'Thu', amount: 480 },
-    { day: 'Fri', amount: 620 },
-    { day: 'Sat', amount: 890 },
-    { day: 'Sun', amount: totalRevenue > 0 ? Math.round(totalRevenue) : 510 }
-  ];
+  // Real sparkline: calculate last-7-days revenue from actual sales data
+  const dailySales = (() => {
+    const result = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dateStr = d.toISOString().split('T')[0];
+      const dayLabel = d.toLocaleDateString('en-US', { weekday: 'short' });
+      const dayRevenue = sales
+        .filter(s => (s.date || '') === dateStr)
+        .reduce((acc, s) => {
+          if (vendor === 'all') return acc + (s.totalPrice || 0);
+          const vendorSum = (s.items || []).reduce((sum, item) => {
+            const prod = products.find(p => p.id === item.id);
+            return prod && prod.vendor === vendor ? sum + (item.lineTotal || 0) : sum;
+          }, 0);
+          return acc + vendorSum;
+        }, 0);
+      result.push({ day: dayLabel, amount: dayRevenue });
+    }
+    return result;
+  })();
 
   // SVG Chart helper calculations
   const chartHeight = 140;
@@ -278,6 +310,56 @@ export default function Dashboard({ products, sales, setProducts, setActiveTab, 
           </div>
         </div>
 
+        {/* Payment Channels Share Card */}
+        {(() => {
+          const paymentMethodStats = filteredSales.reduce((acc, sale) => {
+            const method = sale.paymentMethod || 'Cash';
+            const revenueVal = vendor === 'all'
+              ? sale.totalPrice
+              : sale.items.reduce((sum, item) => {
+                  const prod = products.find(p => p.id === item.id);
+                  return prod && prod.vendor === vendor ? sum + item.lineTotal : sum;
+                }, 0);
+            acc[method] = (acc[method] || 0) + revenueVal;
+            return acc;
+          }, {});
+
+          const totalPayments = Object.values(paymentMethodStats).reduce((sum, v) => sum + v, 0);
+          const paymentStatsList = ['Cash', 'Card', 'UPI'].map(name => {
+            const amount = paymentMethodStats[name] || 0;
+            const percentage = totalPayments > 0 ? Math.round((amount / totalPayments) * 100) : 0;
+            return { name, amount, percentage };
+          });
+
+          return (
+            <div style={styles.categoriesCard} className="card">
+              <div style={styles.cardHeader}>
+                <h2 style={styles.cardTitle}>Payment Channels</h2>
+                <span style={styles.cardInfo}>Revenue share by billing route</span>
+              </div>
+              <div style={styles.categoriesList}>
+                {paymentStatsList.map((pay, idx) => (
+                  <div key={idx} style={styles.catItem}>
+                    <div style={styles.catHeader}>
+                      <span style={styles.catName}>{pay.name}</span>
+                      <span style={styles.catStat}>{storeSettings?.currencySymbol || '$'}{pay.amount.toFixed(2)} ({pay.percentage}%)</span>
+                    </div>
+                    <div style={styles.progressContainer}>
+                      <div 
+                        style={{ 
+                          ...styles.progressBar, 
+                          width: `${pay.percentage}%`,
+                          backgroundColor: pay.name === 'UPI' ? 'var(--color-primary)' : pay.name === 'Card' ? 'var(--color-success)' : 'var(--color-text-muted)'
+                        }} 
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
+
         {/* Low Stock Alerts Replenishment Console */}
         <div style={styles.alertsCard} className="card">
           <div style={styles.cardHeader}>
@@ -419,14 +501,14 @@ export default function Dashboard({ products, sales, setProducts, setActiveTab, 
             <span style={styles.cardInfo}>Latest billing checkout actions</span>
           </div>
           
-          {sales.length === 0 ? (
+          {filteredSales.length === 0 ? (
             <div style={styles.emptyAlerts}>
               <Receipt size={40} color="var(--color-text-muted)" />
               <p style={styles.emptyAlertsText}>No orders recorded today yet.</p>
             </div>
           ) : (
             <div style={styles.feedList}>
-              {sales.slice(-4).reverse().map((sale) => (
+              {filteredSales.slice(-4).reverse().map((sale) => (
                 <div key={sale.id} style={styles.feedItem}>
                   <div style={styles.feedIcon}>
                     <ArrowUpRight size={16} color="var(--color-success)" />

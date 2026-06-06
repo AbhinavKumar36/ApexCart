@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageSquare, X, Send, Bot, Sparkles, AlertCircle, ShoppingBag, TrendingUp } from 'lucide-react';
 
-export default function Chatbot({ products, sales, role, username }) {
+export default function Chatbot({ products, sales, role, username, vendor }) {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
     {
@@ -30,6 +30,8 @@ export default function Chatbot({ products, sales, role, username }) {
     setInputValue('');
     setIsTyping(true);
 
+    const CATEGORIES_LIST = ['Grocery', 'Dairy & Eggs', 'Beverages', 'Electronics', 'Apparel', 'Home & Kitchen'];
+
     // Prepare live store context for Gemini
     const catalogContext = products.map(p => ({
       SKU: p.id,
@@ -40,7 +42,8 @@ export default function Chatbot({ products, sales, role, username }) {
       Cost: p.costPrice,
       GST: p.gst,
       Discount: p.discount,
-      MinStockLimit: p.minStock
+      MinStockLimit: p.minStock,
+      Vendor: p.vendor || 'General'
     }));
 
     const salesContext = sales.map(s => ({
@@ -57,6 +60,7 @@ export default function Chatbot({ products, sales, role, username }) {
 === SYSTEM STORE CONTEXT ===
 Active User Role: ${role}
 Active User Email: ${username}
+Active User Vendor Stall: ${vendor}
 Supermarket Categories: ${JSON.stringify(CATEGORIES_LIST)}
 
 Current Inventory Catalog (Products JSON):
@@ -73,6 +77,7 @@ You are ApexCart AI, the built-in mall and superstore database assistant.
 Analyze the SYSTEM STORE CONTEXT above to answer the User Query.
 - Calculate profit margins, identify low stock, or list items using the exact data.
 - Keep answers professional, friendly, and structured.
+- SECURITY RULE: If Active User Vendor Stall is not "all", the user is restricted to a single stall (e.g. "Apex Grocery"). Answer queries ONLY with respect to items or sales belonging to that vendor stall. Refuse to display or summarize stocks, items, or revenues from other vendors.
 - If the user asks for actions they don't have access to (e.g. staff asking to change passwords or do restocks), guide them politely.
 - Format responses beautifully in markdown (using bold tags, bullet points, numbered lists, or markdown tables for tabular data).
 `;

@@ -11,12 +11,14 @@ import POS from './components/POS';
 import History from './components/History';
 import Settings from './components/Settings';
 import Chatbot from './components/Chatbot';
+import Reports from './components/Reports';
 
 export default function App() {
   // Authentication states
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUser, setCurrentUser] = useState('');
   const [role, setRole] = useState('staff'); // default role: staff
+  const [vendor, setVendor] = useState('all'); // default vendor stall: all
   
   // Database states
   const [products, setProducts] = useState([]);
@@ -37,16 +39,74 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [isOfflineMode, setIsOfflineMode] = useState(false);
 
-  // Theme states (local to client device)
-  const [theme, setTheme] = useState(() => {
-    const saved = localStorage.getItem('apexcart_theme');
-    return saved || 'dark';
+  // Offline Sync Queue State
+  const [offlineSyncQueue, setOfflineSyncQueue] = useState(() => {
+    const saved = localStorage.getItem('apexcart_sync_queue');
+    return saved ? JSON.parse(saved) : [];
   });
 
-  // Active navigation tab
+  // Theme states (local to client device)
+  const [theme, setTheme] = useState(() => {
+    return localStorage.getItem('apexcart_theme') || 'dark';
+  });
+
+  // Navigation states
   const [activeTab, setActiveTab] = useState('dashboard');
 
-  // Monitor Authentication and Sync Database Collections
+  // Reconnect & Sync offline queue function
+  const processOfflineSyncQueue = async (currentQueue = offlineSyncQueue) => {
+    if (currentQueue.length === 0) return;
+    
+    console.log("ApexCart Sync: Processing offline sync queue. Actions:", currentQueue.length);
+    setIsLoading(true);
+
+    try {
+      for (const action of currentQueue) {
+        if (action.type === 'ADD_SALE') {
+          const { id, ...data } = action.data;
+          await setDoc(doc(db, 'sales', id), data);
+        } else if (action.type === 'SYNC_PRODUCTS') {
+          for (const p of action.data) {
+            const { id, ...data } = p;
+            await setDoc(doc(db, 'products', id), data);
+          }
+        } else if (action.type === 'SYNC_SETTINGS') {
+          await setDoc(doc(db, 'settings', 'general'), action.data);
+        }
+      }
+
+      setOfflineSyncQueue([]);
+      localStorage.removeItem('apexcart_sync_queue');
+      alert(`🎉 Database Restored: Synchronized ${currentQueue.length} offline ledger actions back to Cloud Firestore!`);
+    } catch (err) {
+      console.error("ApexCart Sync: Firestore sync error:", err);
+      alert("Failed syncing some offline records. They will remain in queue until connection completes.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Reconnection and online status listeners
+  useEffect(() => {
+    const handleOnlineStatus = () => {
+      if (navigator.onLine) {
+        setIsOfflineMode(false);
+        // Delay slightly to let connection establish, then process
+        setTimeout(() => {
+          const savedQueue = localStorage.getItem('apexcart_sync_queue');
+          const q = savedQueue ? JSON.parse(savedQueue) : [];
+          if (q.length > 0) {
+            processOfflineSyncQueue(q);
+          }
+        }, 1500);
+      }
+    };
+
+    window.addEventListener('online', handleOnlineStatus);
+    return () => window.removeEventListener('online', handleOnlineStatus);
+  }, [offlineSyncQueue]);
+
+  // Auth observer and collection snapshots initialization
   useEffect(() => {
     let unsubProducts = () => {};
     let unsubSales = () => {};
@@ -63,26 +123,37 @@ export default function App() {
         setIsLoading(true);
         setIsOfflineMode(false);
 
-        // 1. Fetch User Role from Firestore 'users' collection
+        // 1. Fetch User Role & Stall Vendor from Firestore 'users' collection
         try {
           const userDocRef = doc(db, 'users', user.uid);
           const userDoc = await getDoc(userDocRef);
           
           if (userDoc.exists()) {
             setRole(userDoc.data().role || 'staff');
+            setVendor(userDoc.data().vendor || 'all');
           } else {
             // Seeding user document based on email prefix (admin@ vs staff@)
             const assignedRole = user.email.startsWith('admin') ? 'admin' : 'staff';
+            let assignedVendor = 'all';
+            if (user.email.startsWith('grocery_staff')) assignedVendor = 'Apex Grocery';
+            else if (user.email.startsWith('fresh_staff')) assignedVendor = 'Apex Fresh';
+
             await setDoc(userDocRef, {
               email: user.email,
               role: assignedRole,
+              vendor: assignedVendor,
               createdAt: new Date().toISOString()
             });
             setRole(assignedRole);
+            setVendor(assignedVendor);
           }
         } catch (err) {
           console.warn("Failed fetching live user role. Defaulting based on email prefix:", err);
           setRole(user.email.startsWith('admin') ? 'admin' : 'staff');
+          let assignedVendor = 'all';
+          if (user.email.startsWith('grocery_staff')) assignedVendor = 'Apex Grocery';
+          else if (user.email.startsWith('fresh_staff')) assignedVendor = 'Apex Fresh';
+          setVendor(assignedVendor);
         }
 
         // 2. Sync Products Collection via Firestore Snapshot
@@ -146,6 +217,7 @@ export default function App() {
         setIsAuthenticated(false);
         setCurrentUser('');
         setRole('staff');
+        setVendor('all');
         setIsLoading(false);
       }
     });
@@ -170,6 +242,7 @@ export default function App() {
         lowStockThreshold: 10,
         expiryWarningDays: 30
       });
+      setVendor('all');
 
       setIsLoading(false);
     }, 4000);
@@ -189,6 +262,11 @@ export default function App() {
     if (user.isOffline) {
       setCurrentUser(user.email);
       setRole(user.email.startsWith('admin') ? 'admin' : 'staff');
+      let assignedVendor = 'all';
+      if (user.email.startsWith('grocery_staff')) assignedVendor = 'Apex Grocery';
+      else if (user.email.startsWith('fresh_staff')) assignedVendor = 'Apex Fresh';
+      setVendor(assignedVendor);
+      
       setIsAuthenticated(true);
       setIsOfflineMode(true);
 
@@ -236,6 +314,14 @@ export default function App() {
             await deleteDoc(doc(db, 'products', p.id));
           }
         });
+      } else {
+        // Queue sync products
+        setOfflineSyncQueue(prevQueue => {
+          const filtered = prevQueue.filter(item => item.type !== 'SYNC_PRODUCTS');
+          const nextQueue = [...filtered, { type: 'SYNC_PRODUCTS', data: next }];
+          localStorage.setItem('apexcart_sync_queue', JSON.stringify(nextQueue));
+          return nextQueue;
+        });
       }
       return next;
     });
@@ -259,6 +345,13 @@ export default function App() {
             await deleteDoc(doc(db, 'sales', s.id));
           }
         });
+      } else {
+        // Queue add sale
+        setOfflineSyncQueue(prevQueue => {
+          const nextQueue = [...prevQueue, { type: 'ADD_SALE', data: next[next.length - 1] }];
+          localStorage.setItem('apexcart_sync_queue', JSON.stringify(nextQueue));
+          return nextQueue;
+        });
       }
       return next;
     });
@@ -272,6 +365,14 @@ export default function App() {
       setDoc(doc(db, 'settings', 'general'), nextSettings).catch(err => 
         console.error("Settings Firestore sync error:", err)
       );
+    } else {
+      // Queue settings change
+      setOfflineSyncQueue(prevQueue => {
+        const filtered = prevQueue.filter(item => item.type !== 'SYNC_SETTINGS');
+        const nextQueue = [...filtered, { type: 'SYNC_SETTINGS', data: nextSettings }];
+        localStorage.setItem('apexcart_sync_queue', JSON.stringify(nextQueue));
+        return nextQueue;
+      });
     }
   };
 
@@ -281,6 +382,7 @@ export default function App() {
     setIsAuthenticated(false);
     setCurrentUser('');
     setRole('staff');
+    setVendor('all');
     setActiveTab('dashboard');
   };
 
@@ -365,6 +467,7 @@ export default function App() {
             setActiveTab={setActiveTab} 
             role={role}
             storeSettings={storeSettings}
+            vendor={vendor}
           />
         );
       case 'pos':
@@ -376,6 +479,7 @@ export default function App() {
             setSales={handleSetSales} 
             categories={CATEGORIES} 
             storeSettings={storeSettings}
+            vendor={vendor}
           />
         );
       case 'inventory':
@@ -389,6 +493,7 @@ export default function App() {
             setProducts={handleSetProducts} 
             categories={CATEGORIES} 
             storeSettings={storeSettings}
+            vendor={vendor}
           />
         );
       case 'history':
@@ -399,6 +504,16 @@ export default function App() {
             products={products} 
             setProducts={handleSetProducts} 
             role={role}
+            vendor={vendor}
+          />
+        );
+      case 'reports':
+        return (
+          <Reports
+            products={products}
+            sales={sales}
+            storeSettings={storeSettings}
+            vendor={vendor}
           />
         );
       case 'settings':
@@ -459,19 +574,38 @@ export default function App() {
         username={currentUser} 
         onLogout={handleLogout} 
         role={role}
+        vendor={vendor}
       />
       <main className="main-content" style={{ marginTop: '60px' /* offset mobile header height */ }}>
         {/* Sync Status Badge Indicator */}
         <div style={styles.statusRow}>
           {isOfflineMode ? (
-            <div style={styles.offlineBadge}>
-              <span style={styles.offlineDot} />
-              <span>Offline Cache Mode (LocalStorage Active)</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <div style={styles.offlineBadge}>
+                <span style={styles.offlineDot} />
+                <span>Offline Cache Mode (LocalStorage Active)</span>
+              </div>
+              {offlineSyncQueue.length > 0 && (
+                <span style={{ fontSize: '0.8rem', fontWeight: 'bold', color: 'var(--color-warning)' }}>
+                  ({offlineSyncQueue.length} pending updates)
+                </span>
+              )}
             </div>
           ) : (
-            <div style={styles.onlineBadge}>
-              <span style={styles.onlineDot} />
-              <span>Firebase Cloud Firestore Synced</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <div style={styles.onlineBadge}>
+                <span style={styles.onlineDot} />
+                <span>Firebase Cloud Firestore Synced</span>
+              </div>
+              {offlineSyncQueue.length > 0 && (
+                <button 
+                  onClick={() => processOfflineSyncQueue()}
+                  className="btn btn-warning" 
+                  style={{ padding: '0.25rem 0.75rem', fontSize: '0.75rem', borderRadius: 'var(--radius-sm)' }}
+                >
+                  Sync Queue ({offlineSyncQueue.length} items)
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -493,6 +627,7 @@ export default function App() {
         sales={sales} 
         role={role} 
         username={currentUser} 
+        vendor={vendor}
       />
     </div>
   );

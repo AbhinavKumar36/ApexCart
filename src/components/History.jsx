@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import Invoice from './Invoice';
 
-export default function History({ sales, setSales, products, setProducts, role }) {
+export default function History({ sales, setSales, products, setProducts, role, vendor }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDate, setSelectedDate] = useState('');
   
@@ -22,6 +22,15 @@ export default function History({ sales, setSales, products, setProducts, role }
 
   // Filter sales list
   const filteredSales = sales.filter(sale => {
+    // Vendor isolation check: only show sales containing items belonging to this vendor
+    if (vendor !== 'all') {
+      const hasVendorItem = sale.items.some(item => {
+        const prod = products.find(p => p.id === item.id);
+        return prod && prod.vendor === vendor;
+      });
+      if (!hasVendorItem) return false;
+    }
+
     const matchesSearch = 
       sale.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
       sale.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -134,7 +143,26 @@ export default function History({ sales, setSales, products, setProducts, role }
                       <span style={styles.custPhone}>{sale.customerPhone}</span>
                     </td>
                     <td style={styles.tdItems}>{sale.items.reduce((acc, i) => acc + i.quantity, 0)} units ({sale.items.length} unique)</td>
-                    <td style={styles.tdPrice}>${sale.totalPrice.toFixed(2)}</td>
+                    <td style={styles.tdPrice}>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '0.15rem' }}>
+                        <span>${sale.totalPrice.toFixed(2)}</span>
+                        {sale.paymentMethod ? (
+                          <span style={{ 
+                            fontSize: '0.65rem', 
+                            fontWeight: '800', 
+                            padding: '0.15rem 0.45rem', 
+                            borderRadius: '4px',
+                            backgroundColor: sale.paymentMethod === 'UPI' ? 'var(--color-primary-light)' : sale.paymentMethod === 'Card' ? 'var(--color-success-light)' : 'var(--color-border)',
+                            color: sale.paymentMethod === 'UPI' ? 'var(--color-primary)' : sale.paymentMethod === 'Card' ? 'var(--color-success)' : 'var(--color-text-secondary)',
+                            textTransform: 'uppercase'
+                          }}>
+                            {sale.paymentMethod}
+                          </span>
+                        ) : (
+                          <span style={{ fontSize: '0.65rem', fontWeight: '800', padding: '0.15rem 0.45rem', borderRadius: '4px', backgroundColor: 'var(--color-border)', color: 'var(--color-text-muted)' }}>CASH</span>
+                        )}
+                      </div>
+                    </td>
                     <td style={styles.tdActions}>
                       <div style={styles.actionButtons}>
                         <button 

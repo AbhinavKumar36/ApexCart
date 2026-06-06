@@ -10,7 +10,8 @@ import {
   Moon, 
   Menu, 
   X, 
-  Store 
+  Store,
+  BarChart3
 } from 'lucide-react';
 
 export default function Sidebar({ 
@@ -20,7 +21,8 @@ export default function Sidebar({
   toggleTheme, 
   username, 
   onLogout,
-  role
+  role,
+  vendor
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -29,13 +31,15 @@ export default function Sidebar({
     { id: 'pos', label: 'Point of Sale (POS)', icon: ShoppingCart },
     { id: 'inventory', label: 'Inventory Manager', icon: Package },
     { id: 'history', label: 'Billing History', icon: History },
+    { id: 'reports', label: 'Reports & Analytics', icon: BarChart3 },
     { id: 'settings', label: 'Control Settings', icon: SettingsIcon }
   ];
 
   // Filter items based on active role
   const filteredMenuItems = menuItems.filter(item => {
     if (role === 'staff') {
-      return ['dashboard', 'pos', 'history'].includes(item.id);
+      // Staff can only see dashboard, pos, history, reports
+      return ['dashboard', 'pos', 'history', 'reports'].includes(item.id);
     }
     return true; // Admin has full access
   });
@@ -91,6 +95,11 @@ export default function Sidebar({
                 {role === 'admin' ? 'ADMINISTRATOR' : 'STAFF OPERATOR'}
               </span>
               <span style={styles.userName}>{username}</span>
+              {vendor && vendor !== 'all' && (
+                <span style={styles.vendorBadge}>
+                  🏪 {vendor}
+                </span>
+              )}
             </div>
           </div>
 
@@ -289,6 +298,17 @@ const styles = {
     fontWeight: '600',
     color: 'var(--color-text-primary)',
     lineHeight: '1.2',
+  },
+  vendorBadge: {
+    fontSize: '0.625rem',
+    fontWeight: '700',
+    color: 'var(--color-success)',
+    backgroundColor: 'var(--color-success-light)',
+    padding: '0.1rem 0.4rem',
+    borderRadius: '9999px',
+    marginTop: '0.1rem',
+    letterSpacing: '0.3px',
+    display: 'inline-block',
   },
   nav: {
     display: 'flex',
