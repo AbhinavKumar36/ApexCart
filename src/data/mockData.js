@@ -1,5 +1,5 @@
 // Default mock data for the Superstore Inventory Management System
-
+ 
 export const DEFAULT_CREDENTIALS = {
   username: 'root',
   password: 'root'
@@ -19,7 +19,8 @@ export const INITIAL_PRODUCTS = [
     discount: 0.0,
     minStock: 15,
     mfgDate: '2026-05-27',
-    expiryDate: '2026-06-03' // Expired!
+    expiryDate: '2026-06-03', // Expired!
+    barcode: '8901234001001'
   },
   {
     id: 'P1002',
@@ -33,7 +34,8 @@ export const INITIAL_PRODUCTS = [
     discount: 5.0, // 5% discount
     minStock: 8,
     mfgDate: '2026-02-15',
-    expiryDate: '2027-02-15' // Safe
+    expiryDate: '2027-02-15', // Safe
+    barcode: '8901234001002'
   },
   {
     id: 'P1003',
@@ -47,7 +49,8 @@ export const INITIAL_PRODUCTS = [
     discount: 10.0,
     minStock: 5,
     mfgDate: '2025-12-20',
-    expiryDate: '2026-12-20' // Safe
+    expiryDate: '2026-12-20', // Safe
+    barcode: '8901234001003'
   },
   {
     id: 'P1004',
@@ -61,7 +64,8 @@ export const INITIAL_PRODUCTS = [
     discount: 0.0,
     minStock: 10,
     mfgDate: '2025-06-15',
-    expiryDate: '2026-06-15' // Expiring soon
+    expiryDate: '2026-06-15', // Expiring soon
+    barcode: '8901234001004'
   },
 
   // Dairy & Eggs
@@ -77,7 +81,8 @@ export const INITIAL_PRODUCTS = [
     discount: 0.0,
     minStock: 10,
     mfgDate: '2026-05-30',
-    expiryDate: '2026-06-09' // Expiring soon
+    expiryDate: '2026-06-09', // Expiring soon
+    barcode: '8901234001005'
   },
   {
     id: 'P1006',
@@ -91,7 +96,8 @@ export const INITIAL_PRODUCTS = [
     discount: 0.0,
     minStock: 8,
     mfgDate: '2026-05-01',
-    expiryDate: '2026-06-01' // Expired!
+    expiryDate: '2026-06-01', // Expired!
+    barcode: '8901234001006'
   },
   {
     id: 'P1007',
@@ -105,7 +111,8 @@ export const INITIAL_PRODUCTS = [
     discount: 0.0,
     minStock: 12,
     mfgDate: '2026-05-25',
-    expiryDate: '2026-06-25' // Expiring soon
+    expiryDate: '2026-06-25', // Expiring soon
+    barcode: '8901234001007'
   },
 
   // Beverages
@@ -121,7 +128,8 @@ export const INITIAL_PRODUCTS = [
     discount: 8.0,
     minStock: 8,
     mfgDate: '2026-04-01',
-    expiryDate: '2027-04-01' // Safe
+    expiryDate: '2027-04-01', // Safe
+    barcode: '8901234001008'
   },
   {
     id: 'P1009',
@@ -135,7 +143,8 @@ export const INITIAL_PRODUCTS = [
     discount: 0.0,
     minStock: 6,
     mfgDate: '2026-04-20',
-    expiryDate: '2026-05-20' // Expired!
+    expiryDate: '2026-05-20', // Expired!
+    barcode: '8901234001009'
   },
   {
     id: 'P1010',
@@ -149,7 +158,8 @@ export const INITIAL_PRODUCTS = [
     discount: 15.0,
     minStock: 5,
     mfgDate: '2026-03-18',
-    expiryDate: '2026-06-18' // Expiring soon
+    expiryDate: '2026-06-18', // Expiring soon
+    barcode: '8901234001010'
   },
 
   // Electronics
@@ -165,7 +175,8 @@ export const INITIAL_PRODUCTS = [
     discount: 10.0,
     minStock: 5,
     mfgDate: '',
-    expiryDate: ''
+    expiryDate: '',
+    barcode: '8901234001011'
   },
   {
     id: 'P1012',
@@ -179,7 +190,8 @@ export const INITIAL_PRODUCTS = [
     discount: 5.0,
     minStock: 5,
     mfgDate: '',
-    expiryDate: ''
+    expiryDate: '',
+    barcode: '8901234001012'
   },
 
   // Apparel & Home
@@ -195,7 +207,8 @@ export const INITIAL_PRODUCTS = [
     discount: 20.0,
     minStock: 10,
     mfgDate: '',
-    expiryDate: ''
+    expiryDate: '',
+    barcode: '8901234001013'
   },
   {
     id: 'P1014',
@@ -209,7 +222,8 @@ export const INITIAL_PRODUCTS = [
     discount: 0.0,
     minStock: 5,
     mfgDate: '',
-    expiryDate: ''
+    expiryDate: '',
+    barcode: '8901234001014'
   },
   {
     id: 'P1015',
@@ -223,7 +237,8 @@ export const INITIAL_PRODUCTS = [
     discount: 0.0,
     minStock: 15,
     mfgDate: '',
-    expiryDate: ''
+    expiryDate: '',
+    barcode: '8901234001015'
   }
 ];
 
@@ -235,3 +250,120 @@ export const CATEGORIES = [
   'Apparel',
   'Home & Kitchen'
 ];
+
+export const DEFAULT_SUPPLIERS = [
+  {
+    id: 'S2001',
+    name: 'Global Grocery Distributors',
+    contactPerson: 'Sarah Jenkins',
+    phone: '+1 (555) 014-9832',
+    email: 'orders@globalgrocery.com',
+    address: '45 Supply Chain Blvd, Logistics Park'
+  },
+  {
+    id: 'S2002',
+    name: 'Fresh Farms Dairy Co.',
+    contactPerson: 'David Miller',
+    phone: '+1 (555) 012-7645',
+    email: 'delivery@freshfarmsdairy.com',
+    address: '12 Dairy Pasture Lane, Green Valley'
+  },
+  {
+    id: 'S2003',
+    name: 'Apex Tech Wholesalers',
+    contactPerson: 'Kevin Patel',
+    phone: '+1 (555) 019-3344',
+    email: 'sales@apextechwholesale.com',
+    address: '88 Tech Hub Circle, Silicon City'
+  },
+  {
+    id: 'S2004',
+    name: 'Apex Apparel & Textiles',
+    contactPerson: 'Elena Rostova',
+    phone: '+1 (555) 017-4499',
+    email: 'info@apextextiles.com',
+    address: '304 Garment District Way, Fashion City'
+  }
+];
+
+export const generateMockSales = (productsList) => {
+  const sales = [];
+  const paymentMethods = ['Cash', 'Card', 'UPI'];
+  const customerNames = ['Alice Smith', 'Bob Johnson', 'Charlie Brown', 'Diana Prince', 'Evan Wright', 'Fiona Gallagher', 'Walk-in Customer'];
+  const times = [
+    '09:15:30 AM', '10:30:12 AM', '11:45:22 AM', '12:15:45 PM', 
+    '01:30:00 PM', '02:45:10 PM', '03:55:18 PM', '04:20:00 PM',
+    '05:10:45 PM', '06:30:20 PM', '07:15:55 PM', '07:45:10 PM',
+    '08:20:30 PM', '08:50:00 PM', '09:15:12 PM', '09:45:00 PM'
+  ];
+
+  const today = new Date();
+  let invoiceId = 10001;
+
+  for (let i = 13; i >= 0; i--) {
+    const targetDate = new Date(today);
+    targetDate.setDate(today.getDate() - i);
+    const dd = String(targetDate.getDate()).padStart(2, '0');
+    const mm = String(targetDate.getMonth() + 1).padStart(2, '0');
+    const yyyy = targetDate.getFullYear();
+    const dateStr = `${dd}/${mm}/${yyyy}`;
+
+    ['Store A', 'Store B'].forEach(store => {
+      const dailySalesCount = 2 + Math.floor(Math.random() * 4);
+      
+      for (let s = 0; s < dailySalesCount; s++) {
+        const storeProducts = productsList.filter(p => p.store === store);
+        if (storeProducts.length === 0) return;
+        
+        const itemCount = 1 + Math.floor(Math.random() * 3);
+        const selectedItems = [];
+        let subtotal = 0;
+        let totalGST = 0;
+        let totalDiscount = 0;
+        
+        for (let k = 0; k < itemCount; k++) {
+          const prod = storeProducts[Math.floor(Math.random() * storeProducts.length)];
+          if (selectedItems.some(item => item.id === prod.id)) continue;
+          
+          const qty = 1 + Math.floor(Math.random() * 3);
+          const basePrice = prod.price || 2.50;
+          const lineTotal = (basePrice + (basePrice * (prod.gst || 5) / 100) - ((basePrice + (basePrice * (prod.gst || 5) / 100)) * (prod.discount || 0) / 100)) * qty;
+          
+          selectedItems.push({
+            id: prod.id,
+            name: prod.name,
+            quantity: qty,
+            price: basePrice,
+            gst: prod.gst || 5,
+            discount: prod.discount || 0,
+            lineTotal: parseFloat(lineTotal.toFixed(2))
+          });
+          
+          const itemBase = basePrice * qty;
+          subtotal += itemBase;
+          totalGST += (itemBase * (prod.gst || 5)) / 100;
+          totalDiscount += ((itemBase + (itemBase * (prod.gst || 5)) / 100) * (prod.discount || 0)) / 100;
+        }
+
+        const grandTotal = subtotal + totalGST - totalDiscount;
+
+        sales.push({
+          id: (invoiceId++).toString(),
+          date: dateStr,
+          time: times[Math.floor(Math.random() * times.length)],
+          customerName: customerNames[Math.floor(Math.random() * customerNames.length)],
+          customerPhone: `+1 (555) 019-${Math.floor(1000 + Math.random() * 9000)}`,
+          paymentMethod: paymentMethods[Math.floor(Math.random() * paymentMethods.length)],
+          items: selectedItems,
+          subtotal: parseFloat(subtotal.toFixed(2)),
+          totalGST: parseFloat(totalGST.toFixed(2)),
+          totalDiscount: parseFloat(totalDiscount.toFixed(2)),
+          totalPrice: parseFloat(grandTotal.toFixed(2)),
+          store
+        });
+      }
+    });
+  }
+
+  return sales;
+};

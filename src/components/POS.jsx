@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   Search, 
   ShoppingCart, 
@@ -12,11 +12,13 @@ import {
   AlertTriangle,
   Receipt,
   CreditCard,
-  QrCode
+  QrCode,
+  Camera
 } from 'lucide-react';
 import Invoice from './Invoice';
+import { Html5Qrcode } from 'html5-qrcode';
 
-export default function POS({ products, setProducts, sales, setSales, categories, storeSettings, vendor }) {
+export default function POS({ products, setProducts, sales, setSales, categories, storeSettings, vendor, currentStore, logActivity }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
   
@@ -34,7 +36,136 @@ export default function POS({ products, setProducts, sales, setSales, categories
   // Invoice state
   const [activeInvoice, setActiveInvoice] = useState(null);
 
+  // Scanner States
+  const [showScanner, setShowScanner] = useState(false);
+  const [continuousScan, setContinuousScan] = useState(true);
+  const [scanStatus, setScanStatus] = useState('');
+  const scannerRef = useRef(null);
+
   const today = new Date().toISOString().split('T')[0];
+
+  // Browser synthesized beep audio
+  const playBeep = () => {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      
+      osc.type = 'sine';
+      osc.frequency.value = 1400; // beep pitch
+      gain.gain.setValueAtTime(0.12, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.005, ctx.currentTime + 0.1);
+      
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      
+      osc.start();
+      osc.stop(ctx.currentTime + 0.1);
+    } catch (e) {
+      console.warn("Audio Context beep failed:", e);
+    }
+  };
+
+  // Keyboard handheld hardware scanner callback
+  const handleSearchKeyDown = (e) => {
+    if (e.key === 'Enter' && searchTerm.trim()) {
+      const code = searchTerm.trim();
+      const matched = products.find(p => 
+        (p.barcode === code || p.id === code) && 
+        p.store === currentStore
+      );
+      if (matched) {
+        addToCart(matched);
+        playBeep();
+        setSearchTerm('');
+        e.preventDefault();
+      }
+    }
+  };
+
+  const startScanning = () => {
+    setScanStatus('Initializing camera...');
+    setTimeout(() => {
+      const html5QrCode = new Html5Qrcode("barcode-reader-viewport");
+      scannerRef.current = html5QrCode;
+      
+      const config = { fps: 12, qrbox: { width: 250, height: 160 } };
+      
+      html5QrCode.start(
+        { facingMode: "environment" }, 
+        config, 
+        (decodedText) => {
+          handleBarcodeScanned(decodedText);
+        },
+        (errorMessage) => {
+          // ignore parsing errors
+        }
+      ).then(() => {
+        setScanStatus('Camera active. Place barcode in frame.');
+      }).catch(err => {
+        setScanStatus(`Camera error: ${err.message || err}`);
+      });
+    }, 400);
+  };
+
+  const stopScanning = () => {
+    if (scannerRef.current) {
+      if (scannerRef.current.isScanning) {
+        scannerRef.current.stop().then(() => {
+          scannerRef.current = null;
+          setShowScanner(false);
+        }).catch(err => {
+          console.error("Failed to stop scanner:", err);
+          scannerRef.current = null;
+          setShowScanner(false);
+        });
+      } else {
+        scannerRef.current = null;
+        setShowScanner(false);
+      }
+    } else {
+      setShowScanner(false);
+    }
+  };
+
+  const handleBarcodeScanned = (scannedCode) => {
+    const matched = products.find(p => 
+      (p.barcode === scannedCode || p.id === scannedCode) && 
+      p.store === currentStore
+    );
+    
+    if (matched) {
+      if (matched.quantity <= 0) {
+        setScanStatus(`⚠️ "${matched.name}" is OUT OF STOCK!`);
+        return;
+      }
+      if (matched.expiryDate && matched.expiryDate < today) {
+        setScanStatus(`❌ SAFETY BLOCK: "${matched.name}" EXPIRED on ${matched.expiryDate}!`);
+        return;
+      }
+      
+      addToCart(matched);
+      playBeep();
+      setScanStatus(`✅ Added: ${matched.name}!`);
+      
+      if (!continuousScan) {
+        stopScanning();
+      } else {
+        setTimeout(() => setScanStatus('Scanning...'), 1500);
+      }
+    } else {
+      setScanStatus(`❌ Barcode "${scannedCode}" not recognized in ${currentStore}.`);
+    }
+  };
+
+  // Stop scanner if component unmounts
+  useEffect(() => {
+    return () => {
+      if (scannerRef.current && scannerRef.current.isScanning) {
+        scannerRef.current.stop().catch(err => console.warn(err));
+      }
+    };
+  }, []);
 
   // Add to cart
   const addToCart = (product) => {
@@ -180,16 +311,21 @@ export default function POS({ products, setProducts, sales, setSales, categories
       subtotal,
       totalGST,
       totalDiscount,
-      totalPrice: grandTotal
+      totalPrice: grandTotal,
+      store: currentStore
     };
 
     setSales(prev => [...prev, newSale]);
     setActiveInvoice(newSale);
+    logActivity('POS_SALE', `Invoice #${invoiceNumber} checked out in ${currentStore} via ${paymentMethod}. Total: ${storeSettings?.currencySymbol || '$'}${grandTotal.toFixed(2)}`);
     clearCart();
   };
 
-  // Filter products for POS including vendor stall filtering
+  // Filter products for POS including vendor stall filtering and store filtering
   const filteredProducts = products.filter(product => {
+    if (product.store !== currentStore) {
+      return false;
+    }
     if (vendor !== 'all' && product.vendor !== vendor) {
       return false;
     }
@@ -214,16 +350,27 @@ export default function POS({ products, setProducts, sales, setSales, categories
 
         {/* Toolbar */}
         <div style={styles.toolbar} className="glass">
-          <div style={styles.searchWrapper}>
-            <Search size={18} style={styles.searchIcon} />
-            <input
-              type="text"
-              placeholder="Search products by barcode/SKU/name..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              style={styles.searchInput}
-              className="input-field"
-            />
+          <div style={styles.searchWrapper} style={{ display: 'flex', gap: '0.75rem', width: '100%', alignItems: 'center' }}>
+            <div style={{ position: 'relative', flex: 1 }}>
+              <Search size={18} style={styles.searchIcon} />
+              <input
+                type="text"
+                placeholder="Search products by barcode/SKU/name... (Press Enter to scan)"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={handleSearchKeyDown}
+                style={{ ...styles.searchInput, width: '100%' }}
+                className="input-field"
+              />
+            </div>
+            <button
+              onClick={() => { setShowScanner(true); startScanning(); }}
+              className="btn btn-secondary"
+              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', whiteSpace: 'nowrap', padding: '0.55rem 1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)', cursor: 'pointer' }}
+            >
+              <Camera size={16} />
+              <span>Webcam Scan</span>
+            </button>
           </div>
         </div>
 
@@ -543,6 +690,46 @@ export default function POS({ products, setProducts, sales, setSales, categories
               >
                 Confirm Payment
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Webcam Barcode Scanner Modal */}
+      {showScanner && (
+        <div style={styles.modalOverlay}>
+          <div style={styles.scannerModal} className="card glow animate-slide">
+            <div style={styles.scannerHeader}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Camera size={20} color="var(--color-primary)" />
+                <h3 style={styles.upiTitle}>Webcam Barcode Scanner</h3>
+              </div>
+              <button onClick={stopScanning} style={styles.closeBtn}>×</button>
+            </div>
+            
+            <div style={styles.scannerFrame}>
+              <div id="barcode-reader-viewport" style={styles.readerViewport}></div>
+            </div>
+            
+            <div style={styles.scannerFooter}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8125rem', color: 'var(--color-text-secondary)', cursor: 'pointer' }}>
+                  <input 
+                    type="checkbox" 
+                    checked={continuousScan} 
+                    onChange={(e) => setContinuousScan(e.target.checked)} 
+                    style={{ width: 'auto' }}
+                  />
+                  <span>Continuous Rapid Scan</span>
+                </label>
+                <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', fontWeight: 'bold' }}>
+                  Store: {currentStore}
+                </span>
+              </div>
+              
+              <div style={{ ...styles.statusBox, backgroundColor: scanStatus.startsWith('❌') ? 'var(--color-danger-light)' : scanStatus.startsWith('✅') ? 'var(--color-success-light)' : 'var(--color-bg-base)', color: scanStatus.startsWith('❌') ? 'var(--color-danger)' : scanStatus.startsWith('✅') ? 'var(--color-success)' : 'var(--color-text-secondary)' }}>
+                {scanStatus || 'Scanning... Align barcode in camera view.'}
+              </div>
             </div>
           </div>
         </div>
@@ -984,6 +1171,64 @@ const styles = {
     flex: 1,
     padding: '0.65rem',
     fontSize: '0.875rem',
+  },
+  scannerModal: {
+    width: '100%',
+    maxWidth: '440px',
+    backgroundColor: 'var(--color-bg-surface)',
+    border: '1px solid var(--color-border)',
+    borderRadius: 'var(--radius-lg)',
+    overflow: 'hidden',
+    display: 'flex',
+    flexDirection: 'column',
+    boxShadow: 'var(--shadow-lg)',
+  },
+  scannerHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '1rem 1.25rem',
+    borderBottom: '1px solid var(--color-border)',
+    backgroundColor: 'var(--color-bg-base)',
+  },
+  closeBtn: {
+    background: 'none',
+    border: 'none',
+    color: 'var(--color-text-muted)',
+    fontSize: '1.5rem',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    padding: 0,
+  },
+  scannerFrame: {
+    padding: '1.25rem',
+    backgroundColor: 'var(--color-bg-base)',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  readerViewport: {
+    width: '100%',
+    maxWidth: '350px',
+    height: '240px',
+    borderRadius: 'var(--radius-md)',
+    overflow: 'hidden',
+    border: '1px solid var(--color-border)',
+    backgroundColor: '#000',
+  },
+  scannerFooter: {
+    padding: '1rem 1.25rem',
+    borderTop: '1px solid var(--color-border)',
+    backgroundColor: 'var(--color-bg-surface)',
+  },
+  statusBox: {
+    padding: '0.65rem 1rem',
+    borderRadius: 'var(--radius-sm)',
+    fontSize: '0.8125rem',
+    fontWeight: '700',
+    textAlign: 'center',
+    border: '1px solid var(--color-border)',
   }
 };
 

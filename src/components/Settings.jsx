@@ -17,7 +17,9 @@ import {
   Building2,
   Bell,
   BarChart3,
-  Package
+  Package,
+  Activity,
+  Search
 } from 'lucide-react';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
@@ -46,7 +48,8 @@ export default function Settings({
   onClearData,
   onImportData,
   products,
-  sales
+  sales,
+  activityLogs
 }) {
   // Store Settings Form State
   const [storeName, setStoreName] = useState(storeSettings.storeName);
@@ -55,6 +58,7 @@ export default function Settings({
   const [currencySymbol, setCurrencySymbol] = useState(storeSettings.currencySymbol);
   const [lowStockThreshold, setLowStockThreshold] = useState(storeSettings.lowStockThreshold);
   const [expiryWarningDays, setExpiryWarningDays] = useState(storeSettings.expiryWarningDays);
+  const [geminiApiKey, setGeminiApiKey] = useState(storeSettings.geminiApiKey || '');
 
   // Status alerts
   const [configError, setConfigError] = useState('');
@@ -76,6 +80,21 @@ export default function Settings({
   // Active settings tab
   const [activeSection, setActiveSection] = useState('store');
 
+  // Audit Logs filters
+  const [logSearch, setLogSearch] = useState('');
+  const [logActionFilter, setLogActionFilter] = useState('all');
+  const [logStoreFilter, setLogStoreFilter] = useState('all');
+
+  const filteredLogs = (activityLogs || []).filter(log => {
+    const detailsVal = log.details || '';
+    const actionVal = log.action || '';
+    const matchesSearch = detailsVal.toLowerCase().includes(logSearch.toLowerCase()) || 
+                          actionVal.toLowerCase().includes(logSearch.toLowerCase());
+    const matchesAction = logActionFilter === 'all' || log.action === logActionFilter;
+    const matchesStore = logStoreFilter === 'all' || log.store === logStoreFilter;
+    return matchesSearch && matchesAction && matchesStore;
+  });
+
   const fileInputRef = useRef(null);
 
   // Handle configuration update
@@ -95,7 +114,8 @@ export default function Settings({
       storePhone: storePhone.trim(),
       currencySymbol: currencySymbol.trim(),
       lowStockThreshold: parseInt(lowStockThreshold, 10) || 5,
-      expiryWarningDays: parseInt(expiryWarningDays, 10) || 30
+      expiryWarningDays: parseInt(expiryWarningDays, 10) || 30,
+      geminiApiKey: geminiApiKey.trim()
     });
 
     setConfigSuccess('Store configuration updated successfully!');
@@ -208,6 +228,7 @@ export default function Settings({
     { id: 'users', label: 'User Management', icon: Users },
     { id: 'theme', label: 'Theme & Display', icon: Sun },
     { id: 'data', label: 'Data Backup', icon: Database },
+    { id: 'logs', label: 'Audit Logs', icon: Activity },
     { id: 'danger', label: 'Danger Zone', icon: ShieldAlert },
   ];
 
@@ -374,6 +395,21 @@ export default function Settings({
                     />
                     <span style={styles.inputHint}>Warn if item expires within this many days</span>
                   </div>
+                </div>
+
+                <div style={styles.divider} />
+
+                <h3 style={{ ...styles.subHeading, color: 'var(--color-primary)' }}>🤖 Gemini AI Configuration</h3>
+                <div style={styles.inputGroup}>
+                  <label style={styles.label}>Gemini API Key</label>
+                  <input
+                    type="password"
+                    placeholder="Enter your Gemini API Key (e.g. AIzaSy...)"
+                    value={geminiApiKey}
+                    onChange={(e) => setGeminiApiKey(e.target.value)}
+                    className="input-field"
+                  />
+                  <span style={styles.inputHint}>Used to power AI procurement restocks and chatbot overlay assistant. Leaves Vite bundle clean of secrets.</span>
                 </div>
 
                 <button type="submit" style={styles.saveBtn} className="btn btn-primary">
@@ -625,6 +661,102 @@ export default function Settings({
               <div style={styles.infoBox}>
                 <Info size={14} />
                 <span>Backups include all product catalog, sales history, and store settings. Import will replace current data.</span>
+              </div>
+            </div>
+          )}
+
+          {/* === AUDIT LOGS === */}
+          {activeSection === 'logs' && (
+            <div className="card" style={styles.panel}>
+              <div style={styles.panelHeader}>
+                <Activity size={22} color="var(--color-primary)" />
+                <div>
+                  <h2 style={styles.panelTitle}>System Audit &amp; Activity Logs</h2>
+                  <p style={styles.panelSubtitle}>Trace user operations, POS billing transactions, and inventory changes.</p>
+                </div>
+              </div>
+
+              {/* Toolbar */}
+              <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.25rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                <div style={{ position: 'relative', flex: 1, minWidth: '200px' }}>
+                  <Search size={16} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)', pointerEvents: 'none' }} />
+                  <input
+                    type="text"
+                    placeholder="Search logs by action or details..."
+                    value={logSearch}
+                    onChange={(e) => setLogSearch(e.target.value)}
+                    style={{ paddingLeft: '2.25rem', width: '100%' }}
+                    className="input-field"
+                  />
+                </div>
+                <select
+                  value={logActionFilter}
+                  onChange={(e) => setLogActionFilter(e.target.value)}
+                  className="input-field"
+                  style={{ minWidth: '150px' }}
+                >
+                  <option value="all">All Actions</option>
+                  <option value="POS_SALE">POS Sale</option>
+                  <option value="STOCK_TRANSFER">Stock Transfer</option>
+                  <option value="PO_RECEIVE">PO Receive</option>
+                  <option value="DATABASE_RESET">Database Reset</option>
+                  <option value="USER_CREATION">User Creation</option>
+                </select>
+                <select
+                  value={logStoreFilter}
+                  onChange={(e) => setLogStoreFilter(e.target.value)}
+                  className="input-field"
+                  style={{ minWidth: '120px' }}
+                >
+                  <option value="all">All Stores</option>
+                  <option value="Store A">Store A</option>
+                  <option value="Store B">Store B</option>
+                </select>
+              </div>
+
+              {/* Table */}
+              <div style={styles.tableWrap}>
+                <table style={styles.table}>
+                  <thead>
+                    <tr>
+                      <th style={styles.th}>Timestamp</th>
+                      <th style={styles.th}>User</th>
+                      <th style={styles.th}>Action</th>
+                      <th style={styles.th}>Store</th>
+                      <th style={styles.th}>Details</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredLogs.map(log => (
+                      <tr key={log.id} style={styles.tr}>
+                        <td style={{ ...styles.td, whiteSpace: 'nowrap', fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>
+                          {new Date(log.timestamp).toLocaleString()}
+                        </td>
+                        <td style={{ ...styles.td, fontWeight: '700' }}>{log.user?.split('@')[0]}</td>
+                        <td style={styles.td}>
+                          <span style={{
+                            ...styles.marginBadge,
+                            fontSize: '0.6875rem',
+                            fontWeight: '800',
+                            color: log.action.includes('RESET') || log.action.includes('PURGE') ? 'var(--color-danger)' : log.action.includes('SALE') ? 'var(--color-success)' : 'var(--color-primary)',
+                            backgroundColor: log.action.includes('RESET') || log.action.includes('PURGE') ? 'var(--color-danger-light)' : log.action.includes('SALE') ? 'var(--color-success-light)' : 'var(--color-primary-light)'
+                          }}>
+                            {log.action}
+                          </span>
+                        </td>
+                        <td style={{ ...styles.td, fontWeight: '600' }}>{log.store || 'N/A'}</td>
+                        <td style={styles.td}>{log.details}</td>
+                      </tr>
+                    ))}
+                    {filteredLogs.length === 0 && (
+                      <tr>
+                        <td colSpan="5" style={{ textAlign: 'center', padding: '2rem', color: 'var(--color-text-muted)' }}>
+                          No audit activity logs found.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
           )}

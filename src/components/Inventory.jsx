@@ -8,14 +8,27 @@ import {
   X, 
   AlertTriangle,
   PackageOpen,
-  Sparkles
+  Sparkles,
+  Building2,
+  Barcode
 } from 'lucide-react';
+import JsBarcode from 'jsbarcode';
+import { useRef } from 'react';
 
-export default function Inventory({ products, setProducts, categories, storeSettings, vendor, role }) {
+export default function Inventory({ products, setProducts, categories, storeSettings, vendor, role, currentStore, logActivity }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [stockFilter, setStockFilter] = useState('All'); // All, In Stock, Low Stock, Out of Stock
   const [expiryFilter, setExpiryFilter] = useState('All'); // All, Expired, Expiring Soon, Safe
+ 
+  // Stock Transfer Modal state
+  const [showTransferModal, setShowTransferModal] = useState(false);
+  const [transferProduct, setTransferProduct] = useState('');
+  const [transferQty, setTransferQty] = useState(1);
+ 
+  // Barcode Modal state
+  const [barcodeViewTarget, setBarcodeViewTarget] = useState(null);
+  const barcodeSvgRef = useRef(null);
 
   // AI Procurement State
   const [recommendations, setRecommendations] = useState([]);
@@ -55,7 +68,8 @@ export default function Inventory({ products, setProducts, categories, storeSett
       setEditingProduct(null);
       // Generate a new temporary SKU
       const maxId = products
-        .map(p => parseInt(p.id.replace('P', ''), 10))
+        .map(p => parseInt(p.id.replace('P', '').replace(/_[AB]$/, ''), 10))
+        .filter(n => !isNaN(n))
         .reduce((max, current) => current > max ? current : max, 1000);
       setFormData({
         id: `P${maxId + 1}`,
@@ -68,7 +82,8 @@ export default function Inventory({ products, setProducts, categories, storeSett
         discount: 0.0,
         minStock: 5,
         mfgDate: '',
-        expiryDate: ''
+        expiryDate: '',
+        barcode: `890123400${maxId + 1}`
       });
     }
     setIsModalOpen(true);
@@ -77,6 +92,54 @@ export default function Inventory({ products, setProducts, categories, storeSett
   const closeModal = () => {
     setIsModalOpen(false);
     setEditingProduct(null);
+  };
+
+  // Stock transfer action
+  const handleStockTransfer = (e) => {
+    e.preventDefault();
+    if (!transferProduct || transferQty <= 0) return;
+    
+    const sourceProd = products.find(p => p.id === transferProduct && p.store === currentStore);
+    if (!sourceProd || sourceProd.quantity < transferQty) {
+      alert("Insufficient stock in source store.");
+      return;
+    }
+    
+    const destStore = currentStore === 'Store A' ? 'Store B' : 'Store A';
+    const destSuffix = destStore === 'Store A' ? '_A' : '_B';
+    const destId = sourceProd.id.replace(/_[AB]$/, '') + destSuffix;
+    
+    setProducts(prevProducts => {
+      const destProdExists = prevProducts.some(p => p.id === destId);
+      
+      let nextProducts = prevProducts.map(p => {
+        if (p.id === sourceProd.id) {
+          return { ...p, quantity: Math.max(0, p.quantity - transferQty) };
+        }
+        if (p.id === destId) {
+          return { ...p, quantity: p.quantity + transferQty };
+        }
+        return p;
+      });
+      
+      if (!destProdExists) {
+        const newDestProd = {
+          ...sourceProd,
+          id: destId,
+          store: destStore,
+          quantity: transferQty
+        };
+        nextProducts.push(newDestProd);
+      }
+      
+      return nextProducts;
+    });
+
+    logActivity('STOCK_TRANSFER', `Transferred ${transferQty} units of "${sourceProd.name}" from ${currentStore} to ${destStore}`);
+    setShowTransferModal(false);
+    setTransferProduct('');
+    setTransferQty(1);
+    alert(`🎉 Transferred ${transferQty} units of "${sourceProd.name}" successfully!`);
   };
 
   // Handle CRUD submissions including category-to-vendor mappings
@@ -89,8 +152,12 @@ export default function Inventory({ products, setProducts, categories, storeSett
       (formData.category === 'Dairy & Eggs') ? 'Apex Fresh' :
       (formData.category === 'Electronics') ? 'Apex Electronics' : 'Apex Apparel';
 
+    const cleanId = formData.id.replace(/_[AB]$/, '');
     const finalProduct = {
       ...formData,
+      id: cleanId + (currentStore === 'Store A' ? '_A' : '_B'),
+      originalId: cleanId,
+      store: currentStore,
       vendor: resolvedVendor
     };
 
@@ -99,9 +166,11 @@ export default function Inventory({ products, setProducts, categories, storeSett
       setProducts(prev => 
         prev.map(p => p.id === editingProduct.id ? finalProduct : p)
       );
+      logActivity('INVENTORY_EDIT', `Updated catalog details for product "${formData.name}" (${cleanId})`);
     } else {
       // Add
       setProducts(prev => [...prev, finalProduct]);
+      logActivity('INVENTORY_ADD', `Added new product "${formData.name}" (${cleanId}) to ${currentStore}`);
     }
     closeModal();
   };
@@ -118,6 +187,9 @@ export default function Inventory({ products, setProducts, categories, storeSett
 
   // Filter products
   const filteredProducts = products.filter(product => {
+    if (product.store !== currentStore) {
+      return false;
+    }
     const matchesSearch = 
       product.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
       product.id.toLowerCase().includes(searchTerm.toLowerCase());
@@ -192,9 +264,9 @@ ${JSON.stringify(lowStockData, null, 2)}
 `;
 
     try {
-      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+      const apiKey = storeSettings?.geminiApiKey || import.meta.env.VITE_GEMINI_API_KEY;
       if (!apiKey || apiKey.includes('placeholder')) {
-        throw new Error("Missing valid API key.");
+        throw new Error("Missing valid API key. Please configure it in Settings -> Store Profile.");
       }
 
       const response = await fetch(
@@ -232,6 +304,10 @@ ${JSON.stringify(lowStockData, null, 2)}
         <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
           {role === 'admin' && (
             <>
+              <button onClick={() => setShowTransferModal(true)} className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.65rem 1.25rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)', cursor: 'pointer' }}>
+                <Building2 size={16} />
+                <span>Transfer Stock</span>
+              </button>
               <button onClick={handleGenerateAIProcurement} className="btn btn-success" style={{ backgroundColor: 'var(--color-success)', borderColor: 'var(--color-success)' }}>
                 <Sparkles size={16} />
                 <span>AI Restock Draft</span>
@@ -321,6 +397,7 @@ ${JSON.stringify(lowStockData, null, 2)}
               <thead>
                 <tr style={styles.tableHeaderRow}>
                   <th style={styles.th}>SKU</th>
+                  <th style={styles.th}>Barcode</th>
                   <th style={styles.th}>Product Details</th>
                   <th style={styles.th}>Category</th>
                   <th style={styles.th}>Stock Status</th>
@@ -363,7 +440,37 @@ ${JSON.stringify(lowStockData, null, 2)}
                   
                   return (
                     <tr key={p.id} style={styles.tr}>
-                      <td style={styles.tdSku}>{p.id}</td>
+                      <td style={styles.tdSku}>{p.id.replace(/_[AB]$/, '')}</td>
+                      <td style={styles.tdSku}>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.2rem' }}>
+                          <span style={{ fontFamily: 'monospace', fontSize: '0.75rem' }}>{p.barcode || 'N/A'}</span>
+                          {p.barcode && (
+                            <button 
+                              onClick={() => {
+                                setBarcodeViewTarget(p);
+                                setTimeout(() => {
+                                  if (barcodeSvgRef.current) {
+                                    JsBarcode(barcodeSvgRef.current, p.barcode, {
+                                      format: "CODE128",
+                                      width: 1.5,
+                                      height: 40,
+                                      displayValue: true,
+                                      fontSize: 10,
+                                      background: "transparent",
+                                      lineColor: "#000"
+                                    });
+                                  }
+                                }, 100);
+                              }}
+                              className="btn btn-secondary"
+                              style={{ padding: '0.15rem 0.4rem', fontSize: '0.65rem', borderRadius: '4px', cursor: 'pointer' }}
+                              title="View & Print Barcode"
+                            >
+                              View
+                            </button>
+                          )}
+                        </div>
+                      </td>
                       <td style={styles.tdDetails}>
                         <div style={{ display: 'flex', flexDirection: 'column' }}>
                           <span style={styles.prodName}>{p.name}</span>
@@ -588,6 +695,34 @@ ${JSON.stringify(lowStockData, null, 2)}
                     className="input-field"
                   />
                 </div>
+ 
+                {/* Barcode / EAN */}
+                <div style={styles.formGroup}>
+                  <label style={styles.formLabel}>Barcode / EAN</label>
+                  <div style={{ display: 'flex', gap: '0.4rem', width: '100%' }}>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. 8901234..."
+                      value={formData.barcode || ''}
+                      onChange={(e) => setFormData({ ...formData, barcode: e.target.value })}
+                      style={{ ...styles.formInput, flex: 1, minWidth: 0 }}
+                      className="input-field"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const randomCode = '8901234' + Math.floor(100000 + Math.random() * 900000);
+                        setFormData({ ...formData, barcode: randomCode });
+                      }}
+                      className="btn btn-secondary"
+                      style={{ padding: '0 0.5rem', fontSize: '0.75rem', height: '42px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                      title="Auto-generate barcode"
+                    >
+                      Gen
+                    </button>
+                  </div>
+                </div>
 
                 {/* Mfg Date */}
                 <div style={styles.formGroup}>
@@ -721,6 +856,95 @@ ${JSON.stringify(lowStockData, null, 2)}
                 </div>
               </>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Stock Transfer Modal */}
+      {showTransferModal && (
+        <div style={styles.modalOverlay}>
+          <div style={styles.modalCard} className="glass animate-slide" style={{ ...styles.modalCard, maxWidth: '440px' }}>
+            <div style={styles.modalHeader}>
+              <h2 style={styles.modalTitle}>Stock Transfer between Stores</h2>
+              <button onClick={() => setShowTransferModal(false)} style={styles.modalClose}>×</button>
+            </div>
+            
+            <form onSubmit={handleStockTransfer} style={styles.form}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', padding: '1rem 0' }}>
+                <div style={styles.formGroup}>
+                  <label style={styles.formLabel}>Select Product to Transfer</label>
+                  <select
+                    value={transferProduct}
+                    onChange={(e) => setTransferProduct(e.target.value)}
+                    required
+                    className="select-field"
+                    style={{ width: '100%', padding: '0.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-base)', color: 'var(--color-text-primary)' }}
+                  >
+                    <option value="">-- Select Product --</option>
+                    {filteredProducts.map(p => (
+                      <option key={p.id} value={p.id}>
+                        {p.name} (Qty: {p.quantity})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                  <div style={{ ...styles.formGroup, flex: 1 }}>
+                    <label style={styles.formLabel}>Source Store</label>
+                    <input type="text" value={currentStore} disabled style={styles.disabledInput} className="input-field" />
+                  </div>
+                  <div style={{ ...styles.formGroup, flex: 1 }}>
+                    <label style={styles.formLabel}>Destination Store</label>
+                    <input type="text" value={currentStore === 'Store A' ? 'Store B' : 'Store A'} disabled style={styles.disabledInput} className="input-field" />
+                  </div>
+                </div>
+                
+                <div style={styles.formGroup}>
+                  <label style={styles.formLabel}>Transfer Quantity</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max={transferProduct ? (products.find(p => p.id === transferProduct && p.store === currentStore)?.quantity || 1) : 1}
+                    required
+                    value={transferQty}
+                    onChange={(e) => setTransferQty(parseInt(e.target.value, 10) || 1)}
+                    className="input-field"
+                  />
+                </div>
+              </div>
+              
+              <div style={styles.modalFooter}>
+                <button type="button" onClick={() => setShowTransferModal(false)} className="btn btn-secondary">
+                  Cancel
+                </button>
+                <button type="submit" className="btn btn-primary" disabled={!transferProduct}>
+                  Execute Transfer
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Barcode View & Print Modal */}
+      {barcodeViewTarget && (
+        <div style={styles.modalOverlay}>
+          <div style={styles.modalCard} className="glass animate-slide" style={{ ...styles.modalCard, maxWidth: '380px', textAlign: 'center' }}>
+            <div style={styles.modalHeader}>
+              <h2 style={styles.modalTitle}>Product Barcode</h2>
+              <button onClick={() => setBarcodeViewTarget(null)} style={styles.modalClose}>×</button>
+            </div>
+            <div style={{ padding: '2rem 1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', backgroundColor: '#fff', borderRadius: 'var(--radius-md)', margin: '1rem 0' }}>
+              <h4 style={{ color: '#000', margin: 0, fontWeight: '800', fontSize: '1rem' }}>{barcodeViewTarget.name}</h4>
+              <svg ref={barcodeSvgRef}></svg>
+              <span style={{ fontSize: '0.75rem', color: '#666', fontFamily: 'monospace' }}>SKU: {barcodeViewTarget.id.replace(/_[AB]$/, '')}</span>
+            </div>
+            <div style={styles.modalFooter}>
+              <button onClick={() => window.print()} className="btn btn-primary" style={{ width: '100%' }}>
+                Print Barcode Label
+              </button>
+            </div>
           </div>
         </div>
       )}

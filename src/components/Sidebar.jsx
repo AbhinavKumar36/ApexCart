@@ -22,7 +22,9 @@ export default function Sidebar({
   username, 
   onLogout,
   role,
-  vendor
+  vendor,
+  currentStore,
+  setCurrentStore
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -30,12 +32,13 @@ export default function Sidebar({
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'pos', label: 'Point of Sale (POS)', icon: ShoppingCart },
     { id: 'inventory', label: 'Inventory Manager', icon: Package },
+    { id: 'suppliers', label: 'Suppliers & POs', icon: Store },
     { id: 'history', label: 'Billing History', icon: History },
     { id: 'reports', label: 'Reports & Analytics', icon: BarChart3 },
     { id: 'settings', label: 'Control Settings', icon: SettingsIcon }
   ];
 
-  // Filter items based on active role - employees see all except Settings
+  // Filter items based on active role - employees see all except Settings and Suppliers
   const filteredMenuItems = menuItems.filter(item => {
     if (role !== 'admin') {
       return ['dashboard', 'pos', 'inventory', 'history', 'reports'].includes(item.id);
@@ -82,6 +85,19 @@ export default function Sidebar({
               <h2 style={styles.brandName}>ApexCart</h2>
               <span style={styles.brandTagline}>v1.0 Enterprise</span>
             </div>
+          </div>
+
+          {/* Store Switcher */}
+          <div style={styles.storeSwitcher}>
+            <Store size={16} color="var(--color-primary)" style={{ flexShrink: 0 }} />
+            <select
+              value={currentStore}
+              onChange={(e) => setCurrentStore(e.target.value)}
+              style={styles.storeSelect}
+            >
+              <option value="Store A">Store A (Main)</option>
+              <option value="Store B">Store B (Secondary)</option>
+            </select>
           </div>
 
           {/* User profile capsule */}
@@ -268,6 +284,27 @@ const styles = {
     backgroundColor: 'var(--color-bg-base)',
     border: '1px solid var(--color-border)',
     marginBottom: '2rem',
+  },
+  storeSwitcher: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    padding: '0.65rem 0.85rem',
+    borderRadius: 'var(--radius-md)',
+    backgroundColor: 'var(--color-bg-base)',
+    border: '1px solid var(--color-border)',
+    marginBottom: '1.25rem',
+  },
+  storeSelect: {
+    border: 'none',
+    background: 'none',
+    outline: 'none',
+    fontSize: '0.875rem',
+    fontWeight: '700',
+    color: 'var(--color-text-primary)',
+    cursor: 'pointer',
+    width: '100%',
+    padding: 0,
   },
   avatar: {
     width: '40px',

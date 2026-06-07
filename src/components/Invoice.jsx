@@ -1,11 +1,93 @@
 import React, { useRef } from 'react';
-import { Printer, X, CheckCircle2, ShieldCheck } from 'lucide-react';
+import { Printer, X, CheckCircle2, ShieldCheck, Download } from 'lucide-react';
+import { jsPDF } from 'jspdf';
+import 'jspdf-autotable';
 
 export default function Invoice({ invoice, onClose, storeSettings }) {
   const printRef = useRef(null);
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const handleExportPDF = () => {
+    const doc = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: [80, 160] // receipt slip layout (80mm width)
+    });
+    
+    const storeName = storeSettings?.storeName || 'APEXCART SUPERMARKET';
+    const storeAddress = storeSettings?.storeAddress || 'Enterprise Logistics Center #4092';
+    const storePhone = storeSettings?.storePhone || 'N/A';
+    const sym = storeSettings?.currencySymbol || '$';
+    
+    // Header
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.text(storeName.toUpperCase(), 40, 8, { align: 'center' });
+    
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(6);
+    doc.text(storeAddress, 40, 11, { align: 'center' });
+    doc.text(`TEL: ${storePhone} | GSTIN: 29AAAAA0000A1Z5`, 40, 14, { align: 'center' });
+    
+    doc.line(5, 16, 75, 16);
+    
+    // Meta information
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(6.5);
+    doc.text(`INVOICE NO: #${invoice.id}`, 5, 20);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(6);
+    doc.text(`DATE / TIME: ${invoice.date} ${invoice.time}`, 5, 23);
+    doc.text(`CUSTOMER: ${invoice.customerName}`, 5, 26);
+    doc.text(`CONTACT: ${invoice.customerPhone}`, 5, 29);
+    
+    doc.line(5, 31, 75, 31);
+    
+    // Items table list
+    const tableColumn = ["Item", "Qty", "Price", "Total"];
+    const tableRows = invoice.items.map(item => [
+      item.name,
+      item.quantity.toString(),
+      `${sym}${item.price.toFixed(1)}`,
+      `${sym}${item.lineTotal.toFixed(1)}`
+    ]);
+    
+    doc.autoTable({
+      startY: 33,
+      head: [tableColumn],
+      body: tableRows,
+      margin: { left: 5, right: 5 },
+      styles: { fontSize: 5.5, cellPadding: 0.8 },
+      headStyles: { fillColor: [99, 102, 241] },
+      theme: 'grid'
+    });
+    
+    const finalY = doc.lastAutoTable.finalY + 5;
+    
+    // Summary
+    doc.setFontSize(6);
+    doc.text(`Subtotal:`, 45, finalY, { align: 'right' });
+    doc.text(`${sym}${invoice.subtotal.toFixed(2)}`, 75, finalY, { align: 'right' });
+    
+    doc.text(`Tax (GST):`, 45, finalY + 3, { align: 'right' });
+    doc.text(`+${sym}${invoice.totalGST.toFixed(2)}`, 75, finalY + 3, { align: 'right' });
+    
+    doc.text(`Discount:`, 45, finalY + 6, { align: 'right' });
+    doc.text(`-${sym}${invoice.totalDiscount.toFixed(2)}`, 75, finalY + 6, { align: 'right' });
+    
+    doc.setFont("helvetica", "bold");
+    doc.text(`GRAND TOTAL:`, 45, finalY + 10, { align: 'right' });
+    doc.text(`${sym}${invoice.totalPrice.toFixed(2)}`, 75, finalY + 10, { align: 'right' });
+    
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(5);
+    doc.text(`PAID VIA: ${invoice.paymentMethod || 'CASH'} • TXN SUCCESS`, 40, finalY + 15, { align: 'center' });
+    doc.text(`Thank you for shopping at ApexCart!`, 40, finalY + 18, { align: 'center' });
+    
+    doc.save(`ApexCart_Invoice_${invoice.id}.pdf`);
   };
 
   return (
@@ -138,13 +220,17 @@ export default function Invoice({ invoice, onClose, storeSettings }) {
         </div>
 
         {/* Actions panel */}
-        <div style={styles.actionsBar} className="no-print">
-          <button onClick={onClose} style={styles.doneBtn} className="btn btn-secondary">
+        <div style={{ ...styles.actionsBar, display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }} className="no-print">
+          <button onClick={onClose} style={{ ...styles.doneBtn, margin: 0 }} className="btn btn-secondary">
             Done & Close
           </button>
-          <button onClick={handlePrint} style={styles.printBtn} className="btn btn-primary animate-pulse">
+          <button onClick={handleExportPDF} className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <Download size={16} />
+            <span>Download PDF</span>
+          </button>
+          <button onClick={handlePrint} style={{ ...styles.printBtn, margin: 0 }} className="btn btn-primary animate-pulse">
             <Printer size={18} />
-            <span>Print / Save PDF</span>
+            <span>Print Receipt</span>
           </button>
         </div>
       </div>

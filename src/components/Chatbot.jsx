@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageSquare, X, Send, Bot, Sparkles, AlertCircle, ShoppingBag, TrendingUp } from 'lucide-react';
 
-export default function Chatbot({ products, sales, role, username, vendor }) {
+export default function Chatbot({ products, sales, role, username, vendor, storeSettings }) {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
     {
@@ -83,9 +83,9 @@ Analyze the SYSTEM STORE CONTEXT above to answer the User Query.
 `;
 
     try {
-      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-      if (!apiKey || apiKey === 'AQ.Ab8RN6L6sO7-BElZvueAA_mZByDGa14lUyxonsPqeQacgYy19Q_placeholder') {
-        throw new Error('Gemini API Key missing or default placeholder. Set VITE_GEMINI_API_KEY in .env');
+      const apiKey = storeSettings?.geminiApiKey || import.meta.env.VITE_GEMINI_API_KEY;
+      if (!apiKey || apiKey.includes('placeholder')) {
+        throw new Error('Gemini API Key missing. Please set it in Control Settings -> Store Profile.');
       }
 
       const response = await fetch(
@@ -129,9 +129,9 @@ Analyze the SYSTEM STORE CONTEXT above to answer the User Query.
   const CATEGORIES_LIST = ['Grocery', 'Dairy & Eggs', 'Beverages', 'Electronics', 'Apparel', 'Home & Kitchen'];
 
   const quickPrompts = [
-    { label: 'Low Stock Alert', icon: AlertCircle, text: 'Identify all low stock items and suggest how many units to restock.' },
-    { label: 'Sales Summary', icon: TrendingUp, text: 'Give me a summary of total sales, billing count, and total items sold.' },
-    { label: 'Top Profit SKUs', icon: ShoppingBag, text: 'Show me which products have the highest markup and profit margins.' }
+    { label: 'Which products should I restock?', icon: AlertCircle, text: 'Which products should I restock based on current levels and minimum limits?' },
+    { label: 'Show products expiring this week', icon: AlertCircle, text: 'Show products likely to expire this week (current date is 2026-06-07) or already expired.' },
+    { label: 'Why did revenue drop this month?', icon: TrendingUp, text: 'Why did revenue drop this month? Please analyze recent transactions for any sales drops or peak hours to explain monthly performance.' }
   ];
 
   // Helper to parse markdown-like bold, lists, and tables into HTML

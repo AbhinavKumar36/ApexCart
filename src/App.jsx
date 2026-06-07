@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { doc, getDoc, setDoc, deleteDoc, collection, onSnapshot } from 'firebase/firestore';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth, db } from './firebase';
-import { INITIAL_PRODUCTS, CATEGORIES } from './data/mockData';
+import { INITIAL_PRODUCTS, CATEGORIES, DEFAULT_SUPPLIERS, generateMockSales } from './data/mockData';
 import Login from './components/Login';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
@@ -12,6 +12,7 @@ import History from './components/History';
 import Settings from './components/Settings';
 import Chatbot from './components/Chatbot';
 import Reports from './components/Reports';
+import Suppliers from './components/Suppliers';
 
 export default function App() {
   // Authentication states
@@ -23,6 +24,17 @@ export default function App() {
   // Database states
   const [products, setProducts] = useState([]);
   const [sales, setSales] = useState([]);
+  const [suppliers, setSuppliers] = useState([]);
+  const [purchaseOrders, setPurchaseOrders] = useState([]);
+  const [activityLogs, setActivityLogs] = useState([]);
+  const [currentStore, setCurrentStore] = useState(() => {
+    return localStorage.getItem('apexcart_current_store') || 'Store A';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('apexcart_current_store', currentStore);
+  }, [currentStore]);
+
   const [storeSettings, setStoreSettings] = useState(() => {
     const saved = localStorage.getItem('apexcart_settings');
     return saved ? JSON.parse(saved) : {
@@ -31,7 +43,8 @@ export default function App() {
       storePhone: "+1 (555) 019-2834",
       currencySymbol: "$",
       lowStockThreshold: 10,
-      expiryWarningDays: 30
+      expiryWarningDays: 30,
+      geminiApiKey: ""
     };
   });
   
@@ -111,6 +124,9 @@ export default function App() {
     let unsubProducts = () => {};
     let unsubSales = () => {};
     let unsubSettings = () => {};
+    let unsubSuppliers = () => {};
+    let unsubPOs = () => {};
+    let unsubLogs = () => {};
     let connectionTimeout;
 
     const unsubAuth = onAuthStateChanged(auth, async (user) => {
@@ -170,10 +186,33 @@ export default function App() {
             setProducts(items);
             localStorage.setItem('apexcart_products', JSON.stringify(items));
           } else {
-            // Seed initial database products catalog to Firestore
-            INITIAL_PRODUCTS.forEach(async (p) => {
-              const { id, ...data } = p;
-              await setDoc(doc(db, 'products', id), data);
+            // Seed initial database products catalog to Firestore for Store A and Store B
+            const seededProducts = [];
+            INITIAL_PRODUCTS.forEach(p => {
+              const pA = {
+                ...p,
+                id: p.id + '_A',
+                originalId: p.id,
+                store: 'Store A'
+              };
+              const pB = {
+                ...p,
+                id: p.id + '_B',
+                originalId: p.id,
+                store: 'Store B',
+                quantity: Math.max(1, Math.round(p.quantity * 0.7))
+              };
+              seededProducts.push(pA, pB);
+            });
+            
+            seededProducts.forEach(async (p) => {
+              await setDoc(doc(db, 'products', p.id), p);
+            });
+
+            // Seed dynamic daily transactions history
+            const generatedSales = generateMockSales(seededProducts);
+            generatedSales.forEach(async (s) => {
+              await setDoc(doc(db, 'sales', s.id), s);
             });
           }
         }, (error) => {
@@ -207,12 +246,56 @@ export default function App() {
               storePhone: "+1 (555) 019-2834",
               currencySymbol: "$",
               lowStockThreshold: 10,
-              expiryWarningDays: 30
+              expiryWarningDays: 30,
+              geminiApiKey: ""
             };
             setDoc(doc(db, 'settings', 'general'), defaultSettings);
           }
         }, (error) => {
           console.error("Settings Firestore sync error:", error);
+        });
+
+        // 5. Sync Suppliers
+        unsubSuppliers = onSnapshot(collection(db, 'suppliers'), (snapshot) => {
+          const items = [];
+          snapshot.forEach(docSnap => {
+            items.push({ id: docSnap.id, ...docSnap.data() });
+          });
+          if (items.length > 0) {
+            setSuppliers(items);
+            localStorage.setItem('apexcart_suppliers', JSON.stringify(items));
+          } else {
+            DEFAULT_SUPPLIERS.forEach(async (s) => {
+              await setDoc(doc(db, 'suppliers', s.id), s);
+            });
+          }
+        }, (error) => {
+          console.error("Suppliers sync error:", error);
+        });
+
+        // 6. Sync Purchase Orders
+        unsubPOs = onSnapshot(collection(db, 'purchaseOrders'), (snapshot) => {
+          const items = [];
+          snapshot.forEach(docSnap => {
+            items.push({ id: docSnap.id, ...docSnap.data() });
+          });
+          setPurchaseOrders(items);
+          localStorage.setItem('apexcart_pos', JSON.stringify(items));
+        }, (error) => {
+          console.error("POs sync error:", error);
+        });
+
+        // 7. Sync Activity Logs
+        unsubLogs = onSnapshot(collection(db, 'activityLogs'), (snapshot) => {
+          const items = [];
+          snapshot.forEach(docSnap => {
+            items.push({ id: docSnap.id, ...docSnap.data() });
+          });
+          items.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+          setActivityLogs(items.slice(0, 100));
+          localStorage.setItem('apexcart_activity_logs', JSON.stringify(items.slice(0, 100)));
+        }, (error) => {
+          console.error("Logs sync error:", error);
         });
 
       } else {
@@ -236,6 +319,15 @@ export default function App() {
       const savedSales = localStorage.getItem('apexcart_sales');
       setSales(savedSales ? JSON.parse(savedSales) : []);
 
+      const savedSuppliers = localStorage.getItem('apexcart_suppliers');
+      setSuppliers(savedSuppliers ? JSON.parse(savedSuppliers) : DEFAULT_SUPPLIERS);
+
+      const savedPOs = localStorage.getItem('apexcart_pos');
+      setPurchaseOrders(savedPOs ? JSON.parse(savedPOs) : []);
+
+      const savedLogs = localStorage.getItem('apexcart_activity_logs');
+      setActivityLogs(savedLogs ? JSON.parse(savedLogs) : []);
+
       const savedSettings = localStorage.getItem('apexcart_settings');
       setStoreSettings(savedSettings ? JSON.parse(savedSettings) : {
         storeName: "ApexCart Supermarket",
@@ -243,7 +335,8 @@ export default function App() {
         storePhone: "+1 (555) 019-2834",
         currencySymbol: "$",
         lowStockThreshold: 10,
-        expiryWarningDays: 30
+        expiryWarningDays: 30,
+        geminiApiKey: ""
       });
       setVendor('all');
 
@@ -256,6 +349,9 @@ export default function App() {
       unsubProducts();
       unsubSales();
       unsubSettings();
+      unsubSuppliers();
+      unsubPOs();
+      unsubLogs();
     };
   }, []);
 
@@ -274,10 +370,27 @@ export default function App() {
       setIsOfflineMode(true);
 
       const savedProducts = localStorage.getItem('apexcart_products');
-      setProducts(savedProducts ? JSON.parse(savedProducts) : INITIAL_PRODUCTS);
+      let productsList = [];
+      if (savedProducts) {
+        productsList = JSON.parse(savedProducts);
+      } else {
+        INITIAL_PRODUCTS.forEach(p => {
+          productsList.push({ ...p, id: p.id + '_A', originalId: p.id, store: 'Store A' });
+          productsList.push({ ...p, id: p.id + '_B', originalId: p.id, store: 'Store B', quantity: Math.max(1, Math.round(p.quantity * 0.7)) });
+        });
+        localStorage.setItem('apexcart_products', JSON.stringify(productsList));
+      }
+      setProducts(productsList);
 
       const savedSales = localStorage.getItem('apexcart_sales');
-      setSales(savedSales ? JSON.parse(savedSales) : []);
+      let salesList = [];
+      if (savedSales) {
+        salesList = JSON.parse(savedSales);
+      } else {
+        salesList = generateMockSales(productsList);
+        localStorage.setItem('apexcart_sales', JSON.stringify(salesList));
+      }
+      setSales(salesList);
       
       setIsLoading(false);
       return;
@@ -297,6 +410,69 @@ export default function App() {
       body.classList.remove('theme-dark');
     }
   }, [theme]);
+
+  const logActivity = async (action, details) => {
+    const logId = 'L' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
+    const newLog = {
+      id: logId,
+      timestamp: new Date().toISOString(),
+      user: currentUser || 'System',
+      action,
+      details,
+      store: currentStore
+    };
+    if (!isOfflineMode) {
+      try {
+        await setDoc(doc(db, 'activityLogs', logId), newLog);
+      } catch (err) {
+        console.error("Failed writing audit log to Firestore:", err);
+      }
+    }
+    setActivityLogs(prev => [newLog, ...prev].slice(0, 200));
+    const saved = localStorage.getItem('apexcart_activity_logs');
+    const logsList = saved ? JSON.parse(saved) : [];
+    localStorage.setItem('apexcart_activity_logs', JSON.stringify([newLog, ...logsList].slice(0, 200)));
+  };
+
+  const handleSetSuppliers = (updater) => {
+    setSuppliers(prev => {
+      const next = typeof updater === 'function' ? updater(prev) : updater;
+      localStorage.setItem('apexcart_suppliers', JSON.stringify(next));
+      if (!isOfflineMode) {
+        next.forEach(async (s) => {
+          const { id, ...data } = s;
+          await setDoc(doc(db, 'suppliers', id), data);
+        });
+        const nextIds = next.map(s => s.id);
+        prev.forEach(async (s) => {
+          if (!nextIds.includes(s.id)) {
+            await deleteDoc(doc(db, 'suppliers', s.id));
+          }
+        });
+      }
+      return next;
+    });
+  };
+
+  const handleSetPurchaseOrders = (updater) => {
+    setPurchaseOrders(prev => {
+      const next = typeof updater === 'function' ? updater(prev) : updater;
+      localStorage.setItem('apexcart_pos', JSON.stringify(next));
+      if (!isOfflineMode) {
+        next.forEach(async (po) => {
+          const { id, ...data } = po;
+          await setDoc(doc(db, 'purchaseOrders', id), data);
+        });
+        const nextIds = next.map(po => po.id);
+        prev.forEach(async (po) => {
+          if (!nextIds.includes(po.id)) {
+            await deleteDoc(doc(db, 'purchaseOrders', po.id));
+          }
+        });
+      }
+      return next;
+    });
+  };
 
   // Wrapper set state calls that sync to both LocalStorage and Cloud Firestore
   const handleSetProducts = (updater) => {
@@ -395,31 +571,70 @@ export default function App() {
   };
 
   // Danger actions reset methods
-  const handleResetData = () => {
-    localStorage.setItem('apexcart_products', JSON.stringify(INITIAL_PRODUCTS));
-    localStorage.setItem('apexcart_sales', JSON.stringify([]));
-    setProducts(INITIAL_PRODUCTS);
-    setSales([]);
+  const handleResetData = async () => {
+    const doubledProducts = [];
+    INITIAL_PRODUCTS.forEach(p => {
+      doubledProducts.push({ ...p, id: p.id + '_A', originalId: p.id, store: 'Store A' });
+      doubledProducts.push({ ...p, id: p.id + '_B', originalId: p.id, store: 'Store B', quantity: Math.max(1, Math.round(p.quantity * 0.7)) });
+    });
+
+    const generatedSales = generateMockSales(doubledProducts);
+
+    localStorage.setItem('apexcart_products', JSON.stringify(doubledProducts));
+    localStorage.setItem('apexcart_sales', JSON.stringify(generatedSales));
+    localStorage.setItem('apexcart_suppliers', JSON.stringify(DEFAULT_SUPPLIERS));
+    localStorage.setItem('apexcart_pos', JSON.stringify([]));
+    localStorage.setItem('apexcart_activity_logs', JSON.stringify([]));
+
+    setProducts(doubledProducts);
+    setSales(generatedSales);
+    setSuppliers(DEFAULT_SUPPLIERS);
+    setPurchaseOrders([]);
+    setActivityLogs([]);
 
     if (!isOfflineMode) {
-      // Delete all current sales documents
+      products.forEach(async (p) => {
+        await deleteDoc(doc(db, 'products', p.id));
+      });
+      for (const p of doubledProducts) {
+        await setDoc(doc(db, 'products', p.id), p);
+      }
       sales.forEach(async (s) => {
         await deleteDoc(doc(db, 'sales', s.id));
       });
-      // Seed default products
-      INITIAL_PRODUCTS.forEach(async (p) => {
-        const { id, ...data } = p;
-        await setDoc(doc(db, 'products', id), data);
+      for (const s of generatedSales) {
+        await setDoc(doc(db, 'sales', s.id), s);
+      }
+      suppliers.forEach(async (s) => {
+        await deleteDoc(doc(db, 'suppliers', s.id));
+      });
+      DEFAULT_SUPPLIERS.forEach(async (s) => {
+        await setDoc(doc(db, 'suppliers', s.id), s);
+      });
+      purchaseOrders.forEach(async (po) => {
+        await deleteDoc(doc(db, 'purchaseOrders', po.id));
+      });
+      activityLogs.forEach(async (log) => {
+        await deleteDoc(doc(db, 'activityLogs', log.id));
       });
     }
-    alert('System catalog reset to default items.');
+    
+    await logActivity('DATABASE_RESET', 'Database was reset to default mock items for Store A & B');
+    alert('System catalog and suppliers reset to default items.');
   };
 
-  const handleClearData = () => {
+  const handleClearData = async () => {
     localStorage.setItem('apexcart_products', JSON.stringify([]));
     localStorage.setItem('apexcart_sales', JSON.stringify([]));
+    localStorage.setItem('apexcart_suppliers', JSON.stringify([]));
+    localStorage.setItem('apexcart_pos', JSON.stringify([]));
+    localStorage.setItem('apexcart_activity_logs', JSON.stringify([]));
+
     setProducts([]);
     setSales([]);
+    setSuppliers([]);
+    setPurchaseOrders([]);
+    setActivityLogs([]);
 
     if (!isOfflineMode) {
       products.forEach(async (p) => {
@@ -428,8 +643,18 @@ export default function App() {
       sales.forEach(async (s) => {
         await deleteDoc(doc(db, 'sales', s.id));
       });
+      suppliers.forEach(async (s) => {
+        await deleteDoc(doc(db, 'suppliers', s.id));
+      });
+      purchaseOrders.forEach(async (po) => {
+        await deleteDoc(doc(db, 'purchaseOrders', po.id));
+      });
+      activityLogs.forEach(async (log) => {
+        await deleteDoc(doc(db, 'activityLogs', log.id));
+      });
     }
-    alert('All catalog items and billing records deleted.');
+    
+    alert('All database catalogs, ledgers, and logs have been purged.');
   };
 
   const handleImportData = (newProducts, newSales) => {
@@ -471,6 +696,7 @@ export default function App() {
             role={role}
             storeSettings={storeSettings}
             vendor={vendor}
+            currentStore={currentStore}
           />
         );
       case 'pos':
@@ -483,10 +709,11 @@ export default function App() {
             categories={CATEGORIES} 
             storeSettings={storeSettings}
             vendor={vendor}
+            currentStore={currentStore}
+            logActivity={logActivity}
           />
         );
       case 'inventory':
-        // Employees get read-only view; admins get full edit access
         return (
           <Inventory 
             products={products} 
@@ -495,6 +722,8 @@ export default function App() {
             storeSettings={storeSettings}
             vendor={vendor}
             role={role}
+            currentStore={currentStore}
+            logActivity={logActivity}
           />
         );
       case 'history':
@@ -506,6 +735,23 @@ export default function App() {
             setProducts={handleSetProducts} 
             role={role}
             vendor={vendor}
+            currentStore={currentStore}
+            logActivity={logActivity}
+          />
+        );
+      case 'suppliers':
+        return (
+          <Suppliers
+            products={products}
+            setProducts={handleSetProducts}
+            suppliers={suppliers}
+            setSuppliers={handleSetSuppliers}
+            purchaseOrders={purchaseOrders}
+            setPurchaseOrders={handleSetPurchaseOrders}
+            currentStore={currentStore}
+            logActivity={logActivity}
+            role={role}
+            storeSettings={storeSettings}
           />
         );
       case 'reports':
@@ -515,6 +761,7 @@ export default function App() {
             sales={sales}
             storeSettings={storeSettings}
             vendor={vendor}
+            currentStore={currentStore}
           />
         );
       case 'settings':
@@ -532,6 +779,7 @@ export default function App() {
             onImportData={handleImportData}
             products={products}
             sales={sales}
+            activityLogs={activityLogs}
           />
         );
       default:
@@ -576,6 +824,8 @@ export default function App() {
         onLogout={handleLogout} 
         role={role}
         vendor={vendor}
+        currentStore={currentStore}
+        setCurrentStore={setCurrentStore}
       />
       <main className="main-content" style={{ marginTop: '60px' /* offset mobile header height */ }}>
         {/* Sync Status Badge Indicator */}
@@ -629,6 +879,7 @@ export default function App() {
         role={role} 
         username={currentUser} 
         vendor={vendor}
+        storeSettings={storeSettings}
       />
     </div>
   );

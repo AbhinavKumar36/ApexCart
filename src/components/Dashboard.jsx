@@ -86,16 +86,34 @@ export default function Dashboard({ products, sales, setProducts, setActiveTab, 
     percentage: Math.round((count / totalProducts) * 100)
   })).sort((a, b) => b.count - a.count);
 
+  // Helper: normalize date strings to YYYY-MM-DD regardless of input format (DD/MM/YYYY or YYYY-MM-DD)
+  const normalizeDateStr = (dateStr) => {
+    if (!dateStr) return '';
+    if (dateStr.includes('/')) {
+      const parts = dateStr.split('/');
+      if (parts.length === 3) return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+    }
+    return dateStr;
+  };
+
+  // Helper: get local YYYY-MM-DD string (avoids UTC timezone shift from toISOString)
+  const toLocalDateStr = (date) => {
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
   // Real sparkline: calculate last-7-days revenue from actual sales data
   const dailySales = (() => {
     const result = [];
     for (let i = 6; i >= 0; i--) {
       const d = new Date();
       d.setDate(d.getDate() - i);
-      const dateStr = d.toISOString().split('T')[0];
+      const dateStr = toLocalDateStr(d);
       const dayLabel = d.toLocaleDateString('en-US', { weekday: 'short' });
       const dayRevenue = sales
-        .filter(s => (s.date || '') === dateStr)
+        .filter(s => normalizeDateStr(s.date) === dateStr)
         .reduce((acc, s) => {
           if (vendor === 'all') return acc + (s.totalPrice || 0);
           const vendorSum = (s.items || []).reduce((sum, item) => {
@@ -267,7 +285,7 @@ export default function Dashboard({ products, sales, setProducts, setActiveTab, 
                     textAnchor="middle" 
                     fontWeight="700"
                   >
-                    ${p.amount}
+                    {storeSettings?.currencySymbol || '$'}{p.amount.toFixed(0)}
                   </text>
                 </g>
               ))}
