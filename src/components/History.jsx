@@ -173,7 +173,7 @@ export default function History({ sales, setSales, products, setProducts, role, 
                           <Eye size={16} />
                           <span>Lookup</span>
                         </button>
-                        {role !== 'staff' && (
+                        {role === 'admin' && (
                           <button 
                             onClick={() => setRefundTarget(sale)} 
                             style={styles.refundBtn}

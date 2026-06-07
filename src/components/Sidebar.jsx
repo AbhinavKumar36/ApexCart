@@ -35,11 +35,10 @@ export default function Sidebar({
     { id: 'settings', label: 'Control Settings', icon: SettingsIcon }
   ];
 
-  // Filter items based on active role
+  // Filter items based on active role - employees see all except Settings
   const filteredMenuItems = menuItems.filter(item => {
-    if (role === 'staff') {
-      // Staff can only see dashboard, pos, history, reports
-      return ['dashboard', 'pos', 'history', 'reports'].includes(item.id);
+    if (role !== 'admin') {
+      return ['dashboard', 'pos', 'inventory', 'history', 'reports'].includes(item.id);
     }
     return true; // Admin has full access
   });
@@ -92,7 +91,7 @@ export default function Sidebar({
             </div>
             <div style={styles.userInfo}>
               <span style={styles.userRole}>
-                {role === 'admin' ? 'ADMINISTRATOR' : 'STAFF OPERATOR'}
+                {role === 'admin' ? 'ADMINISTRATOR' : 'EMPLOYEE'}
               </span>
               <span style={styles.userName}>{username}</span>
               {vendor && vendor !== 'all' && (

@@ -34,7 +34,7 @@ const VENDOR_OPTIONS = [
 
 const ROLE_OPTIONS = [
   { value: 'admin', label: 'Administrator' },
-  { value: 'staff', label: 'Staff Operator' },
+  { value: 'employee', label: 'Employee' },
 ];
 
 export default function Settings({ 
@@ -67,7 +67,7 @@ export default function Settings({
   // User Management state
   const [newEmail, setNewEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');
-  const [newRole, setNewRole] = useState('staff');
+  const [newRole, setNewRole] = useState('employee');
   const [newVendor, setNewVendor] = useState('all');
   const [userCreateLoading, setUserCreateLoading] = useState(false);
   const [userCreateError, setUserCreateError] = useState('');
@@ -135,7 +135,7 @@ export default function Settings({
       setUserCreateSuccess(`✅ Account created: ${newEmail.trim()} (${newRole} · ${newVendor})`);
       setNewEmail('');
       setNewPassword('');
-      setNewRole('staff');
+      setNewRole('employee');
       setNewVendor('all');
     } catch (err) {
       if (err.code === 'auth/email-already-in-use') {
@@ -400,9 +400,7 @@ export default function Settings({
                 <div style={styles.accountsGrid}>
                   {[
                     { email: 'admin@apexcart.com', pass: 'admin123', role: 'Admin', vendor: 'All Stalls', color: 'var(--color-danger)' },
-                    { email: 'staff@apexcart.com', pass: 'staff123', role: 'Staff', vendor: 'All Stalls', color: 'var(--color-primary)' },
-                    { email: 'grocery_staff@apexcart.com', pass: 'staff123', role: 'Staff', vendor: 'Apex Grocery', color: 'var(--color-success)' },
-                    { email: 'fresh_staff@apexcart.com', pass: 'staff123', role: 'Staff', vendor: 'Apex Fresh', color: '#f59e0b' },
+                    { email: 'employee@apexcart.com', pass: 'emp123', role: 'Employee', vendor: 'All Stalls', color: 'var(--color-primary)' },
                   ].map(acc => (
                     <div key={acc.email} style={styles.accountCard}>
                       <div style={{ ...styles.accountAvatar, backgroundColor: `${acc.color}20`, color: acc.color }}>
@@ -434,7 +432,7 @@ export default function Settings({
                   <UserPlus size={22} color="var(--color-primary)" />
                   <div>
                     <h2 style={styles.panelTitle}>Create New Operator Account</h2>
-                    <p style={styles.panelSubtitle}>Register a new staff or admin account with stall assignment</p>
+                    <p style={styles.panelSubtitle}>Register a new employee or admin account with optional stall assignment</p>
                   </div>
                 </div>
 
@@ -489,7 +487,7 @@ export default function Settings({
                           <option key={r.value} value={r.value}>{r.label}</option>
                         ))}
                       </select>
-                      <span style={styles.inputHint}>Admin: full access. Staff: POS + History + Reports only</span>
+                      <span style={styles.inputHint}>Admin: full access. Employee: POS + Inventory (view) + History + Reports</span>
                     </div>
                     <div style={styles.inputGroup}>
                       <label style={styles.label}>Assigned Vendor Stall</label>

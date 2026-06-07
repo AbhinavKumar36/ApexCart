@@ -17,7 +17,7 @@ export default function App() {
   // Authentication states
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUser, setCurrentUser] = useState('');
-  const [role, setRole] = useState('staff'); // default role: staff
+  const [role, setRole] = useState('employee'); // default role: employee
   const [vendor, setVendor] = useState('all'); // default vendor stall: all
   
   // Database states
@@ -129,11 +129,13 @@ export default function App() {
           const userDoc = await getDoc(userDocRef);
           
           if (userDoc.exists()) {
-            setRole(userDoc.data().role || 'staff');
+            // Normalize legacy 'staff' → 'employee'
+            const rawRole = userDoc.data().role || 'employee';
+            setRole(rawRole === 'staff' ? 'employee' : rawRole);
             setVendor(userDoc.data().vendor || 'all');
           } else {
-            // Seeding user document based on email prefix (admin@ vs staff@)
-            const assignedRole = user.email.startsWith('admin') ? 'admin' : 'staff';
+            // Seeding user document based on email prefix (admin@ vs employee@)
+            const assignedRole = user.email.startsWith('admin') ? 'admin' : 'employee';
             let assignedVendor = 'all';
             if (user.email.startsWith('grocery_staff')) assignedVendor = 'Apex Grocery';
             else if (user.email.startsWith('fresh_staff')) assignedVendor = 'Apex Fresh';
@@ -149,7 +151,8 @@ export default function App() {
           }
         } catch (err) {
           console.warn("Failed fetching live user role. Defaulting based on email prefix:", err);
-          setRole(user.email.startsWith('admin') ? 'admin' : 'staff');
+          const rawRole2 = user.email.startsWith('admin') ? 'admin' : 'employee';
+          setRole(rawRole2);
           let assignedVendor = 'all';
           if (user.email.startsWith('grocery_staff')) assignedVendor = 'Apex Grocery';
           else if (user.email.startsWith('fresh_staff')) assignedVendor = 'Apex Fresh';
@@ -216,7 +219,7 @@ export default function App() {
         // Logged out
         setIsAuthenticated(false);
         setCurrentUser('');
-        setRole('staff');
+        setRole('employee');
         setVendor('all');
         setIsLoading(false);
       }
@@ -261,7 +264,7 @@ export default function App() {
     // If sign-in resolved locally in offline mode
     if (user.isOffline) {
       setCurrentUser(user.email);
-      setRole(user.email.startsWith('admin') ? 'admin' : 'staff');
+      setRole(user.email.startsWith('admin') ? 'admin' : 'employee');
       let assignedVendor = 'all';
       if (user.email.startsWith('grocery_staff')) assignedVendor = 'Apex Grocery';
       else if (user.email.startsWith('fresh_staff')) assignedVendor = 'Apex Fresh';
@@ -381,7 +384,7 @@ export default function App() {
     signOut(auth).catch(err => console.error("Signout error:", err));
     setIsAuthenticated(false);
     setCurrentUser('');
-    setRole('staff');
+    setRole('employee');
     setVendor('all');
     setActiveTab('dashboard');
   };
@@ -483,10 +486,7 @@ export default function App() {
           />
         );
       case 'inventory':
-        // Restrict page view if staff attempts to load it directly
-        if (role === 'staff') {
-          return <div style={styles.restrictedText}>Restricted Area. Admin privilege required.</div>;
-        }
+        // Employees get read-only view; admins get full edit access
         return (
           <Inventory 
             products={products} 
@@ -494,6 +494,7 @@ export default function App() {
             categories={CATEGORIES} 
             storeSettings={storeSettings}
             vendor={vendor}
+            role={role}
           />
         );
       case 'history':
@@ -517,7 +518,7 @@ export default function App() {
           />
         );
       case 'settings':
-        if (role === 'staff') {
+        if (role !== 'admin') {
           return <div style={styles.restrictedText}>Restricted Area. Admin privilege required.</div>;
         }
         return (

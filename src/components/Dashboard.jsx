@@ -391,7 +391,7 @@ export default function Dashboard({ products, sales, setProducts, setActiveTab, 
                       <span style={styles.alertMin}>Limit: {storeSettings?.lowStockThreshold || item.minStock}</span>
                     </div>
                   </div>
-                  {role !== 'staff' && (
+                  {role === 'admin' && (
                     <div style={styles.alertActions}>
                       <button 
                         onClick={() => handleQuickRestock(item.id, 10)} 
@@ -467,7 +467,7 @@ export default function Dashboard({ products, sales, setProducts, setActiveTab, 
                         )}
                       </div>
                     </div>
-                    {role !== 'staff' && (
+                    {role === 'admin' && (
                       <div style={styles.alertActions}>
                         <button 
                           onClick={() => { handleClearanceDiscount(item.id, 30); alert(`Applied 30% markdown to ${item.name}`); }} 

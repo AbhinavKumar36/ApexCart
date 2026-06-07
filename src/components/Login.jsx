@@ -67,6 +67,7 @@ export default function Login({ onLoginSuccess }) {
         if (
           (email === 'admin@apexcart.com' && password === 'admin123') ||
           (email === 'staff@apexcart.com' && password === 'staff123') ||
+          (email === 'employee@apexcart.com' && password === 'emp123') ||
           (email === 'grocery_staff@apexcart.com' && password === 'staff123') ||
           (email === 'fresh_staff@apexcart.com' && password === 'staff123')
         ) {
@@ -97,6 +98,7 @@ export default function Login({ onLoginSuccess }) {
         if (
           (email === 'admin@apexcart.com' && password === 'admin123') ||
           (email === 'staff@apexcart.com' && password === 'staff123') ||
+          (email === 'employee@apexcart.com' && password === 'emp123') ||
           (email === 'grocery_staff@apexcart.com' && password === 'staff123') ||
           (email === 'fresh_staff@apexcart.com' && password === 'staff123')
         ) {
@@ -230,10 +232,8 @@ export default function Login({ onLoginSuccess }) {
 
             <div style={styles.hintBox}>
               <p style={styles.hintTitle}>Demo Access Accounts:</p>
-              <p style={styles.hintValue}>Admin: <strong>admin@apexcart.com</strong> / <strong>admin123</strong></p>
-              <p style={styles.hintValue}>Cashier (All): <strong>staff@apexcart.com</strong> / <strong>staff123</strong></p>
-              <p style={styles.hintValue}>Grocery Stall: <strong>grocery_staff@apexcart.com</strong> / <strong>staff123</strong></p>
-              <p style={styles.hintValue}>Fresh Dairy Stall: <strong>fresh_staff@apexcart.com</strong> / <strong>staff123</strong></p>
+              <p style={styles.hintValue}>🔑 Admin: <strong>admin@apexcart.com</strong> / <strong>admin123</strong></p>
+              <p style={styles.hintValue}>👤 Employee: <strong>employee@apexcart.com</strong> / <strong>emp123</strong></p>
             </div>
           </form>
         )}

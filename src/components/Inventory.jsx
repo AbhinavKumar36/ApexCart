@@ -11,7 +11,7 @@ import {
   Sparkles
 } from 'lucide-react';
 
-export default function Inventory({ products, setProducts, categories, storeSettings, vendor }) {
+export default function Inventory({ products, setProducts, categories, storeSettings, vendor, role }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [stockFilter, setStockFilter] = useState('All'); // All, In Stock, Low Stock, Out of Stock
@@ -229,15 +229,22 @@ ${JSON.stringify(lowStockData, null, 2)}
           <h1 style={styles.pageTitle}>Inventory Catalog</h1>
           <p style={styles.pageSubtitle}>Manage items, stocks levels, and store retail values.</p>
         </div>
-        <div style={{ display: 'flex', gap: '0.75rem' }}>
-          <button onClick={handleGenerateAIProcurement} className="btn btn-success" style={{ backgroundColor: 'var(--color-success)', borderColor: 'var(--color-success)' }}>
-            <Sparkles size={16} />
-            <span>AI Restock Draft</span>
-          </button>
-          <button onClick={() => openModal()} style={styles.addBtn} className="btn btn-primary">
-            <Plus size={18} />
-            <span>Add New Product</span>
-          </button>
+        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+          {role === 'admin' && (
+            <>
+              <button onClick={handleGenerateAIProcurement} className="btn btn-success" style={{ backgroundColor: 'var(--color-success)', borderColor: 'var(--color-success)' }}>
+                <Sparkles size={16} />
+                <span>AI Restock Draft</span>
+              </button>
+              <button onClick={() => openModal()} style={styles.addBtn} className="btn btn-primary">
+                <Plus size={18} />
+                <span>Add New Product</span>
+              </button>
+            </>
+          )}
+          {role !== 'admin' && (
+            <span style={styles.readOnlyBadge}>👁️ View Only</span>
+          )}
         </div>
       </div>
 
@@ -410,22 +417,26 @@ ${JSON.stringify(lowStockData, null, 2)}
                         </span>
                       </td>
                       <td style={styles.tdActions}>
-                        <div style={styles.actionButtons}>
-                          <button 
-                            onClick={() => openModal(p)} 
-                            style={styles.editBtn} 
-                            title="Edit details"
-                          >
-                            <Edit size={16} />
-                          </button>
-                          <button 
-                            onClick={() => setDeleteTarget(p)} 
-                            style={styles.deleteBtn} 
-                            title="Delete product"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
+                        {role === 'admin' ? (
+                          <div style={styles.actionButtons}>
+                            <button 
+                              onClick={() => openModal(p)} 
+                              style={styles.editBtn} 
+                              title="Edit details"
+                            >
+                              <Edit size={16} />
+                            </button>
+                            <button 
+                              onClick={() => setDeleteTarget(p)} 
+                              style={styles.deleteBtn} 
+                              title="Delete product"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        ) : (
+                          <span style={styles.viewOnlyCell}>—</span>
+                        )}
                       </td>
                     </tr>
                   );
@@ -743,6 +754,24 @@ const styles = {
   },
   addBtn: {
     padding: '0.65rem 1.25rem',
+  },
+  readOnlyBadge: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.35rem',
+    padding: '0.4rem 0.85rem',
+    borderRadius: '9999px',
+    fontSize: '0.8125rem',
+    fontWeight: '700',
+    color: 'var(--color-text-muted)',
+    backgroundColor: 'var(--color-bg-base)',
+    border: '1px solid var(--color-border)',
+  },
+  viewOnlyCell: {
+    display: 'block',
+    textAlign: 'center',
+    color: 'var(--color-text-muted)',
+    fontSize: '1rem',
   },
   filterRow: {
     display: 'flex',
