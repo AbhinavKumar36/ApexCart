@@ -207,7 +207,8 @@ Analyze the SYSTEM STORE CONTEXT above to answer the User Query.
     const MODELS_TO_TRY = ['gemini-2.5-flash', 'gemini-2.0-flash'];
 
     try {
-      const apiKey = storeSettings?.geminiApiKey || import.meta.env.VITE_GEMINI_API_KEY;
+      const rawApiKey = storeSettings?.geminiApiKey || (import.meta.env.VITE_GEMINI_API_KEY_B64 ? atob(import.meta.env.VITE_GEMINI_API_KEY_B64) : '');
+      const apiKey = rawApiKey;
 
       if (!apiKey || apiKey.includes('placeholder')) {
         throw new Error('NO_API_KEY');

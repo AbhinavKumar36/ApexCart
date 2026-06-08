@@ -294,7 +294,8 @@ ${JSON.stringify(lowStockData, null, 2)}
     };
 
     try {
-      const apiKey = storeSettings?.geminiApiKey || import.meta.env.VITE_GEMINI_API_KEY;
+      const rawApiKey = storeSettings?.geminiApiKey || (import.meta.env.VITE_GEMINI_API_KEY_B64 ? atob(import.meta.env.VITE_GEMINI_API_KEY_B64) : '');
+      const apiKey = rawApiKey;
 
       if (!apiKey || apiKey.includes('placeholder') || !navigator.onLine) {
         // Use offline fallback directly
