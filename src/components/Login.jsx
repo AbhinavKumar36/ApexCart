@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../firebase';
 import { Lock, Mail, AlertTriangle, KeyRound, Eye, EyeOff, Store } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export default function Login({ onLoginSuccess }) {
   const [email, setEmail] = useState('');
@@ -10,20 +11,19 @@ export default function Login({ onLoginSuccess }) {
   const [error, setError] = useState('');
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [attempts, setAttempts] = useState(3);
-  const [lockoutTime, setLockoutTime] = useState(0); // in seconds
-
-  useEffect(() => {
+  const [lockoutTime, setLockoutTime] = useState(() => {
     // Check if there is an active lockout in localStorage from a previous refresh
     const savedLockoutEnd = localStorage.getItem('login_lockout_end');
     if (savedLockoutEnd) {
       const remaining = Math.ceil((parseInt(savedLockoutEnd, 10) - Date.now()) / 1000);
       if (remaining > 0) {
-        setLockoutTime(remaining);
+        return remaining;
       } else {
         localStorage.removeItem('login_lockout_end');
       }
     }
-  }, []);
+    return 0;
+  }); // in seconds
 
   useEffect(() => {
     let timer;
@@ -151,7 +151,13 @@ export default function Login({ onLoginSuccess }) {
   return (
     <div style={styles.container}>
       <div style={styles.backgroundGlow} />
-      <div style={styles.card} className="glass glow animate-slide">
+      <motion.div 
+        style={styles.card} 
+        className="glass glow"
+        initial={{ y: 80, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ type: "spring", stiffness: 100, damping: 15 }}
+      >
         <div style={styles.header}>
           <div style={styles.logoContainer}>
             <Store size={32} color="var(--color-primary)" />
@@ -176,7 +182,7 @@ export default function Login({ onLoginSuccess }) {
             <p style={styles.lockoutText}>Too many failed attempts. Security cooldown active.</p>
             <div style={styles.countdownBox}>
               <span style={styles.countdownLabel}>TRY AGAIN IN</span>
-              <span style={styles.countdownTime}>{formatLockoutTime(lockoutTime)}</span>
+              <span style={styles.countdownTime} className="font-mono">{formatLockoutTime(lockoutTime)}</span>
             </div>
           </div>
         ) : (
@@ -191,7 +197,7 @@ export default function Login({ onLoginSuccess }) {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   style={styles.input}
-                  className="input-field"
+                  className="input-field font-mono"
                   autoFocus
                   required
                 />
@@ -208,7 +214,7 @@ export default function Login({ onLoginSuccess }) {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   style={styles.input}
-                  className="input-field"
+                  className="input-field font-mono"
                   required
                 />
                 <button
@@ -232,12 +238,12 @@ export default function Login({ onLoginSuccess }) {
 
             <div style={styles.hintBox}>
               <p style={styles.hintTitle}>Demo Access Accounts:</p>
-              <p style={styles.hintValue}>🔑 Admin: <strong>admin@apexcart.com</strong> / <strong>admin123</strong></p>
-              <p style={styles.hintValue}>👤 Employee: <strong>employee@apexcart.com</strong> / <strong>emp123</strong></p>
+              <p style={styles.hintValue}>🔑 Admin: <strong className="font-mono">admin@apexcart.com</strong> / <strong className="font-mono">admin123</strong></p>
+              <p style={styles.hintValue}>👤 Employee: <strong className="font-mono">employee@apexcart.com</strong> / <strong className="font-mono">emp123</strong></p>
             </div>
           </form>
         )}
-      </div>
+      </motion.div>
     </div>
   );
 }

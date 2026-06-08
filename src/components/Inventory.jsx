@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { 
   Plus, 
   Search, 
@@ -9,13 +9,30 @@ import {
   AlertTriangle,
   PackageOpen,
   Sparkles,
-  Building2,
-  Barcode
+  Building2
 } from 'lucide-react';
 import JsBarcode from 'jsbarcode';
 import { useRef } from 'react';
+import { motion } from 'framer-motion';
 
-export default function Inventory({ products, setProducts, categories, storeSettings, vendor, role, currentStore, logActivity }) {
+export default function Inventory({ products, setProducts, categories, storeSettings, role, currentStore, logActivity }) {
+  const sym = storeSettings?.currencySymbol || '₹';
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.05
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 15 },
+    show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
+  };
+
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [stockFilter, setStockFilter] = useState('All'); // All, In Stock, Low Stock, Out of Stock
@@ -263,40 +280,90 @@ Low Stock Products Data:
 ${JSON.stringify(lowStockData, null, 2)}
 `;
 
+    // Model chain — gemini-1.5-flash is deprecated
+    const MODELS_TO_TRY = ['gemini-2.5-flash', 'gemini-2.0-flash'];
+
+    // Offline fallback: generate rule-based restock recommendations locally
+    const generateOfflineProcurement = () => {
+      return lowStockItems.map(p => ({
+        id: p.id,
+        name: p.name,
+        qty: p.quantity,
+        recommendation: Math.max(p.minStock * 2 - p.quantity, p.minStock)
+      }));
+    };
+
     try {
       const apiKey = storeSettings?.geminiApiKey || import.meta.env.VITE_GEMINI_API_KEY;
-      if (!apiKey || apiKey.includes('placeholder')) {
-        throw new Error("Missing valid API key. Please configure it in Settings -> Store Profile.");
+
+      if (!apiKey || apiKey.includes('placeholder') || !navigator.onLine) {
+        // Use offline fallback directly
+        setRecommendations(generateOfflineProcurement());
+        return;
       }
 
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }]
-          })
+      let parsed = null;
+      let lastErr = null;
+
+      for (const modelName of MODELS_TO_TRY) {
+        try {
+          const response = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: { temperature: 0.3, maxOutputTokens: 1024 }
+              }),
+              signal: AbortSignal.timeout(15000)
+            }
+          );
+
+          if (!response.ok) {
+            const errorJson = await response.json().catch(() => ({}));
+            const msg = errorJson?.error?.message || `HTTP ${response.status}`;
+            console.warn(`[Inventory] Model ${modelName} failed: ${msg}`);
+            lastErr = new Error(msg);
+            continue;
+          }
+
+          const resData = await response.json();
+          const text = resData.candidates?.[0]?.content?.parts?.[0]?.text || '';
+          const cleanJson = text.replace(/```json/g, '').replace(/```/g, '').trim();
+          parsed = JSON.parse(cleanJson);
+          console.log(`[Inventory] ✅ AI procurement success with ${modelName}`);
+          break;
+        } catch (fetchErr) {
+          console.warn(`[Inventory] ${modelName} error:`, fetchErr.message);
+          lastErr = fetchErr;
+          if (fetchErr.name === 'TypeError' || fetchErr.name === 'AbortError') break;
         }
-      );
-      
-      const resData = await response.json();
-      const text = resData.candidates[0].content.parts[0].text;
-      const cleanJson = text.replace(/```json/g, '').replace(/```/g, '').trim();
-      const parsed = JSON.parse(cleanJson);
-      setRecommendations(parsed);
+      }
+
+      if (parsed) {
+        setRecommendations(parsed);
+      } else {
+        console.warn('[Inventory] All models failed, using offline fallback. Last error:', lastErr?.message);
+        setRecommendations(generateOfflineProcurement());
+      }
     } catch (err) {
-      console.error("Gemini AI procurement recommendations error:", err);
-      alert("AI restock recommendation failed. Verify VITE_GEMINI_API_KEY is configured correctly in your .env configuration.");
-      setShowRecsPanel(false);
+      console.error('Gemini AI procurement error:', err);
+      // Use offline fallback on any error
+      setRecommendations(generateOfflineProcurement());
     } finally {
       setIsGeneratingRecs(false);
     }
   };
 
   return (
-    <div style={styles.container} className="animate-fade">
-      <div style={styles.headerRow}>
+    <motion.div 
+      variants={containerVariants}
+      initial="hidden"
+      animate="show"
+      style={styles.container}
+    >
+      <motion.div variants={itemVariants} style={styles.headerRow}>
         <div>
           <h1 style={styles.pageTitle}>Inventory Catalog</h1>
           <p style={styles.pageSubtitle}>Manage items, stocks levels, and store retail values.</p>
@@ -322,10 +389,10 @@ ${JSON.stringify(lowStockData, null, 2)}
             <span style={styles.readOnlyBadge}>👁️ View Only</span>
           )}
         </div>
-      </div>
+      </motion.div>
 
       {/* Filter Toolbar */}
-      <div style={styles.filterRow} className="glass">
+      <motion.div variants={itemVariants} style={styles.filterRow} className="glass">
         {/* Search */}
         <div style={styles.searchWrapper}>
           <Search size={18} style={styles.searchIcon} />
@@ -382,10 +449,10 @@ ${JSON.stringify(lowStockData, null, 2)}
             <option value="Safe">Safe / No Expiry</option>
           </select>
         </div>
-      </div>
+      </motion.div>
 
       {/* Catalog Table */}
-      <div style={styles.tableCard} className="card">
+      <motion.div variants={itemVariants} style={styles.tableCard} className="card">
         {filteredProducts.length === 0 ? (
           <div style={styles.emptyCatalog}>
             <PackageOpen size={48} color="var(--color-text-muted)" />
@@ -417,33 +484,28 @@ ${JSON.stringify(lowStockData, null, 2)}
                   
                   // Expiry calculations
                   let expiryBadge = null;
-                  let isExpired = false;
-                  let isExpiringSoon = false;
-                  let diffDays = 0;
                   if (p.expiryDate) {
                     if (p.expiryDate < today) {
-                      isExpired = true;
                       expiryBadge = <span className="badge badge-danger" style={{ marginTop: '0.2rem', fontSize: '0.65rem' }}>Expired</span>;
                     } else {
                       const exp = new Date(p.expiryDate);
                       const td = new Date(today);
                       const diffTime = exp - td;
-                      diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
                       
                       const warningDays = storeSettings?.expiryWarningDays || 30;
                       if (diffDays <= warningDays) {
-                        isExpiringSoon = true;
-                        expiryBadge = <span className="badge badge-warning" style={{ marginTop: '0.2rem', fontSize: '0.65rem' }}>Expiring ({diffDays}d)</span>;
+                        expiryBadge = <span className="badge badge-warning" style={{ marginTop: '0.2rem', fontSize: '0.65rem' }}>Expiring (<span className="font-mono">{diffDays}d</span>)</span>;
                       }
                     }
                   }
                   
                   return (
                     <tr key={p.id} style={styles.tr}>
-                      <td style={styles.tdSku}>{p.id.replace(/_[AB]$/, '')}</td>
+                      <td style={styles.tdSku} className="font-mono">{p.id.replace(/_[AB]$/, '')}</td>
                       <td style={styles.tdSku}>
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.2rem' }}>
-                          <span style={{ fontFamily: 'monospace', fontSize: '0.75rem' }}>{p.barcode || 'N/A'}</span>
+                          <span style={{ fontSize: '0.75rem' }} className="font-mono">{p.barcode || 'N/A'}</span>
                           {p.barcode && (
                             <button 
                               onClick={() => {
@@ -476,8 +538,8 @@ ${JSON.stringify(lowStockData, null, 2)}
                           <span style={styles.prodName}>{p.name}</span>
                           {p.expiryDate && (
                             <div style={styles.dateAlerts}>
-                              <span style={styles.mfgLabel}>Mfg: {p.mfgDate || 'N/A'}</span>
-                              <span style={styles.expiryLabel}> • Exp: {p.expiryDate}</span>
+                              <span style={styles.mfgLabel} className="font-mono">Mfg: {p.mfgDate || 'N/A'}</span>
+                              <span style={styles.expiryLabel} className="font-mono"> • Exp: {p.expiryDate}</span>
                             </div>
                           )}
                         </div>
@@ -494,7 +556,7 @@ ${JSON.stringify(lowStockData, null, 2)}
                       </td>
                       <td style={styles.tdStock}>
                         <div style={styles.stockStatus}>
-                          <span style={styles.stockNumber}>{p.quantity} units</span>
+                          <span style={styles.stockNumber} className="font-mono">{p.quantity} units</span>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem', alignItems: 'flex-start' }}>
                             {isOut ? (
                               <span className="badge badge-danger">Out of Stock</span>
@@ -507,20 +569,20 @@ ${JSON.stringify(lowStockData, null, 2)}
                           </div>
                         </div>
                       </td>
-                      <td style={styles.tdPrice}>${p.costPrice.toFixed(2)}</td>
-                      <td style={styles.tdPrice}>${p.price.toFixed(2)}</td>
+                      <td style={styles.tdPrice} className="font-mono">{sym}{p.costPrice.toFixed(2)}</td>
+                      <td style={styles.tdPrice} className="font-mono">{sym}{p.price.toFixed(2)}</td>
                       <td style={styles.tdTax}>
                         <div style={styles.taxCapsules}>
-                          <span style={styles.taxBadge}>GST: {p.gst}%</span>
-                          {p.discount > 0 && <span style={styles.discBadge}>Disc: {p.discount}%</span>}
+                          <span style={styles.taxBadge} className="font-mono">GST: {p.gst}%</span>
+                          {p.discount > 0 && <span style={styles.discBadge} className="font-mono">Disc: {p.discount}%</span>}
                         </div>
                       </td>
                       <td style={styles.tdMargin}>
                         <span style={{ 
                           ...styles.marginVal, 
                           color: marginPercent > 40 ? 'var(--color-success)' : marginPercent > 15 ? 'var(--color-primary)' : 'var(--color-text-secondary)'
-                        }}>
-                          +${margin.toFixed(2)} ({marginPercent}%)
+                        }} className="font-mono">
+                          +{sym}{margin.toFixed(2)} ({marginPercent}%)
                         </span>
                       </td>
                       <td style={styles.tdActions}>
@@ -552,7 +614,7 @@ ${JSON.stringify(lowStockData, null, 2)}
             </table>
           </div>
         )}
-      </div>
+      </motion.div>
 
       {/* Add/Edit Modal */}
       {isModalOpen && (
@@ -623,7 +685,7 @@ ${JSON.stringify(lowStockData, null, 2)}
 
                 {/* Cost Price */}
                 <div style={styles.formGroup}>
-                  <label style={styles.formLabel}>Cost Price ($)</label>
+                  <label style={styles.formLabel}>Cost Price ({sym})</label>
                   <input
                     type="number"
                     step="0.01"
@@ -638,7 +700,7 @@ ${JSON.stringify(lowStockData, null, 2)}
 
                 {/* Selling Price */}
                 <div style={styles.formGroup}>
-                  <label style={styles.formLabel}>Selling Price ($)</label>
+                  <label style={styles.formLabel}>Selling Price ({sym})</label>
                   <input
                     type="number"
                     step="0.01"
@@ -863,7 +925,7 @@ ${JSON.stringify(lowStockData, null, 2)}
       {/* Stock Transfer Modal */}
       {showTransferModal && (
         <div style={styles.modalOverlay}>
-          <div style={styles.modalCard} className="glass animate-slide" style={{ ...styles.modalCard, maxWidth: '440px' }}>
+          <div style={{ ...styles.modalCard, maxWidth: '440px' }} className="glass animate-slide">
             <div style={styles.modalHeader}>
               <h2 style={styles.modalTitle}>Stock Transfer between Stores</h2>
               <button onClick={() => setShowTransferModal(false)} style={styles.modalClose}>×</button>
@@ -930,7 +992,7 @@ ${JSON.stringify(lowStockData, null, 2)}
       {/* Barcode View & Print Modal */}
       {barcodeViewTarget && (
         <div style={styles.modalOverlay}>
-          <div style={styles.modalCard} className="glass animate-slide" style={{ ...styles.modalCard, maxWidth: '380px', textAlign: 'center' }}>
+          <div style={{ ...styles.modalCard, maxWidth: '380px', textAlign: 'center' }} className="glass animate-slide">
             <div style={styles.modalHeader}>
               <h2 style={styles.modalTitle}>Product Barcode</h2>
               <button onClick={() => setBarcodeViewTarget(null)} style={styles.modalClose}>×</button>
@@ -948,7 +1010,7 @@ ${JSON.stringify(lowStockData, null, 2)}
           </div>
         </div>
       )}
-    </div>
+    </motion.div>
   );
 }
 
@@ -1405,12 +1467,3 @@ const styles = {
   }
 };
 
-if (typeof document !== 'undefined') {
-  const style = document.createElement('style');
-  style.innerHTML = `
-    tr:hover {
-      background-color: var(--color-bg-base);
-    }
-  `;
-  document.head.appendChild(style);
-}

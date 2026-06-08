@@ -1,16 +1,31 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { 
   Search, 
   Eye, 
   RotateCcw, 
   Calendar,
   AlertTriangle,
-  Receipt,
-  Download
+  Receipt
 } from 'lucide-react';
 import Invoice from './Invoice';
+import { motion } from 'framer-motion';
 
-export default function History({ sales, setSales, products, setProducts, role, vendor }) {
+export default function History({ sales, setSales, products, setProducts, role, vendor, storeSettings }) {
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.05
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 15 },
+    show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
+  };
+
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDate, setSelectedDate] = useState('');
   
@@ -72,16 +87,21 @@ export default function History({ sales, setSales, products, setProducts, role, 
   };
 
   return (
-    <div style={styles.container} className="animate-fade">
-      <div style={styles.headerRow}>
+    <motion.div 
+      variants={containerVariants}
+      initial="hidden"
+      animate="show"
+      style={styles.container}
+    >
+      <motion.div variants={itemVariants} style={styles.headerRow}>
         <div>
           <h1 style={styles.pageTitle}>Transaction Invoices</h1>
           <p style={styles.pageSubtitle}>Search printed store bills, reprint receipts, and process refunds.</p>
         </div>
-      </div>
+      </motion.div>
 
       {/* Filter toolbar */}
-      <div style={styles.filterRow} className="glass">
+      <motion.div variants={itemVariants} style={styles.filterRow} className="glass">
         {/* Search */}
         <div style={styles.searchWrapper}>
           <Search size={18} style={styles.searchIcon} />
@@ -106,10 +126,10 @@ export default function History({ sales, setSales, products, setProducts, role, 
             className="input-field"
           />
         </div>
-      </div>
+      </motion.div>
 
       {/* Sales Invoices List */}
-      <div style={styles.tableCard} className="card">
+      <motion.div variants={itemVariants} style={styles.tableCard} className="card">
         {filteredSales.length === 0 ? (
           <div style={styles.emptyFeed}>
             <Receipt size={48} color="var(--color-text-muted)" />
@@ -131,21 +151,21 @@ export default function History({ sales, setSales, products, setProducts, role, 
               <tbody>
                 {filteredSales.map((sale) => (
                   <tr key={sale.id} style={styles.tr}>
-                    <td style={styles.tdId}>#{sale.id}</td>
+                    <td style={styles.tdId} className="font-mono">#{sale.id}</td>
                     <td style={styles.tdTime}>
                       <div style={styles.timeCapsules}>
-                        <span>{sale.date}</span>
-                        <span style={styles.timeSub}>{sale.time}</span>
+                        <span className="font-mono">{sale.date}</span>
+                        <span style={styles.timeSub} className="font-mono">{sale.time}</span>
                       </div>
                     </td>
                     <td style={styles.tdCust}>
                       <span style={styles.custName}>{sale.customerName}</span>
-                      <span style={styles.custPhone}>{sale.customerPhone}</span>
+                      <span style={styles.custPhone} className="font-mono">{sale.customerPhone}</span>
                     </td>
-                    <td style={styles.tdItems}>{sale.items.reduce((acc, i) => acc + i.quantity, 0)} units ({sale.items.length} unique)</td>
+                    <td style={styles.tdItems} className="font-mono">{sale.items.reduce((acc, i) => acc + i.quantity, 0)} units ({sale.items.length} unique)</td>
                     <td style={styles.tdPrice}>
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '0.15rem' }}>
-                        <span>${sale.totalPrice.toFixed(2)}</span>
+                        <span className="font-mono">{storeSettings?.currencySymbol || '₹'}{sale.totalPrice.toFixed(2)}</span>
                         {sale.paymentMethod ? (
                           <span style={{ 
                             fontSize: '0.65rem', 
@@ -155,11 +175,11 @@ export default function History({ sales, setSales, products, setProducts, role, 
                             backgroundColor: sale.paymentMethod === 'UPI' ? 'var(--color-primary-light)' : sale.paymentMethod === 'Card' ? 'var(--color-success-light)' : 'var(--color-border)',
                             color: sale.paymentMethod === 'UPI' ? 'var(--color-primary)' : sale.paymentMethod === 'Card' ? 'var(--color-success)' : 'var(--color-text-secondary)',
                             textTransform: 'uppercase'
-                          }}>
+                          }} className="font-mono">
                             {sale.paymentMethod}
                           </span>
                         ) : (
-                          <span style={{ fontSize: '0.65rem', fontWeight: '800', padding: '0.15rem 0.45rem', borderRadius: '4px', backgroundColor: 'var(--color-border)', color: 'var(--color-text-muted)' }}>CASH</span>
+                          <span style={{ fontSize: '0.65rem', fontWeight: '800', padding: '0.15rem 0.45rem', borderRadius: '4px', backgroundColor: 'var(--color-border)', color: 'var(--color-text-muted)' }} className="font-mono">CASH</span>
                         )}
                       </div>
                     </td>
@@ -191,7 +211,7 @@ export default function History({ sales, setSales, products, setProducts, role, 
             </table>
           </div>
         )}
-      </div>
+      </motion.div>
 
       {/* Invoice Viewer Overlay */}
       {viewingInvoice && (
@@ -224,7 +244,7 @@ export default function History({ sales, setSales, products, setProducts, role, 
           </div>
         </div>
       )}
-    </div>
+    </motion.div>
   );
 }
 

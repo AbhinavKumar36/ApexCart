@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { 
   Search, 
   ShoppingCart, 
@@ -7,9 +7,7 @@ import {
   Minus, 
   User, 
   Phone,
-  Store,
-  DollarSign,
-  AlertTriangle,
+  IndianRupee,
   Receipt,
   CreditCard,
   QrCode,
@@ -17,8 +15,24 @@ import {
 } from 'lucide-react';
 import Invoice from './Invoice';
 import { Html5Qrcode } from 'html5-qrcode';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function POS({ products, setProducts, sales, setSales, categories, storeSettings, vendor, currentStore, logActivity }) {
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.05
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 15 },
+    show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
+  };
+
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
   
@@ -97,7 +111,7 @@ export default function POS({ products, setProducts, sales, setSales, categories
         (decodedText) => {
           handleBarcodeScanned(decodedText);
         },
-        (errorMessage) => {
+        () => {
           // ignore parsing errors
         }
       ).then(() => {
@@ -317,7 +331,7 @@ export default function POS({ products, setProducts, sales, setSales, categories
 
     setSales(prev => [...prev, newSale]);
     setActiveInvoice(newSale);
-    logActivity('POS_SALE', `Invoice #${invoiceNumber} checked out in ${currentStore} via ${paymentMethod}. Total: ${storeSettings?.currencySymbol || '$'}${grandTotal.toFixed(2)}`);
+    logActivity('POS_SALE', `Invoice #${invoiceNumber} checked out in ${currentStore} via ${paymentMethod}. Total: ${storeSettings?.currencySymbol || '₹'}${grandTotal.toFixed(2)}`);
     clearCart();
   };
 
@@ -338,7 +352,12 @@ export default function POS({ products, setProducts, sales, setSales, categories
   });
 
   return (
-    <div style={styles.container} className="animate-fade">
+    <motion.div 
+      variants={containerVariants} 
+      initial="hidden" 
+      animate="show" 
+      style={styles.container}
+    >
       {/* Product Search & Grid Panel */}
       <div style={styles.productsPanel}>
         <div style={styles.headerRow}>
@@ -404,10 +423,9 @@ export default function POS({ products, setProducts, sales, setSales, categories
         </div>
 
         {/* Products Grid */}
-        <div style={styles.grid}>
+        <motion.div style={styles.grid} variants={containerVariants} initial="hidden" animate="show">
           {filteredProducts.map((p) => {
             const isOut = p.quantity === 0;
-            const isLow = p.quantity <= p.minStock && p.quantity > 0;
             
             const isExpired = p.expiryDate && p.expiryDate < today;
             const exp = p.expiryDate ? new Date(p.expiryDate) : null;
@@ -422,7 +440,7 @@ export default function POS({ products, setProducts, sales, setSales, categories
             const remainingStock = p.quantity - cartQty;
 
             return (
-              <div 
+              <motion.div 
                 key={p.id} 
                 onClick={() => (!isOut || isExpired) && remainingStock > 0 && addToCart(p)}
                 style={{
@@ -432,6 +450,8 @@ export default function POS({ products, setProducts, sales, setSales, categories
                   borderColor: isExpired ? 'var(--color-danger)' : cartQty > 0 ? 'var(--color-primary)' : 'var(--color-border)',
                 }}
                 className="card glow-hover"
+                variants={itemVariants}
+                whileHover={isOut || remainingStock === 0 ? {} : { y: -4, boxShadow: 'var(--shadow-glow)' }}
               >
                 {isExpired && (
                   <div style={{ ...styles.cartBadge, backgroundColor: 'var(--color-danger)' }}>
@@ -440,19 +460,19 @@ export default function POS({ products, setProducts, sales, setSales, categories
                 )}
                 {!isExpired && cartQty > 0 && (
                   <div style={styles.cartBadge}>
-                    <span>{cartQty} in Cart</span>
+                    <span className="font-mono">{cartQty} in Cart</span>
                   </div>
                 )}
                 
                 <div style={styles.prodDetails}>
-                  <span style={styles.prodSku}>{p.id}</span>
+                  <span style={styles.prodSku} className="font-mono">{p.id}</span>
                   <h3 style={styles.prodName}>{p.name}</h3>
                   <span style={styles.prodCat}>{p.category}</span>
                 </div>
 
                 <div style={styles.prodFooter}>
-                  <span style={styles.prodPrice}>
-                    {storeSettings?.currencySymbol || '$'}{p.price.toFixed(2)}
+                  <span style={styles.prodPrice} className="font-mono">
+                    {storeSettings?.currencySymbol || '₹'}{p.price.toFixed(2)}
                   </span>
                   <div style={styles.stockLabel}>
                     {isOut ? (
@@ -460,24 +480,24 @@ export default function POS({ products, setProducts, sales, setSales, categories
                     ) : isExpired ? (
                       <span className="badge badge-danger" style={{ fontSize: '0.65rem' }}>Expired</span>
                     ) : isExpiringSoon ? (
-                      <span className="badge badge-warning" style={{ fontSize: '0.65rem' }}>
+                      <span className="badge badge-warning font-mono" style={{ fontSize: '0.65rem' }}>
                         Expiring ({diffDays}d)
                       </span>
                     ) : remainingStock <= (storeSettings?.lowStockThreshold || p.minStock) ? (
-                      <span className="badge badge-warning" style={{ fontSize: '0.65rem' }}>
+                      <span className="badge badge-warning font-mono" style={{ fontSize: '0.65rem' }}>
                         {remainingStock} left
                       </span>
                     ) : (
-                      <span className="badge badge-success" style={{ fontSize: '0.65rem' }}>
+                      <span className="badge badge-success font-mono" style={{ fontSize: '0.65rem' }}>
                         {remainingStock} units
                       </span>
                     )}
                   </div>
                 </div>
-              </div>
+              </motion.div>
             );
           })}
-        </div>
+        </motion.div>
       </div>
 
       {/* Cart & Customer Panel */}
@@ -533,7 +553,7 @@ export default function POS({ products, setProducts, sales, setSales, categories
                   fontWeight: paymentMethod === method ? '800' : '600'
                 }}
               >
-                {method === 'Cash' && <DollarSign size={14} />}
+                {method === 'Cash' && <IndianRupee size={14} />}
                 {method === 'Card' && <CreditCard size={14} />}
                 {method === 'UPI' && <QrCode size={14} />}
                 <span>{method}</span>
@@ -550,57 +570,67 @@ export default function POS({ products, setProducts, sales, setSales, categories
               <p style={styles.emptyCartText}>Register is empty. Add products from the grid catalog.</p>
             </div>
           ) : (
-            cart.map((item) => {
-              const base = item.product.price * item.quantity;
-              const gstValue = (base * item.product.gst) / 100;
-              const totalLine = base + gstValue - ((base + gstValue) * item.product.discount) / 100;
+            <AnimatePresence>
+              {cart.map((item) => {
+                const base = item.product.price * item.quantity;
+                const gstValue = (base * item.product.gst) / 100;
+                const totalLine = base + gstValue - ((base + gstValue) * item.product.discount) / 100;
 
-              return (
-                <div key={item.product.id} style={styles.cartItem}>
-                  <div style={styles.cartItemDetails}>
-                    <span style={styles.cartItemName}>{item.product.name}</span>
-                    <div style={styles.cartItemPricing}>
-                      <span>{storeSettings?.currencySymbol || '$'}{item.product.price.toFixed(2)} ea</span>
-                      <span style={styles.bullet}>•</span>
-                      <span style={styles.taxTag}>GST {item.product.gst}%</span>
-                      {item.product.discount > 0 && (
-                        <>
-                          <span style={styles.bullet}>•</span>
-                          <span style={styles.discTag}>Disc {item.product.discount}%</span>
-                        </>
-                      )}
+                return (
+                  <motion.div 
+                    key={item.product.id} 
+                    style={styles.cartItem}
+                    layout
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                  >
+                    <div style={styles.cartItemDetails}>
+                      <span style={styles.cartItemName}>{item.product.name}</span>
+                      <div style={styles.cartItemPricing}>
+                        <span className="font-mono">{storeSettings?.currencySymbol || '₹'}{item.product.price.toFixed(2)} ea</span>
+                        <span style={styles.bullet}>•</span>
+                        <span style={styles.taxTag} className="font-mono">GST {item.product.gst}%</span>
+                        {item.product.discount > 0 && (
+                          <>
+                            <span style={styles.bullet}>•</span>
+                            <span style={styles.discTag} className="font-mono">Disc {item.product.discount}%</span>
+                          </>
+                        )}
+                      </div>
                     </div>
-                  </div>
 
-                  <div style={styles.cartItemControls}>
-                    <div style={styles.qtyBox}>
+                    <div style={styles.cartItemControls}>
+                      <div style={styles.qtyBox}>
+                        <button 
+                          onClick={() => updateCartQuantity(item.product.id, item.quantity - 1, item.product.quantity)}
+                          style={styles.qtyBtn}
+                        >
+                          <Minus size={12} />
+                        </button>
+                        <span style={styles.qtyVal} className="font-mono">{item.quantity}</span>
+                        <button 
+                          onClick={() => updateCartQuantity(item.product.id, item.quantity + 1, item.product.quantity)}
+                          style={styles.qtyBtn}
+                        >
+                          <Plus size={12} />
+                        </button>
+                      </div>
+                      
+                      <span style={styles.cartItemTotal} className="font-mono">{storeSettings?.currencySymbol || '₹'}{totalLine.toFixed(2)}</span>
+                      
                       <button 
-                        onClick={() => updateCartQuantity(item.product.id, item.quantity - 1, item.product.quantity)}
-                        style={styles.qtyBtn}
+                        onClick={() => removeFromCart(item.product.id)}
+                        style={styles.cartRemoveBtn}
                       >
-                        <Minus size={12} />
-                      </button>
-                      <span style={styles.qtyVal}>{item.quantity}</span>
-                      <button 
-                        onClick={() => updateCartQuantity(item.product.id, item.quantity + 1, item.product.quantity)}
-                        style={styles.qtyBtn}
-                      >
-                        <Plus size={12} />
+                        <Trash2 size={14} />
                       </button>
                     </div>
-                    
-                    <span style={styles.cartItemTotal}>{storeSettings?.currencySymbol || '$'}{totalLine.toFixed(2)}</span>
-                    
-                    <button 
-                      onClick={() => removeFromCart(item.product.id)}
-                      style={styles.cartRemoveBtn}
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                </div>
-              );
-            })
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
           )}
         </div>
 
@@ -608,20 +638,20 @@ export default function POS({ products, setProducts, sales, setSales, categories
         <div style={styles.summaryBox}>
           <div style={styles.summaryRow}>
             <span>Subtotal</span>
-            <span>{storeSettings?.currencySymbol || '$'}{subtotal.toFixed(2)}</span>
+            <span className="font-mono">{storeSettings?.currencySymbol || '₹'}{subtotal.toFixed(2)}</span>
           </div>
           <div style={styles.summaryRow}>
             <span>Taxes (GST)</span>
-            <span>+{storeSettings?.currencySymbol || '$'}{totalGST.toFixed(2)}</span>
+            <span className="font-mono">+{storeSettings?.currencySymbol || '₹'}{totalGST.toFixed(2)}</span>
           </div>
           <div style={styles.summaryRow}>
             <span>Discounts Applied</span>
-            <span style={{ color: 'var(--color-danger)' }}>-{storeSettings?.currencySymbol || '$'}{totalDiscount.toFixed(2)}</span>
+            <span style={{ color: 'var(--color-danger)' }} className="font-mono">-{storeSettings?.currencySymbol || '₹'}{totalDiscount.toFixed(2)}</span>
           </div>
           <div style={styles.totalDivider} />
           <div style={styles.grandTotalRow}>
             <span>Grand Total</span>
-            <span>{storeSettings?.currencySymbol || '$'}{grandTotal.toFixed(2)}</span>
+            <span className="font-mono">{storeSettings?.currencySymbol || '₹'}{grandTotal.toFixed(2)}</span>
           </div>
         </div>
 
@@ -636,7 +666,7 @@ export default function POS({ products, setProducts, sales, setSales, categories
           }}
           className="btn btn-primary"
         >
-          <DollarSign size={18} />
+          <IndianRupee size={18} />
           <span>Checkout & Print Bill</span>
         </button>
       </div>
@@ -668,7 +698,7 @@ export default function POS({ products, setProducts, sales, setSales, categories
             </div>
             
             <div style={styles.upiDetails}>
-              <span style={styles.upiAmount}>Amount: {storeSettings?.currencySymbol || '$'}{grandTotal.toFixed(2)}</span>
+              <span style={styles.upiAmount}>Amount: {storeSettings?.currencySymbol || '₹'}{grandTotal.toFixed(2)}</span>
               <span style={styles.upiVpa}>Merchant: apexcart@upi</span>
             </div>
             
@@ -734,7 +764,7 @@ export default function POS({ products, setProducts, sales, setSales, categories
           </div>
         </div>
       )}
-    </div>
+    </motion.div>
   );
 }
 

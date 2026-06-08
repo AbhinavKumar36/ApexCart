@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { doc, getDoc, setDoc, deleteDoc, collection, onSnapshot } from 'firebase/firestore';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth, db } from './firebase';
@@ -37,11 +38,19 @@ export default function App() {
 
   const [storeSettings, setStoreSettings] = useState(() => {
     const saved = localStorage.getItem('apexcart_settings');
-    return saved ? JSON.parse(saved) : {
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed.currencySymbol === '$') {
+        parsed.currencySymbol = '₹';
+        localStorage.setItem('apexcart_settings', JSON.stringify(parsed));
+      }
+      return parsed;
+    }
+    return {
       storeName: "ApexCart Supermarket",
       storeAddress: "123 Galleria Mall, Cyber City",
       storePhone: "+1 (555) 019-2834",
-      currencySymbol: "$",
+      currencySymbol: "₹",
       lowStockThreshold: 10,
       expiryWarningDays: 30,
       geminiApiKey: ""
@@ -67,7 +76,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
 
   // Reconnect & Sync offline queue function
-  const processOfflineSyncQueue = async (currentQueue = offlineSyncQueue) => {
+  const processOfflineSyncQueue = useCallback(async (currentQueue = offlineSyncQueue) => {
     if (currentQueue.length === 0) return;
     
     console.log("ApexCart Sync: Processing offline sync queue. Actions:", currentQueue.length);
@@ -97,7 +106,7 @@ export default function App() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [offlineSyncQueue]);
 
   // Reconnection and online status listeners
   useEffect(() => {
@@ -117,7 +126,7 @@ export default function App() {
 
     window.addEventListener('online', handleOnlineStatus);
     return () => window.removeEventListener('online', handleOnlineStatus);
-  }, [offlineSyncQueue]);
+  }, [offlineSyncQueue, processOfflineSyncQueue]);
 
   // Auth observer and collection snapshots initialization
   useEffect(() => {
@@ -237,6 +246,12 @@ export default function App() {
         unsubSettings = onSnapshot(doc(db, 'settings', 'general'), (docSnap) => {
           if (docSnap.exists()) {
             const settingsData = docSnap.data();
+            if (settingsData.currencySymbol === '$') {
+              settingsData.currencySymbol = '₹';
+              setDoc(doc(db, 'settings', 'general'), settingsData).catch(err => 
+                console.warn("Failed migrating settings in Firestore:", err)
+              );
+            }
             setStoreSettings(settingsData);
             localStorage.setItem('apexcart_settings', JSON.stringify(settingsData));
           } else {
@@ -244,7 +259,7 @@ export default function App() {
               storeName: "ApexCart Supermarket",
               storeAddress: "123 Galleria Mall, Cyber City",
               storePhone: "+1 (555) 019-2834",
-              currencySymbol: "$",
+              currencySymbol: "₹",
               lowStockThreshold: 10,
               expiryWarningDays: 30,
               geminiApiKey: ""
@@ -329,15 +344,20 @@ export default function App() {
       setActivityLogs(savedLogs ? JSON.parse(savedLogs) : []);
 
       const savedSettings = localStorage.getItem('apexcart_settings');
-      setStoreSettings(savedSettings ? JSON.parse(savedSettings) : {
+      let parsedSettings = savedSettings ? JSON.parse(savedSettings) : {
         storeName: "ApexCart Supermarket",
         storeAddress: "123 Galleria Mall, Cyber City",
         storePhone: "+1 (555) 019-2834",
-        currencySymbol: "$",
+        currencySymbol: "₹",
         lowStockThreshold: 10,
         expiryWarningDays: 30,
         geminiApiKey: ""
-      });
+      };
+      if (parsedSettings.currencySymbol === '$') {
+        parsedSettings.currencySymbol = '₹';
+        localStorage.setItem('apexcart_settings', JSON.stringify(parsedSettings));
+      }
+      setStoreSettings(parsedSettings);
       setVendor('all');
 
       setIsLoading(false);
@@ -383,7 +403,7 @@ export default function App() {
       setProducts(productsList);
 
       const savedSales = localStorage.getItem('apexcart_sales');
-      let salesList = [];
+      let salesList;
       if (savedSales) {
         salesList = JSON.parse(savedSales);
       } else {
@@ -720,7 +740,6 @@ export default function App() {
             setProducts={handleSetProducts} 
             categories={CATEGORIES} 
             storeSettings={storeSettings}
-            vendor={vendor}
             role={role}
             currentStore={currentStore}
             logActivity={logActivity}
@@ -737,6 +756,7 @@ export default function App() {
             vendor={vendor}
             currentStore={currentStore}
             logActivity={logActivity}
+            storeSettings={storeSettings}
           />
         );
       case 'suppliers':
@@ -750,7 +770,6 @@ export default function App() {
             setPurchaseOrders={handleSetPurchaseOrders}
             currentStore={currentStore}
             logActivity={logActivity}
-            role={role}
             storeSettings={storeSettings}
           />
         );
@@ -861,7 +880,17 @@ export default function App() {
           )}
         </div>
         <div style={styles.contentInner}>
-          {renderActiveView()}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.2, ease: "easeInOut" }}
+            >
+              {renderActiveView()}
+            </motion.div>
+          </AnimatePresence>
         </div>
       </main>
 

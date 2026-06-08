@@ -1,6 +1,5 @@
-import React, { useState, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { 
-  Sliders, 
   Database, 
   Download, 
   Upload, 
@@ -11,7 +10,6 @@ import {
   Store,
   Users,
   UserPlus,
-  KeyRound,
   AlertCircle,
   Info,
   Building2,
@@ -24,6 +22,7 @@ import {
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase';
+import { motion } from 'framer-motion';
 
 // Predefined vendor stall options
 const VENDOR_OPTIONS = [
@@ -51,6 +50,21 @@ export default function Settings({
   sales,
   activityLogs
 }) {
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.05
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 15 },
+    show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
+  };
+
   // Store Settings Form State
   const [storeName, setStoreName] = useState(storeSettings.storeName);
   const [storeAddress, setStoreAddress] = useState(storeSettings.storeAddress);
@@ -210,7 +224,7 @@ export default function Settings({
         } else {
           alert('Invalid backup file format. Missing products/sales fields.');
         }
-      } catch (err) {
+      } catch {
         alert('Error parsing JSON backup file.');
       }
     };
@@ -233,8 +247,13 @@ export default function Settings({
   ];
 
   return (
-    <div style={styles.container} className="animate-fade">
-      <div style={styles.headerRow}>
+    <motion.div 
+      variants={containerVariants} 
+      initial="hidden" 
+      animate="show" 
+      style={styles.container}
+    >
+      <motion.div style={styles.headerRow} variants={itemVariants}>
         <div>
           <h1 style={styles.pageTitle}>System Control Settings</h1>
           <p style={styles.pageSubtitle}>
@@ -245,30 +264,35 @@ export default function Settings({
         <div style={styles.statsRow}>
           <div style={styles.statPill}>
             <BarChart3 size={14} color="var(--color-success)" />
-            <span style={{ fontSize: '0.8125rem', fontWeight: '700', color: 'var(--color-success)' }}>
+            <span style={{ fontSize: '0.8125rem', fontWeight: '700', color: 'var(--color-success)' }} className="font-mono">
               {storeSettings.currencySymbol}{totalRevenue.toFixed(2)} Revenue
             </span>
           </div>
           <div style={styles.statPill}>
             <Package size={14} color="var(--color-primary)" />
-            <span style={{ fontSize: '0.8125rem', fontWeight: '700', color: 'var(--color-primary)' }}>
+            <span style={{ fontSize: '0.8125rem', fontWeight: '700', color: 'var(--color-primary)' }} className="font-mono">
               {totalProducts} SKUs
             </span>
           </div>
           {lowStockCount > 0 && (
             <div style={{ ...styles.statPill, borderColor: 'rgba(245,158,11,0.3)' }}>
               <Bell size={14} color="var(--color-warning)" />
-              <span style={{ fontSize: '0.8125rem', fontWeight: '700', color: 'var(--color-warning)' }}>
+              <span style={{ fontSize: '0.8125rem', fontWeight: '700', color: 'var(--color-warning)' }} className="font-mono">
                 {lowStockCount} Low Stock
               </span>
             </div>
           )}
         </div>
-      </div>
+      </motion.div>
 
       <div style={styles.layout}>
         {/* Sidebar Navigation */}
-        <div style={styles.sectionNav} className="card">
+        <motion.div 
+          style={styles.sectionNav} 
+          className="card"
+          variants={itemVariants}
+          whileHover={{ y: -2 }}
+        >
           {sections.map(sec => {
             const Icon = sec.icon;
             const isActive = activeSection === sec.id;
@@ -289,13 +313,20 @@ export default function Settings({
               </button>
             );
           })}
-        </div>
+        </motion.div>
 
         {/* Main Content Panel */}
         <div style={styles.mainPanel}>
           {/* === STORE PROFILE === */}
           {activeSection === 'store' && (
-            <div className="card" style={styles.panel}>
+            <motion.div 
+              className="card" 
+              style={styles.panel}
+              variants={itemVariants}
+              initial="hidden"
+              animate="show"
+              whileHover={{ y: -2 }}
+            >
               <div style={styles.panelHeader}>
                 <Building2 size={22} color="var(--color-primary)" />
                 <div>
@@ -378,7 +409,7 @@ export default function Settings({
                       required
                       value={lowStockThreshold}
                       onChange={(e) => setLowStockThreshold(parseInt(e.target.value, 10) || 5)}
-                      className="input-field"
+                      className="input-field font-mono"
                     />
                     <span style={styles.inputHint}>Flag items with quantity ≤ this value</span>
                   </div>
@@ -391,7 +422,7 @@ export default function Settings({
                       required
                       value={expiryWarningDays}
                       onChange={(e) => setExpiryWarningDays(parseInt(e.target.value, 10) || 30)}
-                      className="input-field"
+                      className="input-field font-mono"
                     />
                     <span style={styles.inputHint}>Warn if item expires within this many days</span>
                   </div>
@@ -407,7 +438,7 @@ export default function Settings({
                     placeholder="Enter your Gemini API Key (e.g. AIzaSy...)"
                     value={geminiApiKey}
                     onChange={(e) => setGeminiApiKey(e.target.value)}
-                    className="input-field"
+                    className="input-field font-mono"
                   />
                   <span style={styles.inputHint}>Used to power AI procurement restocks and chatbot overlay assistant. Leaves Vite bundle clean of secrets.</span>
                 </div>
@@ -417,14 +448,24 @@ export default function Settings({
                   Save Store Configuration
                 </button>
               </form>
-            </div>
+            </motion.div>
           )}
 
           {/* === USER MANAGEMENT === */}
           {activeSection === 'users' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            <motion.div 
+              style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}
+              variants={containerVariants}
+              initial="hidden"
+              animate="show"
+            >
               {/* Existing accounts overview */}
-              <div className="card" style={styles.panel}>
+              <motion.div 
+                className="card" 
+                style={styles.panel}
+                variants={itemVariants}
+                whileHover={{ y: -2 }}
+              >
                 <div style={styles.panelHeader}>
                   <Users size={22} color="var(--color-primary)" />
                   <div>
@@ -450,7 +491,7 @@ export default function Settings({
                           </span>
                           <span style={styles.vendorTag}>· {acc.vendor}</span>
                         </span>
-                        <span style={styles.accountPass}>Password: <strong>{acc.pass}</strong></span>
+                        <span style={styles.accountPass}>Password: <strong className="font-mono">{acc.pass}</strong></span>
                       </div>
                     </div>
                   ))}
@@ -460,10 +501,15 @@ export default function Settings({
                   <Info size={14} />
                   <span>These accounts are auto-created on first login attempt with the listed credentials.</span>
                 </div>
-              </div>
+              </motion.div>
 
               {/* Create new account */}
-              <div className="card" style={styles.panel}>
+              <motion.div 
+                className="card" 
+                style={styles.panel}
+                variants={itemVariants}
+                whileHover={{ y: -2 }}
+              >
                 <div style={styles.panelHeader}>
                   <UserPlus size={22} color="var(--color-primary)" />
                   <div>
@@ -550,13 +596,20 @@ export default function Settings({
                     {userCreateLoading ? 'Creating Account...' : 'Create Operator Account'}
                   </button>
                 </form>
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
           )}
 
           {/* === THEME === */}
           {activeSection === 'theme' && (
-            <div className="card" style={styles.panel}>
+            <motion.div 
+              className="card" 
+              style={styles.panel}
+              variants={itemVariants}
+              initial="hidden"
+              animate="show"
+              whileHover={{ y: -2 }}
+            >
               <div style={styles.panelHeader}>
                 {theme === 'dark' ? <Moon size={22} color="var(--color-primary)" /> : <Sun size={22} color="var(--color-warning)" />}
                 <div>
@@ -604,12 +657,19 @@ export default function Settings({
                   </div>
                 </div>
               </div>
-            </div>
+            </motion.div>
           )}
 
           {/* === DATA BACKUP === */}
           {activeSection === 'data' && (
-            <div className="card" style={styles.panel}>
+            <motion.div 
+              className="card" 
+              style={styles.panel}
+              variants={itemVariants}
+              initial="hidden"
+              animate="show"
+              whileHover={{ y: -2 }}
+            >
               <div style={styles.panelHeader}>
                 <Database size={22} color="var(--color-primary)" />
                 <div>
@@ -619,15 +679,15 @@ export default function Settings({
               </div>
               <div style={styles.dataStats}>
                 <div style={styles.dataStat}>
-                  <span style={styles.dataStatValue}>{products.length}</span>
+                  <span style={styles.dataStatValue} className="font-mono">{products.length}</span>
                   <span style={styles.dataStatLabel}>Products</span>
                 </div>
                 <div style={styles.dataStat}>
-                  <span style={styles.dataStatValue}>{sales.length}</span>
+                  <span style={styles.dataStatValue} className="font-mono">{sales.length}</span>
                   <span style={styles.dataStatLabel}>Sales Records</span>
                 </div>
                 <div style={styles.dataStat}>
-                  <span style={styles.dataStatValue}>{new Date().toLocaleDateString()}</span>
+                  <span style={styles.dataStatValue} className="font-mono">{new Date().toLocaleDateString()}</span>
                   <span style={styles.dataStatLabel}>Today's Date</span>
                 </div>
               </div>
@@ -662,12 +722,19 @@ export default function Settings({
                 <Info size={14} />
                 <span>Backups include all product catalog, sales history, and store settings. Import will replace current data.</span>
               </div>
-            </div>
+            </motion.div>
           )}
 
           {/* === AUDIT LOGS === */}
           {activeSection === 'logs' && (
-            <div className="card" style={styles.panel}>
+            <motion.div 
+              className="card" 
+              style={styles.panel}
+              variants={itemVariants}
+              initial="hidden"
+              animate="show"
+              whileHover={{ y: -2 }}
+            >
               <div style={styles.panelHeader}>
                 <Activity size={22} color="var(--color-primary)" />
                 <div>
@@ -729,7 +796,7 @@ export default function Settings({
                   <tbody>
                     {filteredLogs.map(log => (
                       <tr key={log.id} style={styles.tr}>
-                        <td style={{ ...styles.td, whiteSpace: 'nowrap', fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>
+                        <td style={{ ...styles.td, whiteSpace: 'nowrap', fontSize: '0.75rem', color: 'var(--color-text-secondary)' }} className="font-mono">
                           {new Date(log.timestamp).toLocaleString()}
                         </td>
                         <td style={{ ...styles.td, fontWeight: '700' }}>{log.user?.split('@')[0]}</td>
@@ -740,7 +807,7 @@ export default function Settings({
                             fontWeight: '800',
                             color: log.action.includes('RESET') || log.action.includes('PURGE') ? 'var(--color-danger)' : log.action.includes('SALE') ? 'var(--color-success)' : 'var(--color-primary)',
                             backgroundColor: log.action.includes('RESET') || log.action.includes('PURGE') ? 'var(--color-danger-light)' : log.action.includes('SALE') ? 'var(--color-success-light)' : 'var(--color-primary-light)'
-                          }}>
+                          }} className="font-mono">
                             {log.action}
                           </span>
                         </td>
@@ -758,12 +825,19 @@ export default function Settings({
                   </tbody>
                 </table>
               </div>
-            </div>
+            </motion.div>
           )}
 
           {/* === DANGER ZONE === */}
           {activeSection === 'danger' && (
-            <div className="card" style={{ ...styles.panel, borderColor: 'rgba(239, 68, 68, 0.4)' }}>
+            <motion.div 
+              className="card" 
+              style={{ ...styles.panel, borderColor: 'rgba(239, 68, 68, 0.4)' }}
+              variants={itemVariants}
+              initial="hidden"
+              animate="show"
+              whileHover={{ y: -2 }}
+            >
               <div style={styles.panelHeader}>
                 <ShieldAlert size={22} color="var(--color-danger)" />
                 <div>
@@ -825,7 +899,7 @@ export default function Settings({
                   )}
                 </div>
               </div>
-            </div>
+            </motion.div>
           )}
         </div>
       </div>
@@ -834,7 +908,7 @@ export default function Settings({
         .nav-btn-hover { transition: all 0.18s ease; }
         .nav-btn-hover:hover { background-color: var(--color-primary-light) !important; color: var(--color-primary) !important; }
       `}</style>
-    </div>
+    </motion.div>
   );
 }
 

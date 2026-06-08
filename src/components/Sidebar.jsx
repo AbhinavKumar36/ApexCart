@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { motion } from 'framer-motion';
 import { 
   LayoutDashboard, 
   ShoppingCart, 
@@ -11,7 +12,9 @@ import {
   Menu, 
   X, 
   Store,
-  BarChart3
+  BarChart3,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 
 export default function Sidebar({ 
@@ -27,6 +30,7 @@ export default function Sidebar({
   setCurrentStore
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -68,54 +72,118 @@ export default function Sidebar({
       {mobileOpen && <div style={styles.overlay} onClick={() => setMobileOpen(false)} />}
 
       {/* Sidebar Container */}
-      <aside 
+      <motion.aside 
+        animate={{ width: isCollapsed ? '80px' : '280px' }}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
         style={{
           ...styles.sidebar,
-          transform: mobileOpen ? 'translateX(0)' : 'translateX(-100%)',
+          transform: mobileOpen ? 'translateX(0)' : undefined,
         }}
         className={`glass ${mobileOpen ? 'mobile-open' : ''}`}
       >
-        <div style={styles.sidebarContent}>
+        <div style={{
+          ...styles.sidebarContent,
+          padding: isCollapsed ? '2rem 0.75rem' : '2rem 1.5rem',
+        }}>
           {/* Logo Section */}
-          <div style={styles.logoSection}>
-            <div style={styles.logoContainer}>
-              <Store size={28} color="var(--color-primary)" />
+          <div style={{ 
+            ...styles.logoSection, 
+            justifyContent: isCollapsed ? 'center' : 'space-between',
+            gap: isCollapsed ? '0' : '1rem',
+            marginBottom: '2rem'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', overflow: 'hidden' }}>
+              <div style={styles.logoContainer}>
+                <Store size={28} color="var(--color-primary)" style={{ flexShrink: 0 }} />
+              </div>
+              {!isCollapsed && (
+                <motion.div
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  style={{ display: 'flex', flexDirection: 'column' }}
+                >
+                  <h2 style={styles.brandName}>ApexCart</h2>
+                  <span style={styles.brandTagline}>v1.0 Enterprise</span>
+                </motion.div>
+              )}
             </div>
-            <div>
-              <h2 style={styles.brandName}>ApexCart</h2>
-              <span style={styles.brandTagline}>v1.0 Enterprise</span>
-            </div>
+            
+            {/* Collapse Toggle Button (Desktop Only) */}
+            <button 
+              onClick={() => setIsCollapsed(!isCollapsed)} 
+              style={styles.collapseToggle} 
+              className="desktop-only-btn"
+              title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+            >
+              {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+            </button>
           </div>
 
           {/* Store Switcher */}
-          <div style={styles.storeSwitcher}>
-            <Store size={16} color="var(--color-primary)" style={{ flexShrink: 0 }} />
-            <select
-              value={currentStore}
-              onChange={(e) => setCurrentStore(e.target.value)}
-              style={styles.storeSelect}
+          {isCollapsed ? (
+            <div 
+              style={{ ...styles.storeSwitcher, justifyContent: 'center', cursor: 'pointer', padding: '0.65rem 0', position: 'relative' }}
+              onClick={() => setCurrentStore(prev => prev === 'Store A' ? 'Store B' : 'Store A')}
+              title={`Switch Store (Current: ${currentStore}) - Click to toggle`}
+              className="nav-item-container"
             >
-              <option value="Store A">Store A (Main)</option>
-              <option value="Store B">Store B (Secondary)</option>
-            </select>
-          </div>
+              <Store size={16} color="var(--color-primary)" />
+              <div style={{
+                position: 'absolute',
+                bottom: '4px',
+                right: '4px',
+                width: '6px',
+                height: '6px',
+                borderRadius: '50%',
+                backgroundColor: currentStore === 'Store A' ? 'var(--color-primary)' : '#10b981'
+              }} />
+              <div className="sidebar-tooltip">Toggle Outlet: {currentStore}</div>
+            </div>
+          ) : (
+            <div style={styles.storeSwitcher}>
+              <Store size={16} color="var(--color-primary)" style={{ flexShrink: 0 }} />
+              <select
+                value={currentStore}
+                onChange={(e) => setCurrentStore(e.target.value)}
+                style={styles.storeSelect}
+              >
+                <option value="Store A">Store A (Main)</option>
+                <option value="Store B">Store B (Secondary)</option>
+              </select>
+            </div>
+          )}
 
           {/* User profile capsule */}
-          <div style={styles.userBox}>
-            <div style={styles.avatar}>
+          <div style={{ 
+            ...styles.userBox, 
+            justifyContent: isCollapsed ? 'center' : 'flex-start', 
+            padding: isCollapsed ? '0.5rem 0' : '0.85rem',
+            marginBottom: '2rem'
+          }}>
+            <div style={styles.avatar} title={`${username} (${role === 'admin' ? 'Admin' : 'Employee'})`}>
               {username.charAt(0).toUpperCase()}
             </div>
-            <div style={styles.userInfo}>
-              <span style={styles.userRole}>
-                {role === 'admin' ? 'ADMINISTRATOR' : 'EMPLOYEE'}
-              </span>
-              <span style={styles.userName}>{username}</span>
-              {vendor && vendor !== 'all' && (
-                <span style={styles.vendorBadge}>
-                  🏪 {vendor}
+            {!isCollapsed && (
+              <motion.div 
+                style={styles.userInfo}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+              >
+                <span style={styles.userRole}>
+                  {role === 'admin' ? 'ADMINISTRATOR' : 'EMPLOYEE'}
                 </span>
-              )}
-            </div>
+                <span style={styles.userName}>{username}</span>
+                {vendor && vendor !== 'all' && (
+                  <span style={styles.vendorBadge}>
+                    🏪 {vendor}
+                  </span>
+                )}
+              </motion.div>
+            )}
           </div>
 
           {/* Navigation Items */}
@@ -129,41 +197,78 @@ export default function Sidebar({
                   onClick={() => handleNavClick(item.id)}
                   style={{
                     ...styles.navBtn,
-                    backgroundColor: isActive ? 'var(--color-primary)' : 'transparent',
-                    color: isActive ? '#ffffff' : 'var(--color-text-secondary)',
+                    justifyContent: isCollapsed ? 'center' : 'flex-start',
+                    color: isActive ? 'var(--color-bg-base)' : 'var(--color-text-secondary)',
+                    position: 'relative',
+                    zIndex: 1,
+                    backgroundColor: 'transparent',
                   }}
-                  className="nav-btn-hover"
+                  className="nav-item-container nav-btn-hover"
                 >
-                  <Icon size={20} />
-                  <span>{item.label}</span>
+                  {isActive && (
+                    <motion.div
+                      layoutId="activeSidebarIndicator"
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: 'var(--color-primary)',
+                        borderRadius: 'var(--radius-md)',
+                        zIndex: -1,
+                      }}
+                      transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                    />
+                  )}
+                  <Icon size={20} style={{ flexShrink: 0 }} />
+                  {!isCollapsed && (
+                    <motion.span
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.15 }}
+                      style={{ whiteSpace: 'nowrap' }}
+                    >
+                      {item.label}
+                    </motion.span>
+                  )}
+                  
+                  {/* Collapsed Tooltip */}
+                  {isCollapsed && (
+                    <div className="sidebar-tooltip">
+                      {item.label}
+                    </div>
+                  )}
                 </button>
               );
             })}
           </nav>
 
           {/* Footer Controls */}
-          <div style={styles.footer}>
-            <button onClick={toggleTheme} style={styles.footerBtn} className="btn-secondary">
-              {theme === 'dark' ? (
-                <>
-                  <Sun size={18} color="var(--color-warning)" />
-                  <span>Switch Light</span>
-                </>
-              ) : (
-                <>
-                  <Moon size={18} color="var(--color-primary)" />
-                  <span>Switch Dark</span>
-                </>
-              )}
+          <div style={{ ...styles.footer, alignItems: isCollapsed ? 'center' : 'stretch', padding: isCollapsed ? '1.5rem 0 0 0' : '1.5rem 0' }}>
+            <button 
+              onClick={toggleTheme} 
+              style={{ ...styles.footerBtn, justifyContent: isCollapsed ? 'center' : 'center' }} 
+              className="btn-secondary nav-item-container"
+            >
+              {theme === 'dark' ? <Sun size={18} color="var(--color-warning)" /> : <Moon size={18} color="var(--color-primary)" />}
+              {!isCollapsed && <span>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>}
+              {isCollapsed && <div className="sidebar-tooltip">{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</div>}
             </button>
 
-            <button onClick={onLogout} style={styles.logoutBtn} className="btn-secondary">
+            <button 
+              onClick={onLogout} 
+              style={{ ...styles.logoutBtn, justifyContent: isCollapsed ? 'center' : 'center' }} 
+              className="btn-secondary nav-item-container"
+            >
               <LogOut size={18} color="var(--color-danger)" />
-              <span>Sign Out</span>
+              {!isCollapsed && <span>Sign Out</span>}
+              {isCollapsed && <div className="sidebar-tooltip">Sign Out</div>}
             </button>
           </div>
         </div>
-      </aside>
+      </motion.aside>
 
       {/* Global CSS for hover effects that are cleaner inline */}
       <style>{`
@@ -174,6 +279,31 @@ export default function Sidebar({
           background-color: var(--color-primary-light) !important;
           color: var(--color-primary) !important;
         }
+        .sidebar-tooltip {
+          position: absolute;
+          left: 70px;
+          background-color: var(--color-bg-surface);
+          color: var(--color-text-primary);
+          padding: 0.5rem 0.75rem;
+          border-radius: var(--radius-sm);
+          border: 1px solid var(--color-border);
+          box-shadow: var(--shadow-md);
+          font-size: 0.75rem;
+          font-weight: 700;
+          white-space: nowrap;
+          opacity: 0;
+          pointer-events: none;
+          transform: translateX(-10px);
+          transition: all 0.2s ease;
+          z-index: 100;
+        }
+        .nav-item-container {
+          position: relative;
+        }
+        .nav-item-container:hover .sidebar-tooltip {
+          opacity: 1;
+          transform: translateX(0);
+        }
         @media (min-width: 1025px) {
           aside {
             transform: none !important;
@@ -183,6 +313,11 @@ export default function Sidebar({
             display: none !important;
           }
           .overlay {
+            display: none !important;
+          }
+        }
+        @media (max-width: 1024px) {
+          .desktop-only-btn {
             display: none !important;
           }
         }
@@ -239,7 +374,6 @@ const styles = {
     top: 0,
     left: 0,
     bottom: 0,
-    width: '280px',
     height: '100vh',
     zIndex: 50,
     borderRight: '1px solid var(--color-border)',
@@ -249,13 +383,10 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     height: '100%',
-    padding: '2rem 1.5rem',
   },
   logoSection: {
     display: 'flex',
     alignItems: 'center',
-    gap: '1rem',
-    marginBottom: '2rem',
   },
   logoContainer: {
     display: 'flex',
@@ -279,11 +410,9 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     gap: '0.75rem',
-    padding: '0.85rem',
     borderRadius: 'var(--radius-md)',
     backgroundColor: 'var(--color-bg-base)',
     border: '1px solid var(--color-border)',
-    marginBottom: '2rem',
   },
   storeSwitcher: {
     display: 'flex',
@@ -311,17 +440,19 @@ const styles = {
     height: '40px',
     borderRadius: '50%',
     backgroundColor: 'var(--color-primary)',
-    color: '#ffffff',
+    color: 'var(--color-bg-base)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    fontWeight: '700',
+    fontWeight: '800',
     fontSize: '1.25rem',
     boxShadow: 'var(--shadow-sm)',
+    flexShrink: 0,
   },
   userInfo: {
     display: 'flex',
     flexDirection: 'column',
+    overflow: 'hidden',
   },
   userRole: {
     fontSize: '0.625rem',
@@ -363,13 +494,13 @@ const styles = {
     cursor: 'pointer',
     fontWeight: '600',
     textAlign: 'left',
+    transition: 'all 0.15s ease',
   },
   footer: {
     display: 'flex',
     flexDirection: 'column',
     gap: '0.75rem',
     borderTop: '1px solid var(--color-border)',
-    paddingTop: '1.5rem',
   },
   footerBtn: {
     display: 'flex',
@@ -383,6 +514,7 @@ const styles = {
     cursor: 'pointer',
     fontWeight: '600',
     background: 'none',
+    transition: 'all 0.15s ease',
   },
   logoutBtn: {
     display: 'flex',
@@ -396,5 +528,20 @@ const styles = {
     cursor: 'pointer',
     fontWeight: '600',
     background: 'none',
+    transition: 'all 0.15s ease',
+  },
+  collapseToggle: {
+    background: 'var(--color-bg-base)',
+    border: '1px solid var(--color-border)',
+    borderRadius: '50%',
+    width: '24px',
+    height: '24px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+    color: 'var(--color-text-secondary)',
+    boxShadow: 'var(--shadow-sm)',
+    transition: 'all 0.15s ease',
   }
 };

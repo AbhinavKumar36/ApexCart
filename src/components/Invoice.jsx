@@ -1,7 +1,8 @@
-import React, { useRef } from 'react';
+import { useRef } from 'react';
 import { Printer, X, CheckCircle2, ShieldCheck, Download } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
+import { motion } from 'framer-motion';
 
 export default function Invoice({ invoice, onClose, storeSettings }) {
   const printRef = useRef(null);
@@ -20,7 +21,7 @@ export default function Invoice({ invoice, onClose, storeSettings }) {
     const storeName = storeSettings?.storeName || 'APEXCART SUPERMARKET';
     const storeAddress = storeSettings?.storeAddress || 'Enterprise Logistics Center #4092';
     const storePhone = storeSettings?.storePhone || 'N/A';
-    const sym = storeSettings?.currencySymbol || '$';
+    const sym = storeSettings?.currencySymbol || '₹';
     
     // Header
     doc.setFont("helvetica", "bold");
@@ -91,8 +92,19 @@ export default function Invoice({ invoice, onClose, storeSettings }) {
   };
 
   return (
-    <div style={styles.overlay}>
-      <div style={styles.modalCard} className="glass animate-slide">
+    <motion.div 
+      style={styles.overlay}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
+      <motion.div 
+        style={styles.modalCard} 
+        className="glass"
+        initial={{ y: 20, scale: 0.95 }}
+        animate={{ y: 0, scale: 1, transition: { type: "spring", stiffness: 300, damping: 25 } }}
+        exit={{ y: 20, scale: 0.95 }}
+      >
         {/* Modal Controls */}
         <div style={styles.modalHeader} className="no-print">
           <div style={styles.successHeading}>
@@ -121,11 +133,11 @@ export default function Invoice({ invoice, onClose, storeSettings }) {
             <div style={styles.metaGrid}>
               <div style={styles.metaRow}>
                 <span style={styles.metaLabel}>INVOICE NO:</span>
-                <span style={styles.metaValRed}>#{invoice.id}</span>
+                <span style={styles.metaValRed} className="font-mono">#{invoice.id}</span>
               </div>
               <div style={styles.metaRow}>
                 <span style={styles.metaLabel}>DATE / TIME:</span>
-                <span style={styles.metaVal}>{invoice.date} {invoice.time}</span>
+                <span style={styles.metaVal} className="font-mono">{invoice.date} {invoice.time}</span>
               </div>
               <div style={styles.metaRow}>
                 <span style={styles.metaLabel}>CUSTOMER:</span>
@@ -133,7 +145,7 @@ export default function Invoice({ invoice, onClose, storeSettings }) {
               </div>
               <div style={styles.metaRow}>
                 <span style={styles.metaLabel}>CONTACT:</span>
-                <span style={styles.metaVal}>{invoice.customerPhone}</span>
+                <span style={styles.metaVal} className="font-mono">{invoice.customerPhone}</span>
               </div>
             </div>
 
@@ -155,19 +167,19 @@ export default function Invoice({ invoice, onClose, storeSettings }) {
               <tbody>
                 {invoice.items.map((item, index) => (
                   <tr key={index} style={styles.tr}>
-                    <td style={styles.tdIndex}>{index + 1}</td>
+                    <td style={styles.tdIndex} className="font-mono">{index + 1}</td>
                     <td style={styles.tdName}>
                       <span style={styles.itemName}>{item.name}</span>
-                      <span style={styles.itemSku}>{item.id}</span>
+                      <span style={styles.itemSku} className="font-mono">{item.id}</span>
                     </td>
-                    <td style={{ ...styles.td, textAlign: 'center', fontWeight: '700' }}>{item.quantity}</td>
-                    <td style={{ ...styles.td, textAlign: 'right' }}>{storeSettings?.currencySymbol || '$'}{item.price.toFixed(2)}</td>
-                    <td style={{ ...styles.td, textAlign: 'center' }}>{item.gst}%</td>
-                    <td style={{ ...styles.td, textAlign: 'center', color: item.discount > 0 ? 'var(--color-danger)' : 'inherit' }}>
+                    <td style={{ ...styles.td, textAlign: 'center', fontWeight: '700' }} className="font-mono">{item.quantity}</td>
+                    <td style={{ ...styles.td, textAlign: 'right' }} className="font-mono">{storeSettings?.currencySymbol || '₹'}{item.price.toFixed(2)}</td>
+                    <td style={{ ...styles.td, textAlign: 'center' }} className="font-mono">{item.gst}%</td>
+                    <td style={{ ...styles.td, textAlign: 'center', color: item.discount > 0 ? 'var(--color-danger)' : 'inherit' }} className="font-mono">
                       {item.discount}%
                     </td>
-                    <td style={{ ...styles.td, textAlign: 'right', fontWeight: '800' }}>
-                      {storeSettings?.currencySymbol || '$'}{item.lineTotal.toFixed(2)}
+                    <td style={{ ...styles.td, textAlign: 'right', fontWeight: '800' }} className="font-mono">
+                      {storeSettings?.currencySymbol || '₹'}{item.lineTotal.toFixed(2)}
                     </td>
                   </tr>
                 ))}
@@ -180,23 +192,23 @@ export default function Invoice({ invoice, onClose, storeSettings }) {
             <div style={styles.balanceContainer}>
               <div style={styles.balanceRow}>
                 <span>Subtotal</span>
-                <span>{storeSettings?.currencySymbol || '$'}{invoice.subtotal.toFixed(2)}</span>
+                <span className="font-mono">{storeSettings?.currencySymbol || '₹'}{invoice.subtotal.toFixed(2)}</span>
               </div>
               <div style={styles.balanceRow}>
                 <span>Tax (GST)</span>
-                <span>+{storeSettings?.currencySymbol || '$'}{invoice.totalGST.toFixed(2)}</span>
+                <span className="font-mono">+{storeSettings?.currencySymbol || '₹'}{invoice.totalGST.toFixed(2)}</span>
               </div>
               <div style={styles.balanceRow}>
                 <span>Discount</span>
-                <span style={{ color: 'var(--color-danger)' }}>-{storeSettings?.currencySymbol || '$'}{invoice.totalDiscount.toFixed(2)}</span>
+                <span style={{ color: 'var(--color-danger)' }} className="font-mono">-{storeSettings?.currencySymbol || '₹'}{invoice.totalDiscount.toFixed(2)}</span>
               </div>
               <div style={styles.balanceDivider} />
               <div style={styles.grandTotalRow}>
                 <span>GRAND TOTAL</span>
-                <span>{storeSettings?.currencySymbol || '$'}{invoice.totalPrice.toFixed(2)}</span>
+                <span className="font-mono">{storeSettings?.currencySymbol || '₹'}{invoice.totalPrice.toFixed(2)}</span>
               </div>
               {invoice.paymentMethod && (
-                <div style={{ ...styles.balanceRow, marginTop: '0.35rem', justifyContent: 'center', fontSize: '0.72rem', fontWeight: '800', color: 'var(--color-primary)', border: '1px dashed var(--color-primary-glow)', padding: '0.25rem', textTransform: 'uppercase', borderRadius: '4px' }}>
+                <div style={{ ...styles.balanceRow, marginTop: '0.35rem', justifyContent: 'center', fontSize: '0.72rem', fontWeight: '800', color: 'var(--color-primary)', border: '1px dashed var(--color-primary-glow)', padding: '0.25rem', textTransform: 'uppercase', borderRadius: '4px' }} className="font-mono">
                   <span>PAID VIA: {invoice.paymentMethod} • TXN SUCCESS</span>
                 </div>
               )}
@@ -208,7 +220,7 @@ export default function Invoice({ invoice, onClose, storeSettings }) {
             <div style={styles.receiptFooter}>
               <div style={styles.barcodeBox}>
                 <div style={styles.barcodeLines} />
-                <span style={styles.barcodeText}>*TXN-{invoice.id}-{invoice.date.replace(/\//g, '')}*</span>
+                <span style={styles.barcodeText} className="font-mono">*TXN-{invoice.id}-{invoice.date.replace(/\//g, '')}*</span>
               </div>
               <div style={styles.secureBadge}>
                 <ShieldCheck size={14} color="var(--color-success)" />
@@ -233,7 +245,7 @@ export default function Invoice({ invoice, onClose, storeSettings }) {
             <span>Print Receipt</span>
           </button>
         </div>
-      </div>
+      </motion.div>
 
       <style>{`
         @keyframes pulse {
@@ -245,7 +257,7 @@ export default function Invoice({ invoice, onClose, storeSettings }) {
           animation: pulse 2s infinite;
         }
       `}</style>
-    </div>
+    </motion.div>
   );
 }
 

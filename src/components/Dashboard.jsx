@@ -1,6 +1,8 @@
-import React from 'react';
+
+import { motion } from 'framer-motion';
+import { ResponsiveContainer, AreaChart, Area, XAxis, Tooltip } from 'recharts';
 import { 
-  DollarSign, 
+  IndianRupee, 
   Receipt, 
   PackageCheck, 
   AlertTriangle, 
@@ -11,7 +13,36 @@ import {
   Inbox
 } from 'lucide-react';
 
+const CustomTooltip = ({ active, payload, label, currencySymbol }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div style={styles.glassTooltip}>
+        <p style={styles.tooltipLabel}>{label}</p>
+        <p style={styles.tooltipValue}>
+          {currencySymbol}{payload[0].value.toFixed(2)}
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
+
 export default function Dashboard({ products, sales, setProducts, setActiveTab, role, storeSettings, vendor }) {
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.05
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 15 },
+    show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
+  };
+
   // Filter products and sales based on the assigned vendor stall for isolated metrics
   const filteredProducts = vendor === 'all' 
     ? products 
@@ -53,7 +84,6 @@ export default function Dashboard({ products, sales, setProducts, setActiveTab, 
 
   const expiredCount = expiredProducts.length;
   const expiringSoonCount = expiringSoonProducts.length;
-  const totalPerishablesAlerts = expiredCount + expiringSoonCount;
 
   // Restock handler directly from dashboard
   const handleQuickRestock = (productId, amount) => {
@@ -79,11 +109,11 @@ export default function Dashboard({ products, sales, setProducts, setActiveTab, 
     return acc;
   }, {});
 
-  const totalCategoriesCount = Object.keys(categoryCounts).length;
+  const totalProductsCount = products.length;
   const categoriesList = Object.entries(categoryCounts).map(([name, count]) => ({
     name,
     count,
-    percentage: Math.round((count / totalProducts) * 100)
+    percentage: Math.round((count / totalProductsCount) * 100)
   })).sort((a, b) => b.count - a.count);
 
   // Helper: normalize date strings to YYYY-MM-DD regardless of input format (DD/MM/YYYY or YYYY-MM-DD)
@@ -113,40 +143,29 @@ export default function Dashboard({ products, sales, setProducts, setActiveTab, 
       const dateStr = toLocalDateStr(d);
       const dayLabel = d.toLocaleDateString('en-US', { weekday: 'short' });
       const dayRevenue = sales
-        .filter(s => normalizeDateStr(s.date) === dateStr)
-        .reduce((acc, s) => {
-          if (vendor === 'all') return acc + (s.totalPrice || 0);
-          const vendorSum = (s.items || []).reduce((sum, item) => {
-            const prod = products.find(p => p.id === item.id);
-            return prod && prod.vendor === vendor ? sum + (item.lineTotal || 0) : sum;
+          .filter(s => normalizeDateStr(s.date) === dateStr)
+          .reduce((acc, s) => {
+            if (vendor === 'all') return acc + (s.totalPrice || 0);
+            const vendorSum = (s.items || []).reduce((sum, item) => {
+              const prod = products.find(p => p.id === item.id);
+              return prod && prod.vendor === vendor ? sum + (item.lineTotal || 0) : sum;
+            }, 0);
+            return acc + vendorSum;
           }, 0);
-          return acc + vendorSum;
-        }, 0);
       result.push({ day: dayLabel, amount: dayRevenue });
     }
     return result;
   })();
 
-  // SVG Chart helper calculations
-  const chartHeight = 140;
-  const chartWidth = 500;
-  const padding = 30;
-  const maxAmount = Math.max(...dailySales.map(d => d.amount), 1000);
-  const points = dailySales.map((d, index) => {
-    const x = padding + (index * (chartWidth - padding * 2)) / (dailySales.length - 1);
-    const y = chartHeight - padding - (d.amount / maxAmount) * (chartHeight - padding * 2);
-    return { x, y, ...d };
-  });
-
-  const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
-  const areaPath = points.length > 0 
-    ? `${linePath} L ${points[points.length - 1].x} ${chartHeight - padding} L ${points[0].x} ${chartHeight - padding} Z` 
-    : '';
-
   return (
-    <div style={styles.container} className="animate-fade">
+    <motion.div 
+      variants={containerVariants}
+      initial="hidden"
+      animate="show"
+      style={styles.container}
+    >
       {/* Top Welcome Title */}
-      <div style={styles.welcomeRow}>
+      <motion.div variants={itemVariants} style={styles.welcomeRow}>
         <div>
           <h1 style={styles.pageTitle}>{storeSettings?.storeName || 'Logistics Dashboard'}</h1>
           <p style={styles.pageSubtitle}>{storeSettings?.storeAddress || 'Real-time metrics and store inventory operations control.'}</p>
@@ -155,31 +174,31 @@ export default function Dashboard({ products, sales, setProducts, setActiveTab, 
           <ShoppingBag size={18} />
           <span>Launch POS Register</span>
         </button>
-      </div>
+      </motion.div>
 
       {/* KPI Cards Grid */}
       <div style={styles.kpiGrid}>
         {/* KPI 1 */}
-        <div style={styles.kpiCard} className="card glow">
+        <motion.div variants={itemVariants} whileHover={{ y: -4, boxShadow: 'var(--shadow-glow)' }} style={styles.kpiCard} className="card glow">
           <div style={styles.kpiHeader}>
             <span style={styles.kpiTitle}>Total Revenue</span>
             <div style={{ ...styles.kpiIconBox, backgroundColor: 'var(--color-success-light)' }}>
-              <DollarSign size={20} color="var(--color-success)" />
+              <IndianRupee size={20} color="var(--color-success)" />
             </div>
           </div>
           <div style={styles.kpiValRow}>
-            <span style={styles.kpiValue}>
-              {storeSettings?.currencySymbol || '$'}{totalRevenue.toFixed(2)}
+            <span style={styles.kpiValue} className="font-mono">
+              {storeSettings?.currencySymbol || '₹'}{totalRevenue.toFixed(2)}
             </span>
             <span style={styles.kpiChange}>
               <TrendingUp size={14} /> +12.4%
             </span>
           </div>
           <span style={styles.kpiSubtext}>Calculated from {totalBills} sales invoices</span>
-        </div>
+        </motion.div>
 
         {/* KPI 2 */}
-        <div style={styles.kpiCard} className="card">
+        <motion.div variants={itemVariants} whileHover={{ y: -4, boxShadow: 'var(--shadow-md)' }} style={styles.kpiCard} className="card">
           <div style={styles.kpiHeader}>
             <span style={styles.kpiTitle}>Invoices Printed</span>
             <div style={{ ...styles.kpiIconBox, backgroundColor: 'var(--color-primary-light)' }}>
@@ -187,14 +206,14 @@ export default function Dashboard({ products, sales, setProducts, setActiveTab, 
             </div>
           </div>
           <div style={styles.kpiValRow}>
-            <span style={styles.kpiValue}>{totalBills}</span>
+            <span style={styles.kpiValue} className="font-mono">{totalBills}</span>
             <span style={styles.kpiSubtext2}>Active sales records</span>
           </div>
           <span style={styles.kpiSubtext}>Stock values auto-deducted</span>
-        </div>
+        </motion.div>
 
         {/* KPI 3 */}
-        <div style={styles.kpiCard} className="card">
+        <motion.div variants={itemVariants} whileHover={{ y: -4, boxShadow: 'var(--shadow-md)' }} style={styles.kpiCard} className="card">
           <div style={styles.kpiHeader}>
             <span style={styles.kpiTitle}>Product SKUs</span>
             <div style={{ ...styles.kpiIconBox, backgroundColor: 'var(--color-primary-light)' }}>
@@ -202,17 +221,22 @@ export default function Dashboard({ products, sales, setProducts, setActiveTab, 
             </div>
           </div>
           <div style={styles.kpiValRow}>
-            <span style={styles.kpiValue}>{totalProducts}</span>
-            <span style={styles.kpiSubtext2}>Across {totalCategoriesCount} categories</span>
+            <span style={styles.kpiValue} className="font-mono">{totalProducts}</span>
+            <span style={styles.kpiSubtext2}>Across {categoryCounts ? Object.keys(categoryCounts).length : 0} categories</span>
           </div>
           <span style={styles.kpiSubtext}>Check catalog status in real-time</span>
-        </div>
+        </motion.div>
 
         {/* KPI 4 - Combined Alerts */}
-        <div style={{
-          ...styles.kpiCard,
-          borderColor: (lowStockCount > 0 || expiredCount > 0) ? 'var(--color-danger)' : 'var(--color-border)',
-        }} className="card">
+        <motion.div 
+          variants={itemVariants} 
+          whileHover={{ y: -4, boxShadow: 'var(--shadow-md)' }}
+          style={{
+            ...styles.kpiCard,
+            borderColor: (lowStockCount > 0 || expiredCount > 0) ? 'var(--color-danger)' : 'var(--color-border)',
+          }} 
+          className="card"
+        >
           <div style={styles.kpiHeader}>
             <span style={styles.kpiTitle}>Security & Alerts</span>
             <div style={{ 
@@ -226,83 +250,60 @@ export default function Dashboard({ products, sales, setProducts, setActiveTab, 
             <span style={{ 
               ...styles.kpiValue,
               color: (lowStockCount > 0 || expiredCount > 0) ? 'var(--color-danger)' : 'var(--color-text-primary)'
-            }}>
+            }} className="font-mono">
               Low: {lowStockCount} | Exp: {expiredCount}
             </span>
           </div>
           <span style={styles.kpiSubtext}>
             {expiringSoonCount} items expiring in {storeSettings?.expiryWarningDays || 30} days
           </span>
-        </div>
+        </motion.div>
       </div>
 
       {/* Main Charts & Lists Grid */}
       <div style={styles.mainGrid}>
         {/* Sales Trend Chart Card */}
-        <div style={styles.chartCard} className="card">
+        <motion.div variants={itemVariants} whileHover={{ y: -2 }} style={styles.chartCard} className="card">
           <div style={styles.cardHeader}>
             <h2 style={styles.cardTitle}>Sales Velocity (Weekly Trend)</h2>
-            <span style={styles.cardInfo}>$ USD Daily sales turnover</span>
+            <span style={styles.cardInfo}>₹ INR Daily sales turnover</span>
           </div>
           <div style={styles.chartWrapper}>
-            <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} style={styles.svgChart}>
-              {/* Grid Lines */}
-              <line x1={padding} y1={padding} x2={chartWidth - padding} y2={padding} stroke="var(--color-border)" strokeDasharray="4" />
-              <line x1={padding} y1={chartHeight - padding} x2={chartWidth - padding} y2={chartHeight - padding} stroke="var(--color-border)" />
-              
-              {/* Area path */}
-              <path d={areaPath} fill="url(#chartGradient)" />
-
-              {/* Line path */}
-              <path d={linePath} fill="none" stroke="var(--color-primary)" strokeWidth="3" />
-
-              {/* Points */}
-              {points.map((p, index) => (
-                <g key={index}>
-                  <circle 
-                    cx={p.x} 
-                    cy={p.y} 
-                    r="4" 
-                    fill="var(--color-bg-surface)" 
-                    stroke="var(--color-primary)" 
-                    strokeWidth="2.5" 
-                  />
-                  <text 
-                    x={p.x} 
-                    y={chartHeight - 8} 
-                    fontSize="10" 
-                    fill="var(--color-text-secondary)" 
-                    textAnchor="middle"
-                    fontWeight="600"
-                  >
-                    {p.day}
-                  </text>
-                  <text 
-                    x={p.x} 
-                    y={p.y - 10} 
-                    fontSize="9" 
-                    fill="var(--color-text-primary)" 
-                    textAnchor="middle" 
-                    fontWeight="700"
-                  >
-                    {storeSettings?.currencySymbol || '$'}{p.amount.toFixed(0)}
-                  </text>
-                </g>
-              ))}
-
-              {/* Gradients */}
-              <defs>
-                <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="var(--color-primary)" stopOpacity="0.25" />
-                  <stop offset="100%" stopColor="var(--color-primary)" stopOpacity="0.0" />
-                </linearGradient>
-              </defs>
-            </svg>
+            <ResponsiveContainer width="100%" height={140}>
+              <AreaChart data={dailySales} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="dashboardChartGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="var(--color-primary)" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <XAxis 
+                  dataKey="day" 
+                  stroke="var(--color-text-secondary)" 
+                  fontSize={10}
+                  tickLine={false}
+                  axisLine={false}
+                  dy={5}
+                />
+                <Tooltip 
+                  content={<CustomTooltip currencySymbol={storeSettings?.currencySymbol || '₹'} />}
+                  cursor={{ stroke: 'var(--color-border)', strokeWidth: 1 }}
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="amount" 
+                  stroke="var(--color-primary)" 
+                  strokeWidth={2}
+                  fillOpacity={1} 
+                  fill="url(#dashboardChartGradient)" 
+                />
+              </AreaChart>
+            </ResponsiveContainer>
           </div>
-        </div>
+        </motion.div>
 
         {/* Categories Share Card */}
-        <div style={styles.categoriesCard} className="card">
+        <motion.div variants={itemVariants} whileHover={{ y: -2 }} style={styles.categoriesCard} className="card">
           <div style={styles.cardHeader}>
             <h2 style={styles.cardTitle}>Inventory Categories</h2>
             <span style={styles.cardInfo}>Distribution of items in warehouse</span>
@@ -312,12 +313,12 @@ export default function Dashboard({ products, sales, setProducts, setActiveTab, 
               <div key={idx} style={styles.catItem}>
                 <div style={styles.catHeader}>
                   <span style={styles.catName}>{cat.name}</span>
-                  <span style={styles.catStat}>{cat.count} items ({cat.percentage}%)</span>
+                  <span style={styles.catStat} className="font-mono">{cat.count} items ({cat.percentage}%)</span>
                 </div>
                 <div style={styles.progressContainer}>
                   <div 
                     style={{ 
-                      ...styles.progressBar, 
+                       ...styles.progressBar, 
                       width: `${cat.percentage}%`,
                       backgroundColor: idx === 0 ? 'var(--color-primary)' : idx === 1 ? 'var(--color-success)' : 'var(--color-text-muted)'
                     }} 
@@ -326,7 +327,7 @@ export default function Dashboard({ products, sales, setProducts, setActiveTab, 
               </div>
             ))}
           </div>
-        </div>
+        </motion.div>
 
         {/* Payment Channels Share Card */}
         {(() => {
@@ -350,7 +351,7 @@ export default function Dashboard({ products, sales, setProducts, setActiveTab, 
           });
 
           return (
-            <div style={styles.categoriesCard} className="card">
+            <motion.div variants={itemVariants} whileHover={{ y: -2 }} style={styles.categoriesCard} className="card">
               <div style={styles.cardHeader}>
                 <h2 style={styles.cardTitle}>Payment Channels</h2>
                 <span style={styles.cardInfo}>Revenue share by billing route</span>
@@ -360,7 +361,7 @@ export default function Dashboard({ products, sales, setProducts, setActiveTab, 
                   <div key={idx} style={styles.catItem}>
                     <div style={styles.catHeader}>
                       <span style={styles.catName}>{pay.name}</span>
-                      <span style={styles.catStat}>{storeSettings?.currencySymbol || '$'}{pay.amount.toFixed(2)} ({pay.percentage}%)</span>
+                      <span style={styles.catStat} className="font-mono">{storeSettings?.currencySymbol || '₹'}{pay.amount.toFixed(2)} ({pay.percentage}%)</span>
                     </div>
                     <div style={styles.progressContainer}>
                       <div 
@@ -374,12 +375,12 @@ export default function Dashboard({ products, sales, setProducts, setActiveTab, 
                   </div>
                 ))}
               </div>
-            </div>
+            </motion.div>
           );
         })()}
 
         {/* Low Stock Alerts Replenishment Console */}
-        <div style={styles.alertsCard} className="card">
+        <motion.div variants={itemVariants} whileHover={{ y: -2 }} style={styles.alertsCard} className="card">
           <div style={styles.cardHeader}>
             <h2 style={styles.cardTitle}>Replenishment Alerts</h2>
             <span style={styles.cardInfo}>Low stock items requiring updates</span>
@@ -403,7 +404,7 @@ export default function Dashboard({ products, sales, setProducts, setActiveTab, 
                         color: item.quantity === 0 ? 'var(--color-danger)' : 'var(--color-warning)',
                         fontWeight: '700'
                       }}>
-                        {item.quantity === 0 ? 'OUT OF STOCK' : `${item.quantity} units left`}
+                        {item.quantity === 0 ? 'OUT OF STOCK' : <><span className="font-mono">{item.quantity}</span> units left</>}
                       </span>
                       <span style={styles.divider}>•</span>
                       <span style={styles.alertMin}>Limit: {storeSettings?.lowStockThreshold || item.minStock}</span>
@@ -433,10 +434,10 @@ export default function Dashboard({ products, sales, setProducts, setActiveTab, 
               ))}
             </div>
           )}
-        </div>
+        </motion.div>
 
         {/* Perishables Expiry Console */}
-        <div style={styles.alertsCard} className="card">
+        <motion.div variants={itemVariants} whileHover={{ y: -2 }} style={styles.alertsCard} className="card">
           <div style={styles.cardHeader}>
             <h2 style={styles.cardTitle}>Perishables Expiry Console</h2>
             <span style={styles.cardInfo}>Perishable goods status & markdown clearance</span>
@@ -510,10 +511,10 @@ export default function Dashboard({ products, sales, setProducts, setActiveTab, 
               })}
             </div>
           )}
-        </div>
+        </motion.div>
 
         {/* Recent Invoices Feed */}
-        <div style={styles.recentFeedCard} className="card">
+        <motion.div variants={itemVariants} whileHover={{ y: -2 }} style={styles.recentFeedCard} className="card">
           <div style={styles.cardHeader}>
             <h2 style={styles.cardTitle}>Recent Store Sales</h2>
             <span style={styles.cardInfo}>Latest billing checkout actions</span>
@@ -536,20 +537,42 @@ export default function Dashboard({ products, sales, setProducts, setActiveTab, 
                     <span style={styles.feedSubtitle}>{sale.customerName || 'Walk-in Customer'} • {sale.items.length} items</span>
                   </div>
                   <div style={styles.feedValue}>
-                    <span>+{storeSettings?.currencySymbol || '$'}{sale.totalPrice.toFixed(2)}</span>
+                    <span className="font-mono">+{storeSettings?.currencySymbol || '₹'}{sale.totalPrice.toFixed(2)}</span>
                     <span style={styles.feedTime}>{sale.time}</span>
                   </div>
                 </div>
               ))}
             </div>
           )}
-        </div>
+        </motion.div>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
 const styles = {
+  glassTooltip: {
+    backgroundColor: 'rgba(22, 27, 34, 0.8)',
+    backdropFilter: 'blur(12px)',
+    WebkitBackdropFilter: 'blur(12px)',
+    border: '1px solid var(--color-border)',
+    padding: '0.5rem 0.75rem',
+    borderRadius: '8px',
+    boxShadow: 'var(--shadow-md)',
+  },
+  tooltipLabel: {
+    fontSize: '0.75rem',
+    color: 'var(--color-text-secondary)',
+    margin: 0,
+    fontWeight: '600',
+  },
+  tooltipValue: {
+    fontSize: '0.875rem',
+    fontFamily: 'var(--font-mono)',
+    color: 'var(--color-primary)',
+    fontWeight: '800',
+    margin: '0.1rem 0 0 0',
+  },
   container: {
     display: 'flex',
     flexDirection: 'column',

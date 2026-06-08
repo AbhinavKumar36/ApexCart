@@ -1,15 +1,12 @@
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   TrendingUp,
-  TrendingDown,
-  DollarSign,
+  IndianRupee,
   Package,
   BarChart3,
-  PieChart,
+  PieChart as PieChartIcon,
   Calendar,
   Download,
-  ArrowUpRight,
-  ArrowDownRight,
   ShoppingBag,
   Target,
   Zap,
@@ -22,6 +19,49 @@ import {
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import * as XLSX from 'xlsx';
+import { motion } from 'framer-motion';
+import { ResponsiveContainer, AreaChart, Area, BarChart, Bar, XAxis, Tooltip, PieChart, Pie, Cell } from 'recharts';
+
+// Helper to parse GB format (dd/mm/yyyy) or Standard (yyyy-mm-dd) to standard string format
+const getStandardDateStr = (dateStr) => {
+  if (!dateStr) return '';
+  if (dateStr.includes('-')) return dateStr;
+  const parts = dateStr.split('/');
+  if (parts.length === 3) {
+    const dd = parts[0].padStart(2, '0');
+    const mm = parts[1].padStart(2, '0');
+    const yyyy = parts[2];
+    return `${yyyy}-${mm}-${dd}`;
+  }
+  return dateStr;
+};
+
+// Helper to check if a date is within N days
+const isWithinDays = (dateStr, days, todayDate) => {
+  const stdDate = getStandardDateStr(dateStr);
+  if (!stdDate) return false;
+  const d = new Date(stdDate);
+  d.setHours(0,0,0,0);
+  const referenceDate = new Date(todayDate);
+  referenceDate.setHours(0,0,0,0);
+  const diffTime = referenceDate - d;
+  const diffDays = diffTime / (1000 * 60 * 60 * 24);
+  return diffDays >= 0 && diffDays <= days;
+};
+
+const CustomTooltip = ({ active, payload, label, currencySymbol }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div style={styles.glassTooltip}>
+        <p style={styles.tooltipLabel}>{label}</p>
+        <p style={styles.tooltipValue} className="font-mono">
+          {currencySymbol}{payload[0].value.toFixed(2)}
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
 
 export default function Reports({ products, sales, storeSettings, vendor, currentStore }) {
   const [activeReportTab, setActiveReportTab] = useState('dashboard'); // 'dashboard', 'forecasting'
@@ -29,10 +69,25 @@ export default function Reports({ products, sales, storeSettings, vendor, curren
   const [forecastSearch, setForecastSearch] = useState('');
   const [showExportMenu, setShowExportMenu] = useState(false);
 
-  const sym = storeSettings?.currencySymbol || '$';
+  const sym = storeSettings?.currencySymbol || '₹';
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.05
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 15 },
+    show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
+  };
 
   // Today as dynamic
-  const today = new Date();
+  const today = useMemo(() => new Date(), []);
   
   // Local timezone date string helper
   const toISOStringLocalDate = (date) => {
@@ -43,33 +98,6 @@ export default function Reports({ products, sales, storeSettings, vendor, curren
   };
 
   const todayStr = toISOStringLocalDate(today);
-
-  // Helper to parse GB format (dd/mm/yyyy) or Standard (yyyy-mm-dd) to standard string format
-  const getStandardDateStr = (dateStr) => {
-    if (!dateStr) return '';
-    if (dateStr.includes('-')) return dateStr;
-    const parts = dateStr.split('/');
-    if (parts.length === 3) {
-      const dd = parts[0].padStart(2, '0');
-      const mm = parts[1].padStart(2, '0');
-      const yyyy = parts[2];
-      return `${yyyy}-${mm}-${dd}`;
-    }
-    return dateStr;
-  };
-
-  // Helper to check if a date is within N days
-  const isWithinDays = (dateStr, days) => {
-    const stdDate = getStandardDateStr(dateStr);
-    if (!stdDate) return false;
-    const d = new Date(stdDate);
-    d.setHours(0,0,0,0);
-    const referenceDate = new Date(today);
-    referenceDate.setHours(0,0,0,0);
-    const diffTime = referenceDate - d;
-    const diffDays = diffTime / (1000 * 60 * 60 * 24);
-    return diffDays >= 0 && diffDays <= days;
-  };
 
   // Filter sales by currentStore and date range
   const rangedSales = useMemo(() => {
@@ -121,16 +149,16 @@ export default function Reports({ products, sales, storeSettings, vendor, curren
       if (stdDateStr === todayStr) {
         todayRev += rev;
       }
-      if (isWithinDays(s.date, 7)) {
+      if (isWithinDays(s.date, 7, today)) {
         weekRev += rev;
       }
-      if (isWithinDays(s.date, 30)) {
+      if (isWithinDays(s.date, 30, today)) {
         monthRev += rev;
       }
     });
     
     return { today: todayRev, week: weekRev, month: monthRev };
-  }, [sales, products, currentStore, vendor, todayStr]);
+  }, [sales, products, currentStore, vendor, todayStr, today]);
 
   // Core financial metrics (for selected date range)
   const totalRevenue = useMemo(() => {
@@ -192,7 +220,7 @@ export default function Reports({ products, sales, storeSettings, vendor, curren
       result.push({ date: dateStr, label: dayLabel, revenue: dayRevenue });
     }
     return result;
-  }, [sales, dateRange, currentStore, vendor]);
+  }, [sales, dateRange, currentStore, vendor, products]);
 
   // Category performance
   const categoryStats = useMemo(() => {
@@ -317,10 +345,6 @@ export default function Reports({ products, sales, storeSettings, vendor, curren
     }));
   }, [filteredSales, vendor, products]);
 
-  const maxPeakRevenue = useMemo(() => {
-    return Math.max(...peakSalesHours.map(h => h.revenue), 1);
-  }, [peakSalesHours]);
-
   // Inventory health stats
   const inventoryHealth = useMemo(() => {
     const fp = products.filter(p => p.store === currentStore && (vendor === 'all' || p.vendor === vendor));
@@ -340,7 +364,7 @@ export default function Reports({ products, sales, storeSettings, vendor, curren
       }).length,
       totalValue: fp.reduce((acc, p) => acc + (p.costPrice || 0) * p.quantity, 0)
     };
-  }, [products, vendor, storeSettings, todayStr, currentStore]);
+  }, [products, vendor, storeSettings, todayStr, currentStore, today]);
 
   // Inventory turnover calculation
   const inventoryTurnover = useMemo(() => {
@@ -606,11 +630,7 @@ export default function Reports({ products, sales, storeSettings, vendor, curren
     setShowExportMenu(false);
   };
 
-  const chartHeight = 180;
-  const chartPad = 40;
-  const chartW = 600;
-  const maxRevenue = Math.max(...dailyRevenue.map(d => d.revenue), 1);
-  const barWidth = Math.max(4, Math.floor((chartW - chartPad * 2) / dailyRevenue.length) - 6);
+
 
   const CATEGORY_COLORS = [
     'var(--color-primary)',
@@ -622,7 +642,12 @@ export default function Reports({ products, sales, storeSettings, vendor, curren
   ];
 
   return (
-    <div style={styles.container} className="animate-fade">
+    <motion.div 
+      variants={containerVariants}
+      initial="hidden"
+      animate="show"
+      style={styles.container}
+    >
       {/* Header View Selection Tab Bar */}
       <div style={styles.tabHeaderRow}>
         <div style={styles.tabButtonGroup} className="glass">
@@ -714,77 +739,77 @@ export default function Reports({ products, sales, storeSettings, vendor, curren
           {/* Real-time Sales Metrics (Static Reference & Selected Range) */}
           <div style={styles.dashboardStatsGrid}>
             {/* Revenue Today Card */}
-            <div style={styles.kpiCard} className="card glow">
+            <motion.div variants={itemVariants} whileHover={{ y: -4, boxShadow: 'var(--shadow-glow)' }} style={styles.kpiCard} className="card glow">
               <div style={styles.kpiIcon} className="kpi-icon-revenue">
-                <DollarSign size={20} color="var(--color-success)" />
+                <IndianRupee size={20} color="var(--color-success)" />
               </div>
               <div style={styles.kpiBody}>
                 <span style={styles.kpiLabel}>Revenue Today</span>
-                <span style={styles.kpiValue}>{sym}{statsTodayWeekMonth.today.toFixed(2)}</span>
+                <span style={styles.kpiValue} className="font-mono">{sym}{statsTodayWeekMonth.today.toFixed(2)}</span>
                 <span style={{ ...styles.kpiBadge, color: 'var(--color-text-muted)' }}>current store billing</span>
               </div>
-            </div>
+            </motion.div>
             {/* Revenue This Week Card */}
-            <div style={styles.kpiCard} className="card">
+            <motion.div variants={itemVariants} whileHover={{ y: -4, boxShadow: 'var(--shadow-md)' }} style={styles.kpiCard} className="card">
               <div style={styles.kpiIcon} className="kpi-icon-revenue">
                 <Calendar size={20} color="var(--color-primary)" />
               </div>
               <div style={styles.kpiBody}>
                 <span style={styles.kpiLabel}>Revenue (7D)</span>
-                <span style={styles.kpiValue}>{sym}{statsTodayWeekMonth.week.toFixed(2)}</span>
+                <span style={styles.kpiValue} className="font-mono">{sym}{statsTodayWeekMonth.week.toFixed(2)}</span>
                 <span style={{ ...styles.kpiBadge, color: 'var(--color-text-muted)' }}>rolling last 7 days</span>
               </div>
-            </div>
+            </motion.div>
             {/* Revenue This Month Card */}
-            <div style={styles.kpiCard} className="card">
+            <motion.div variants={itemVariants} whileHover={{ y: -4, boxShadow: 'var(--shadow-md)' }} style={styles.kpiCard} className="card">
               <div style={styles.kpiIcon} className="kpi-icon-revenue">
                 <ShoppingBag size={20} color="#8b5cf6" />
               </div>
               <div style={styles.kpiBody}>
                 <span style={styles.kpiLabel}>Revenue (30D)</span>
-                <span style={styles.kpiValue}>{sym}{statsTodayWeekMonth.month.toFixed(2)}</span>
+                <span style={styles.kpiValue} className="font-mono">{sym}{statsTodayWeekMonth.month.toFixed(2)}</span>
                 <span style={{ ...styles.kpiBadge, color: 'var(--color-text-muted)' }}>rolling last 30 days</span>
               </div>
-            </div>
+            </motion.div>
             {/* Inventory Turnover Card */}
-            <div style={styles.kpiCard} className="card">
+            <motion.div variants={itemVariants} whileHover={{ y: -4, boxShadow: 'var(--shadow-md)' }} style={styles.kpiCard} className="card">
               <div style={styles.kpiIcon} className="kpi-icon-inv">
                 <TrendingUp size={20} color="#f59e0b" />
               </div>
               <div style={styles.kpiBody}>
                 <span style={styles.kpiLabel}>Inventory Turnover</span>
-                <span style={styles.kpiValue}>{inventoryTurnover}x</span>
+                <span style={styles.kpiValue} className="font-mono">{inventoryTurnover}x</span>
                 <span style={{ ...styles.kpiBadge, color: parseFloat(inventoryTurnover) > 0.5 ? 'var(--color-success)' : 'var(--color-warning)' }}>
                   COGS / Inventory Assets
                 </span>
               </div>
-            </div>
+            </motion.div>
           </div>
 
           {/* Core range specific KPIs */}
           <div style={styles.kpiRow}>
-            <div style={styles.kpiCardMini}>
+            <motion.div variants={itemVariants} whileHover={{ y: -2 }} style={styles.kpiCardMini}>
               <span style={styles.kpiLabelMini}>Selected Range Revenue</span>
-              <span style={styles.kpiValueMini}>{sym}{totalRevenue.toFixed(2)}</span>
-            </div>
-            <div style={styles.kpiCardMini}>
+              <span style={styles.kpiValueMini} className="font-mono">{sym}{totalRevenue.toFixed(2)}</span>
+            </motion.div>
+            <motion.div variants={itemVariants} whileHover={{ y: -2 }} style={styles.kpiCardMini}>
               <span style={styles.kpiLabelMini}>Gross Profit</span>
-              <span style={styles.kpiValueMini}>{sym}{grossProfit.toFixed(2)}</span>
-            </div>
-            <div style={styles.kpiCardMini}>
+              <span style={styles.kpiValueMini} className="font-mono">{sym}{grossProfit.toFixed(2)}</span>
+            </motion.div>
+            <motion.div variants={itemVariants} whileHover={{ y: -2 }} style={styles.kpiCardMini}>
               <span style={styles.kpiLabelMini}>Margin</span>
-              <span style={styles.kpiValueMini}>{grossMargin}%</span>
-            </div>
-            <div style={styles.kpiCardMini}>
+              <span style={styles.kpiValueMini} className="font-mono">{grossMargin}%</span>
+            </motion.div>
+            <motion.div variants={itemVariants} whileHover={{ y: -2 }} style={styles.kpiCardMini}>
               <span style={styles.kpiLabelMini}>Avg Ticket Value</span>
-              <span style={styles.kpiValueMini}>{sym}{avgOrderValue.toFixed(2)}</span>
-            </div>
+              <span style={styles.kpiValueMini} className="font-mono">{sym}{avgOrderValue.toFixed(2)}</span>
+            </motion.div>
           </div>
 
           {/* Revenue Trends and Payment Methods */}
           <div style={styles.chartRow}>
-            {/* Revenue Trend SVG */}
-            <div style={{ ...styles.chartCard, flex: 2 }} className="card">
+            {/* Revenue Trend AreaChart */}
+            <motion.div variants={itemVariants} whileHover={{ y: -2 }} style={{ ...styles.chartCard, flex: 2 }} className="card">
               <div style={styles.cardHeader}>
                 <div style={styles.cardTitleRow}>
                   <BarChart3 size={20} color="var(--color-primary)" />
@@ -792,87 +817,96 @@ export default function Reports({ products, sales, storeSettings, vendor, curren
                 </div>
                 <span style={styles.cardSubtext}>Last {Math.min(dateRange === 'all' ? 14 : dateRange, 14)} days</span>
               </div>
-              <div style={styles.svgWrap}>
-                <svg viewBox={`0 0 ${chartW} ${chartHeight + 30}`} style={{ width: '100%', height: 'auto' }}>
-                  {[0, 0.25, 0.5, 0.75, 1].map((pct, i) => {
-                    const y = chartPad + (1 - pct) * (chartHeight - chartPad);
-                    return (
-                      <g key={i}>
-                        <line x1={chartPad} y1={y} x2={chartW - chartPad / 2} y2={y}
-                          stroke="var(--color-border)" strokeDasharray="3" strokeWidth="1" />
-                        <text x={chartPad - 5} y={y + 4} fontSize="9" textAnchor="end"
-                          fill="var(--color-text-muted)" fontWeight="600">
-                          {sym}{Math.round(maxRevenue * pct)}
-                        </text>
-                      </g>
-                    );
-                  })}
-                  {dailyRevenue.map((d, i) => {
-                    const x = chartPad + i * ((chartW - chartPad * 2) / dailyRevenue.length) + 3;
-                    const barH = dailyRevenue.length > 0 ? (d.revenue / maxRevenue) * (chartHeight - chartPad) : 0;
-                    const y = chartHeight - barH;
-                    const isToday = d.date === todayStr;
-                    return (
-                      <g key={i}>
-                        <rect
-                          x={x}
-                          y={y}
-                          width={barWidth}
-                          height={Math.max(barH, 2)}
-                          rx="3"
-                          fill="var(--color-primary)"
-                          opacity={isToday ? 1 : 0.6}
-                        />
-                        {d.revenue > 0 && (
-                          <text x={x + barWidth / 2} y={y - 4} fontSize="8" textAnchor="middle"
-                            fill="var(--color-text-primary)" fontWeight="700">
-                            {sym}{d.revenue.toFixed(0)}
-                          </text>
-                        )}
-                        <text x={x + barWidth / 2} y={chartHeight + 16} fontSize="8" textAnchor="middle"
-                          fill="var(--color-text-muted)" fontWeight="600">
-                          {d.label.replace(/^\w+ /, '')}
-                        </text>
-                      </g>
-                    );
-                  })}
-                </svg>
+              <div style={{ width: '100%', height: 220 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={dailyRevenue} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="reportsDailyChartGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="var(--color-primary)" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <XAxis 
+                      dataKey="label" 
+                      stroke="var(--color-text-secondary)" 
+                      fontSize={10}
+                      tickLine={false}
+                      axisLine={false}
+                      dy={5}
+                    />
+                    <Tooltip 
+                      content={<CustomTooltip currencySymbol={sym} />}
+                      cursor={{ stroke: 'var(--color-border)', strokeWidth: 1 }}
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="revenue" 
+                      stroke="var(--color-primary)" 
+                      strokeWidth={2}
+                      fillOpacity={1} 
+                      fill="url(#reportsDailyChartGradient)" 
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
               </div>
-            </div>
+            </motion.div>
 
-            {/* Payment Distribution */}
-            <div style={{ ...styles.chartCard, flex: 1 }} className="card">
+            {/* Payment Distribution PieChart */}
+            <motion.div variants={itemVariants} whileHover={{ y: -2 }} style={{ ...styles.chartCard, flex: 1 }} className="card">
               <div style={styles.cardHeader}>
                 <div style={styles.cardTitleRow}>
-                  <PieChart size={20} color="var(--color-primary)" />
+                  <PieChartIcon size={20} color="var(--color-primary)" />
                   <h2 style={styles.cardTitle}>Payment Distribution</h2>
                 </div>
               </div>
-              <div style={styles.paymentList}>
-                {paymentStats.map((pay, idx) => {
-                  const colors = ['var(--color-text-muted)', 'var(--color-success)', 'var(--color-primary)'];
-                  return (
-                    <div key={pay.name} style={styles.paymentRow}>
-                      <div style={styles.paymentLeft}>
-                        <div style={{ ...styles.payDot, backgroundColor: colors[idx] }} />
-                        <span style={styles.payName}>{pay.name}</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1, justifyContent: 'center' }}>
+                <div style={{ width: '100%', height: 110 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={paymentStats}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={30}
+                        outerRadius={45}
+                        paddingAngle={5}
+                        dataKey="amount"
+                      >
+                        {paymentStats.map((entry, index) => {
+                          const colors = ['#8b5cf6', 'var(--color-success)', 'var(--color-primary)'];
+                          return <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />;
+                        })}
+                      </Pie>
+                      <Tooltip content={<CustomTooltip currencySymbol={sym} />} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                <div style={styles.paymentList}>
+                  {paymentStats.map((pay, idx) => {
+                    const colors = ['#8b5cf6', 'var(--color-success)', 'var(--color-primary)'];
+                    return (
+                      <div key={pay.name} style={styles.paymentRow}>
+                        <div style={styles.paymentLeft}>
+                          <div style={{ ...styles.payDot, backgroundColor: colors[idx] }} />
+                          <span style={styles.payName}>{pay.name}</span>
+                        </div>
+                        <div style={styles.payRight}>
+                          <span style={styles.payAmt} className="font-mono">{sym}{pay.amount.toFixed(2)}</span>
+                          <span style={{ ...styles.payPct, color: colors[idx] }} className="font-mono">{pay.pct}%</span>
+                        </div>
+                        <div style={styles.payBarWrap}>
+                          <div style={{ ...styles.payBar, width: `${pay.pct}%`, backgroundColor: colors[idx] }} />
+                        </div>
                       </div>
-                      <div style={styles.payRight}>
-                        <span style={styles.payAmt}>{sym}{pay.amount.toFixed(2)}</span>
-                        <span style={{ ...styles.payPct, color: colors[idx] }}>{pay.pct}%</span>
-                      </div>
-                      <div style={styles.payBarWrap}>
-                        <div style={{ ...styles.payBar, width: `${pay.pct}%`, backgroundColor: colors[idx] }} />
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
-            </div>
+            </motion.div>
           </div>
 
-          {/* Peak Hours SVG Line Chart */}
-          <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          {/* Peak Hours Recharts BarChart */}
+          <motion.div variants={itemVariants} whileHover={{ y: -2 }} className="card" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <div style={styles.cardHeader}>
               <div style={styles.cardTitleRow}>
                 <Clock size={20} color="var(--color-primary)" />
@@ -880,77 +914,34 @@ export default function Reports({ products, sales, storeSettings, vendor, curren
               </div>
               <span style={styles.cardSubtext}>Identifies peak shopping hours</span>
             </div>
-            <div style={styles.svgWrap}>
-              <svg viewBox={`0 0 ${chartW + 20} ${chartHeight + 40}`} style={{ width: '100%', height: 'auto' }}>
-                {/* Horizontal grid lines */}
-                {[0, 0.25, 0.5, 0.75, 1].map((pct, i) => {
-                  const y = chartPad + (1 - pct) * (chartHeight - chartPad);
-                  return (
-                    <g key={i}>
-                      <line x1={chartPad} y1={y} x2={chartW} y2={y}
-                        stroke="var(--color-border)" strokeDasharray="3" strokeWidth="1" />
-                      <text x={chartPad - 5} y={y + 4} fontSize="8" textAnchor="end" fill="var(--color-text-muted)">
-                        {sym}{Math.round(maxPeakRevenue * pct)}
-                      </text>
-                    </g>
-                  );
-                })}
-                {/* Hourly Area Curve */}
-                {(() => {
-                  const pts = peakSalesHours.map((h, i) => {
-                    const x = chartPad + i * ((chartW - chartPad) / 23);
-                    const y = chartHeight - (h.revenue / maxPeakRevenue) * (chartHeight - chartPad);
-                    return { x, y };
-                  });
-                  
-                  if (pts.length === 0) return null;
-                  
-                  // Construct Area Path
-                  const areaD = `M ${pts[0].x} ${chartHeight} ` + 
-                    pts.map(p => `L ${p.x} ${p.y}`).join(' ') + 
-                    ` L ${pts[pts.length - 1].x} ${chartHeight} Z`;
-                  
-                  // Construct Line Path  
-                  const lineD = pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
-
-                  return (
-                    <g>
-                      <path d={areaD} fill="var(--color-primary)" opacity="0.15" />
-                      <path d={lineD} fill="none" stroke="var(--color-primary)" strokeWidth="2.5" />
-                      {pts.map((p, i) => {
-                        const h = peakSalesHours[i];
-                        if (h.revenue === 0) return null;
-                        return (
-                          <g key={i}>
-                            <circle cx={p.x} cy={p.y} r="3.5" fill="var(--color-bg-surface)" stroke="var(--color-primary)" strokeWidth="2" />
-                            <text x={p.x} y={p.y - 6} fontSize="7" fontWeight="bold" textAnchor="middle" fill="var(--color-text-primary)">
-                              {sym}{h.revenue.toFixed(0)}
-                            </text>
-                          </g>
-                        );
-                      })}
-                    </g>
-                  );
-                })()}
-                {/* X-axis time labels */}
-                {peakSalesHours.map((h, i) => {
-                  // Only show label every 3 hours to prevent overlap
-                  if (i % 3 !== 0) return null;
-                  const x = chartPad + i * ((chartW - chartPad) / 23);
-                  return (
-                    <text key={i} x={x} y={chartHeight + 16} fontSize="8" textAnchor="middle" fill="var(--color-text-muted)" fontWeight="600">
-                      {h.label}
-                    </text>
-                  );
-                })}
-              </svg>
+            <div style={{ width: '100%', height: 220 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={peakSalesHours} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
+                  <XAxis 
+                    dataKey="label" 
+                    stroke="var(--color-text-secondary)" 
+                    fontSize={10}
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <Tooltip 
+                    content={<CustomTooltip currencySymbol={sym} />}
+                    cursor={{ fill: 'rgba(255, 255, 255, 0.05)' }}
+                  />
+                  <Bar 
+                    dataKey="revenue" 
+                    fill="var(--color-primary)" 
+                    radius={[4, 4, 0, 0]} 
+                  />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
-          </div>
+          </motion.div>
 
           {/* Tables Row (Category Performance, Top Products, Best Profit Margins) */}
           <div style={styles.tableRow}>
             {/* Category Performance */}
-            <div style={{ ...styles.tableCard, flex: 1.2 }} className="card">
+            <motion.div variants={itemVariants} whileHover={{ y: -2 }} style={{ ...styles.tableCard, flex: 1.2 }} className="card">
               <div style={styles.cardHeader}>
                 <div style={styles.cardTitleRow}>
                   <Target size={18} color="var(--color-primary)" />
@@ -981,8 +972,8 @@ export default function Reports({ products, sales, storeSettings, vendor, curren
                               <div style={{ ...styles.catBarInner, width: `${barPct}%`, backgroundColor: CATEGORY_COLORS[idx % CATEGORY_COLORS.length] }} />
                             </div>
                           </td>
-                          <td style={{ ...styles.td, textAlign: 'right', fontWeight: '700' }}>{sym}{cat.revenue.toFixed(2)}</td>
-                          <td style={{ ...styles.td, textAlign: 'right', color: cat.profit >= 0 ? 'var(--color-success)' : 'var(--color-danger)', fontWeight: '700' }}>
+                          <td style={{ ...styles.td, textAlign: 'right', fontWeight: '700' }} className="font-mono">{sym}{cat.revenue.toFixed(2)}</td>
+                          <td style={{ ...styles.td, textAlign: 'right', color: cat.profit >= 0 ? 'var(--color-success)' : 'var(--color-danger)', fontWeight: '700' }} className="font-mono">
                             {sym}{cat.profit.toFixed(2)}
                           </td>
                           <td style={{ ...styles.td, textAlign: 'right' }}>
@@ -990,7 +981,7 @@ export default function Reports({ products, sales, storeSettings, vendor, curren
                               ...styles.marginBadge,
                               color: parseFloat(cat.margin) > 20 ? 'var(--color-success)' : parseFloat(cat.margin) > 10 ? 'var(--color-warning)' : 'var(--color-danger)',
                               backgroundColor: parseFloat(cat.margin) > 20 ? 'var(--color-success-light)' : parseFloat(cat.margin) > 10 ? 'var(--color-warning-light)' : 'var(--color-danger-light)'
-                            }}>
+                            }} className="font-mono">
                               {cat.margin}%
                             </span>
                           </td>
@@ -1007,10 +998,10 @@ export default function Reports({ products, sales, storeSettings, vendor, curren
                   </tbody>
                 </table>
               </div>
-            </div>
+            </motion.div>
 
             {/* Best Profit Margins Table */}
-            <div style={{ ...styles.tableCard, flex: 1 }} className="card">
+            <motion.div variants={itemVariants} whileHover={{ y: -2 }} style={{ ...styles.tableCard, flex: 1 }} className="card">
               <div style={styles.cardHeader}>
                 <div style={styles.cardTitleRow}>
                   <TrendingUp size={18} color="var(--color-primary)" />
@@ -1033,13 +1024,13 @@ export default function Reports({ products, sales, storeSettings, vendor, curren
                           <div style={styles.prodName}>{p.name}</div>
                           <span style={styles.prodCat}>{p.category}</span>
                         </td>
-                        <td style={{ ...styles.td, textAlign: 'right', fontWeight: '600' }}>
+                        <td style={{ ...styles.td, textAlign: 'right', fontWeight: '600' }} className="font-mono">
                           <span style={{ color: 'var(--color-text-muted)' }}>{sym}{p.costPrice.toFixed(1)}</span>
                           <span style={{ margin: '0 4px' }}>/</span>
                           <span style={{ color: 'var(--color-text-primary)' }}>{sym}{p.price.toFixed(1)}</span>
                         </td>
                         <td style={{ ...styles.td, textAlign: 'right' }}>
-                          <span style={{ ...styles.marginBadge, color: 'var(--color-success)', backgroundColor: 'var(--color-success-light)' }}>
+                          <span style={{ ...styles.marginBadge, color: 'var(--color-success)', backgroundColor: 'var(--color-success-light)' }} className="font-mono">
                             {p.margin}%
                           </span>
                         </td>
@@ -1055,11 +1046,11 @@ export default function Reports({ products, sales, storeSettings, vendor, curren
                   </tbody>
                 </table>
               </div>
-            </div>
+            </motion.div>
           </div>
 
           {/* Top Selling Products */}
-          <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <motion.div variants={itemVariants} whileHover={{ y: -2 }} className="card" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <div style={styles.cardHeader}>
               <div style={styles.cardTitleRow}>
                 <Zap size={18} color="var(--color-primary)" />
@@ -1081,12 +1072,12 @@ export default function Reports({ products, sales, storeSettings, vendor, curren
                 <tbody>
                   {topProducts.map((prod, idx) => (
                     <tr key={prod.id} style={styles.tr}>
-                      <td style={{ ...styles.td, fontWeight: '800', color: 'var(--color-text-muted)', width: '50px' }}>#{idx+1}</td>
-                      <td style={styles.td} className="code">{prod.id}</td>
+                      <td style={{ ...styles.td, fontWeight: '800', color: 'var(--color-text-muted)', width: '50px' }} className="font-mono">#{idx+1}</td>
+                      <td style={styles.td} className="code font-mono">{prod.id}</td>
                       <td style={{ ...styles.td, fontWeight: '700' }}>{prod.name}</td>
                       <td style={styles.td}>{prod.category}</td>
-                      <td style={{ ...styles.td, textAlign: 'right', fontWeight: '600' }}>{prod.units} units</td>
-                      <td style={{ ...styles.td, textAlign: 'right', fontWeight: '800', color: 'var(--color-primary)' }}>{sym}{prod.revenue.toFixed(2)}</td>
+                      <td style={{ ...styles.td, textAlign: 'right', fontWeight: '600' }} className="font-mono">{prod.units} units</td>
+                      <td style={{ ...styles.td, textAlign: 'right', fontWeight: '800', color: 'var(--color-primary)' }} className="font-mono">{sym}{prod.revenue.toFixed(2)}</td>
                     </tr>
                   ))}
                   {topProducts.length === 0 && (
@@ -1099,10 +1090,10 @@ export default function Reports({ products, sales, storeSettings, vendor, curren
                 </tbody>
               </table>
             </div>
-          </div>
+          </motion.div>
 
           {/* Inventory Health Snapshots */}
-          <div className="card" style={styles.invHealthCard}>
+          <motion.div variants={itemVariants} whileHover={{ y: -2 }} className="card" style={styles.invHealthCard}>
             <div style={styles.cardHeader}>
               <div style={styles.cardTitleRow}>
                 <Package size={20} color="var(--color-primary)" />
@@ -1120,18 +1111,18 @@ export default function Reports({ products, sales, storeSettings, vendor, curren
                 { label: 'Asset Value', value: `${sym}${inventoryHealth.totalValue.toFixed(0)}`, color: 'var(--color-primary)' },
               ].map(item => (
                 <div key={item.label} style={styles.invStat}>
-                  <span style={{ ...styles.invStatValue, color: item.color }}>{item.value}</span>
+                  <span style={{ ...styles.invStatValue, color: item.color }} className="font-mono">{item.value}</span>
                   <span style={styles.invStatLabel}>{item.label}</span>
                 </div>
               ))}
             </div>
-          </div>
+          </motion.div>
         </>
       ) : (
         /* Demand Forecasting Tab View */
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+        <motion.div variants={containerVariants} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           {/* Moving Average Explanation Banner */}
-          <div style={styles.forecastingBanner} className="glass">
+          <motion.div variants={itemVariants} style={styles.forecastingBanner} className="glass">
             <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
               <AlertTriangle size={20} color="#f59e0b" style={{ flexShrink: 0, marginTop: '2px' }} />
               <div>
@@ -1143,10 +1134,10 @@ export default function Reports({ products, sales, storeSettings, vendor, curren
                 </p>
               </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Search bar & statistics */}
-          <div style={styles.forecastToolbar} className="card">
+          <motion.div variants={itemVariants} style={styles.forecastToolbar} className="card">
             <div style={{ display: 'flex', gap: '0.75rem', flex: 1, alignItems: 'center' }}>
               <div style={{ position: 'relative', flex: 1 }}>
                 <Search size={16} style={styles.searchIcon} />
@@ -1168,10 +1159,10 @@ export default function Reports({ products, sales, storeSettings, vendor, curren
                 <span>Download Forecast Sheet (Excel)</span>
               </button>
             </div>
-          </div>
+          </motion.div>
 
           {/* Forecasting Grid Table */}
-          <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <motion.div variants={itemVariants} whileHover={{ y: -2 }} className="card" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <div style={styles.cardHeader}>
               <h2 style={styles.cardTitle}>Stockout &amp; Demand Predictions</h2>
               <span style={styles.cardSubtext}>{filteredForecast.length} items evaluated</span>
@@ -1217,17 +1208,17 @@ export default function Reports({ products, sales, storeSettings, vendor, curren
                     
                     return (
                       <tr key={item.id} style={styles.tr}>
-                        <td style={styles.td} className="code">{item.id}</td>
+                        <td style={styles.td} className="code font-mono">{item.id}</td>
                         <td style={{ ...styles.td, fontWeight: '700' }}>{item.name}</td>
                         <td style={styles.td}>{item.category}</td>
-                        <td style={{ ...styles.td, textAlign: 'right', fontWeight: '600' }}>
+                        <td style={{ ...styles.td, textAlign: 'right', fontWeight: '600' }} className="font-mono">
                           <span style={{ color: stock === 0 ? 'var(--color-danger)' : 'inherit' }}>
                             {stock} units
                           </span>
                         </td>
-                        <td style={{ ...styles.td, textAlign: 'right', color: 'var(--color-text-secondary)' }}>{item.salesVelocity} units/day</td>
-                        <td style={{ ...styles.td, textAlign: 'right', fontWeight: '600', color: 'var(--color-primary)' }}>{item.demand7Day} units</td>
-                        <td style={{ ...styles.td, textAlign: 'center', fontWeight: '700' }}>
+                        <td style={{ ...styles.td, textAlign: 'right', color: 'var(--color-text-secondary)' }} className="font-mono">{item.salesVelocity} units/day</td>
+                        <td style={{ ...styles.td, textAlign: 'right', fontWeight: '600', color: 'var(--color-primary)' }} className="font-mono">{item.demand7Day} units</td>
+                        <td style={{ ...styles.td, textAlign: 'center', fontWeight: '700' }} className="font-mono">
                           <span style={{ 
                             color: stock === 0 ? 'var(--color-danger)' : stockoutDays <= 3 ? 'var(--color-warning)' : 'inherit'
                           }}>
@@ -1239,7 +1230,7 @@ export default function Reports({ products, sales, storeSettings, vendor, curren
                             ...styles.marginBadge,
                             color: badgeColor,
                             backgroundColor: badgeBg
-                          }}>
+                          }} className="font-mono">
                             {actionText}
                           </span>
                         </td>
@@ -1256,8 +1247,8 @@ export default function Reports({ products, sales, storeSettings, vendor, curren
                 </tbody>
               </table>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
 
       <style>{`
@@ -1267,11 +1258,32 @@ export default function Reports({ products, sales, storeSettings, vendor, curren
         .kpi-icon-inv { background-color: rgba(245, 158, 11, 0.1) !important; }
         .code { font-family: monospace; font-size: 0.75rem; letter-spacing: 0.5px; }
       `}</style>
-    </div>
+    </motion.div>
   );
 }
 
 const styles = {
+  glassTooltip: {
+    backgroundColor: 'rgba(22, 27, 34, 0.8)',
+    backdropFilter: 'blur(12px)',
+    WebkitBackdropFilter: 'blur(12px)',
+    border: '1px solid var(--color-border)',
+    padding: '0.5rem 0.75rem',
+    borderRadius: '8px',
+    boxShadow: 'var(--shadow-md)',
+  },
+  tooltipLabel: {
+    fontSize: '0.75rem',
+    color: 'var(--color-text-secondary)',
+    margin: 0,
+    fontWeight: '600',
+  },
+  tooltipValue: {
+    fontSize: '0.875rem',
+    color: 'var(--color-primary)',
+    fontWeight: '800',
+    margin: '0.1rem 0 0 0',
+  },
   container: {
     display: 'flex',
     flexDirection: 'column',

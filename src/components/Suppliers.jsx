@@ -1,17 +1,12 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { 
   Truck, 
-  FileText, 
   Plus, 
   Trash2, 
   Edit, 
-  CheckCircle, 
-  Calendar, 
-  DollarSign, 
-  ClipboardList, 
-  X,
-  AlertTriangle
+  ClipboardList
 } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export default function Suppliers({ 
   products, 
@@ -22,11 +17,25 @@ export default function Suppliers({
   setPurchaseOrders, 
   currentStore, 
   logActivity, 
-  role,
   storeSettings
 }) {
   const [activeTab, setActiveTab] = useState('directory'); // directory, pos, create_po
-  const sym = storeSettings?.currencySymbol || '$';
+  const sym = storeSettings?.currencySymbol || '₹';
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.05
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 15 },
+    show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
+  };
 
   // Supplier Form State
   const [showSupplierModal, setShowSupplierModal] = useState(false);
@@ -185,9 +194,14 @@ export default function Suppliers({
   const currentStoreProducts = products.filter(p => p.store === currentStore);
 
   return (
-    <div style={styles.container} className="animate-fade">
+    <motion.div 
+      variants={containerVariants} 
+      initial="hidden" 
+      animate="show" 
+      style={styles.container}
+    >
       {/* Header */}
-      <div style={styles.headerRow}>
+      <motion.div style={styles.headerRow} variants={itemVariants}>
         <div>
           <h1 style={styles.pageTitle}>Suppliers &amp; POs</h1>
           <p style={styles.pageSubtitle}>Log wholesale distributors, draft purchase orders, and stock delivery shipments.</p>
@@ -227,11 +241,16 @@ export default function Suppliers({
             <span>Create PO</span>
           </button>
         </div>
-      </div>
+      </motion.div>
 
       {/* Directory Tab */}
       {activeTab === 'directory' && (
-        <div className="card" style={styles.card}>
+        <motion.div 
+          className="card" 
+          style={styles.card}
+          variants={itemVariants}
+          whileHover={{ y: -2 }}
+        >
           <div style={styles.cardHeader}>
             <div style={styles.titleRow}>
               <Truck size={20} color="var(--color-primary)" />
@@ -258,10 +277,10 @@ export default function Suppliers({
               <tbody>
                 {suppliers.map(sup => (
                   <tr key={sup.id} style={styles.tr}>
-                    <td style={{ ...styles.td, fontWeight: '700' }}>{sup.id}</td>
+                    <td style={{ ...styles.td, fontWeight: '700' }} className="font-mono">{sup.id}</td>
                     <td style={{ ...styles.td, fontWeight: '800' }}>{sup.name}</td>
                     <td style={styles.td}>{sup.contactPerson}</td>
-                    <td style={styles.td}>{sup.phone}</td>
+                    <td style={styles.td} className="font-mono">{sup.phone}</td>
                     <td style={styles.td}>{sup.email}</td>
                     <td style={styles.td}>{sup.address}</td>
                     <td style={styles.tdActions}>
@@ -276,12 +295,17 @@ export default function Suppliers({
               </tbody>
             </table>
           </div>
-        </div>
+        </motion.div>
       )}
 
       {/* Purchase Orders Tab */}
       {activeTab === 'pos' && (
-        <div className="card" style={styles.card}>
+        <motion.div 
+          className="card" 
+          style={styles.card}
+          variants={itemVariants}
+          whileHover={{ y: -2 }}
+        >
           <div style={styles.cardHeader}>
             <div style={styles.titleRow}>
               <ClipboardList size={20} color="var(--color-primary)" />
@@ -312,19 +336,19 @@ export default function Suppliers({
                   const colors = statusColors[po.status] || { bg: 'gray', fg: 'white' };
                   return (
                     <tr key={po.id} style={styles.tr}>
-                      <td style={{ ...styles.td, fontWeight: '700' }}>{po.id}</td>
+                      <td style={{ ...styles.td, fontWeight: '700' }} className="font-mono">{po.id}</td>
                       <td style={{ ...styles.td, fontWeight: '800' }}>{po.supplierName}</td>
-                      <td style={styles.td}>{po.date}</td>
+                      <td style={styles.td} className="font-mono">{po.date}</td>
                       <td style={styles.td}>
                         <div style={styles.itemsList}>
                           {po.items.map(item => (
                             <span key={item.id} style={styles.itemBadge}>
-                              {item.name} (x{item.qty})
+                              {item.name} (<span className="font-mono">x{item.qty}</span>)
                             </span>
                           ))}
                         </div>
                       </td>
-                      <td style={{ ...styles.td, fontWeight: '700' }}>{sym}{po.totalAmount.toFixed(2)}</td>
+                      <td style={{ ...styles.td, fontWeight: '700' }} className="font-mono">{sym}{po.totalAmount.toFixed(2)}</td>
                       <td style={styles.td}>
                         <span style={{ 
                           ...styles.statusBadge, 
@@ -374,14 +398,19 @@ export default function Suppliers({
               </tbody>
             </table>
           </div>
-        </div>
+        </motion.div>
       )}
 
       {/* Create PO Tab */}
       {activeTab === 'create_po' && (
         <div style={styles.poWizardGrid}>
           {/* Draft Items List */}
-          <div className="card" style={{ ...styles.card, flex: 3 }}>
+          <motion.div 
+            className="card" 
+            style={{ ...styles.card, flex: 3 }}
+            variants={itemVariants}
+            whileHover={{ y: -2 }}
+          >
             <div style={styles.cardHeader}>
               <div style={styles.titleRow}>
                 <Plus size={20} color="var(--color-primary)" />
@@ -410,11 +439,13 @@ export default function Suppliers({
                     <tbody>
                       {poItems.map(item => (
                         <tr key={item.id} style={styles.tr}>
-                          <td style={styles.td}>{item.id}</td>
+                          <td style={styles.td} className="font-mono">{item.id}</td>
                           <td style={{ ...styles.td, fontWeight: '700' }}>{item.name}</td>
-                          <td style={{ ...styles.td, textAlign: 'right' }}>{sym}{item.costPrice.toFixed(2)}</td>
-                          <td style={{ ...styles.td, textAlign: 'center', fontWeight: '800' }}>{item.qty} units</td>
-                          <td style={{ ...styles.td, textAlign: 'right', fontWeight: '700' }}>{sym}{(item.qty * item.costPrice).toFixed(2)}</td>
+                          <td style={{ ...styles.td, textAlign: 'right' }} className="font-mono">{sym}{item.costPrice.toFixed(2)}</td>
+                          <td style={{ ...styles.td, textAlign: 'center', fontWeight: '800' }}>
+                            <span className="font-mono">{item.qty}</span> units
+                          </td>
+                          <td style={{ ...styles.td, textAlign: 'right', fontWeight: '700' }} className="font-mono">{sym}{(item.qty * item.costPrice).toFixed(2)}</td>
                           <td style={styles.tdActions}>
                             <button 
                               onClick={() => setPoItems(prev => prev.filter(x => x.id !== item.id))} 
@@ -430,11 +461,16 @@ export default function Suppliers({
                 </div>
               )}
             </div>
-          </div>
+          </motion.div>
 
           {/* Add Item Panel & Wizard Controls */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 2 }}>
-            <div className="card" style={styles.card}>
+            <motion.div 
+              className="card" 
+              style={styles.card}
+              variants={itemVariants}
+              whileHover={{ y: -2 }}
+            >
               <h3 style={styles.subTitle}>Select Supplier &amp; Store</h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '0.5rem' }}>
                 <div style={styles.formGroup}>
@@ -456,9 +492,14 @@ export default function Suppliers({
                   <input type="text" value={currentStore} disabled style={styles.disabledInput} className="input-field" />
                 </div>
               </div>
-            </div>
+            </motion.div>
 
-            <div className="card" style={styles.card}>
+            <motion.div 
+              className="card" 
+              style={styles.card}
+              variants={itemVariants}
+              whileHover={{ y: -2 }}
+            >
               <h3 style={styles.subTitle}>Add Wholesale Item</h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '0.5rem' }}>
                 <div style={styles.formGroup}>
@@ -511,9 +552,9 @@ export default function Suppliers({
                   Add to PO Draft
                 </button>
               </div>
-            </div>
+            </motion.div>
 
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <motion.div style={{ display: 'flex', gap: '0.5rem' }} variants={itemVariants}>
               <button 
                 onClick={() => handleCreatePO('Draft')}
                 className="btn btn-secondary"
@@ -530,7 +571,7 @@ export default function Suppliers({
               >
                 Place Order
               </button>
-            </div>
+            </motion.div>
           </div>
         </div>
       )}
@@ -617,7 +658,7 @@ export default function Suppliers({
           </div>
         </div>
       )}
-    </div>
+    </motion.div>
   );
 }
 

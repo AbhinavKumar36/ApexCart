@@ -58,3 +58,13 @@ All 10 prioritized enhancements have been successfully built, tested, and valida
 ## 10. Security & Secret Protection
 - Moved Gemini API Key to database `Settings -> Store Profile` form rather than bundling inside inlined environment variables.
 - Created Firestore access security definitions file `firestore.rules`.
+
+## 11. Currency Localization (USD $ to INR ₹)
+- **App-wide Defaults**: Swapped all default configurations and template code in `App.jsx` to initialize the currency symbol to `₹`.
+- **Dynamic Conversions**: Configured automatic check and migration of stored user configuration in `localStorage` and Cloud Firestore (e.g. database settings general document) to update currency settings from `$` to `₹`.
+- **Components Refactoring**:
+  - Replaced lucide-react `DollarSign` icon with `IndianRupee` in `Dashboard.jsx` and `POS.jsx`.
+  - Passed `storeSettings` to the `History` component to display dynamic currency symbols.
+  - Eliminated hardcoded dollar signs `$` and replaced them with dynamic currency variables (`sym` or `storeSettings.currencySymbol`) in `Invoice.jsx`, `Inventory.jsx`, `POS.jsx`, `Reports.jsx`, `Suppliers.jsx`, and `History.jsx`.
+  - Updated text label descriptors from "$ USD" to "₹ INR" in the Analytics dashboard.
+
