@@ -835,6 +835,10 @@ const styles = {
     cursor: 'pointer',
     whiteSpace: 'nowrap',
     transition: 'all 0.15s ease',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: '36px',
   },
   grid: {
     display: 'grid',
