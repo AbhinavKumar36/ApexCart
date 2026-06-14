@@ -3,7 +3,6 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'fire
 import { auth } from '../firebase';
 import { Lock, Mail, AlertTriangle, KeyRound, Eye, EyeOff, Store } from 'lucide-react';
 import { motion } from 'framer-motion';
-import logo from '../assets/logo.png';
 
 export default function Login({ onLoginSuccess }) {
   const [email, setEmail] = useState('');
@@ -161,7 +160,7 @@ export default function Login({ onLoginSuccess }) {
       >
         <div style={styles.header}>
           <div style={styles.logoContainer}>
-            <img src={logo} alt="ApexCart Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <img src={`${import.meta.env.BASE_URL}logo.png`} alt="ApexCart Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           </div>
           <h1 style={styles.title}>ApexCart</h1>
           <p style={styles.subtitle}>Superstore Control Center</p>

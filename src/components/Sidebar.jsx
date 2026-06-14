@@ -16,7 +16,6 @@ import {
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
-import logo from '../assets/logo.png';
 
 export default function Sidebar({ 
   activeTab, 
@@ -61,7 +60,7 @@ export default function Sidebar({
       {/* Mobile Top Header */}
       <header style={styles.mobileHeader} className="glass">
         <div style={styles.logoRow}>
-          <img src={logo} alt="ApexCart Logo" style={{ width: '36px', height: '36px', objectFit: 'cover', borderRadius: '8px' }} />
+          <img src={`${import.meta.env.BASE_URL}logo.png`} alt="ApexCart Logo" style={{ width: '36px', height: '36px', objectFit: 'cover', borderRadius: '8px' }} />
           <span style={styles.logoText}>ApexCart</span>
         </div>
         <button onClick={() => setMobileOpen(!mobileOpen)} style={styles.menuBtn}>
@@ -95,7 +94,7 @@ export default function Sidebar({
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', overflow: 'hidden' }}>
               <div style={styles.logoContainer}>
-                <img src={logo} alt="ApexCart Logo" style={{ width: '100%', height: '100%', objectFit: 'cover', flexShrink: 0 }} />
+                <img src={`${import.meta.env.BASE_URL}logo.png`} alt="ApexCart Logo" style={{ width: '100%', height: '100%', objectFit: 'cover', flexShrink: 0 }} />
               </div>
               {!isCollapsed && (
                 <motion.div
