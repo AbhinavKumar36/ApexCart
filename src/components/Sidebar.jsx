@@ -61,7 +61,7 @@ export default function Sidebar({
       {/* Mobile Top Header */}
       <header style={styles.mobileHeader} className="glass">
         <div style={styles.logoRow}>
-          <img src={logo} alt="ApexCart Logo" style={{ width: '28px', height: '28px', objectFit: 'contain' }} />
+          <img src={logo} alt="ApexCart Logo" style={{ width: '36px', height: '36px', objectFit: 'cover', borderRadius: '8px' }} />
           <span style={styles.logoText}>ApexCart</span>
         </div>
         <button onClick={() => setMobileOpen(!mobileOpen)} style={styles.menuBtn}>
@@ -95,7 +95,7 @@ export default function Sidebar({
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', overflow: 'hidden' }}>
               <div style={styles.logoContainer}>
-                <img src={logo} alt="ApexCart Logo" style={{ width: '28px', height: '28px', objectFit: 'contain', flexShrink: 0 }} />
+                <img src={logo} alt="ApexCart Logo" style={{ width: '100%', height: '100%', objectFit: 'cover', flexShrink: 0 }} />
               </div>
               {!isCollapsed && (
                 <motion.div
@@ -391,9 +391,14 @@ const styles = {
   },
   logoContainer: {
     display: 'flex',
-    padding: '0.5rem',
+    padding: '0',
     borderRadius: '10px',
     backgroundColor: 'var(--color-primary-light)',
+    width: '42px',
+    height: '42px',
+    overflow: 'hidden',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   brandName: {
     fontSize: '1.5rem',

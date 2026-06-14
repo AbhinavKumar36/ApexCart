@@ -161,7 +161,7 @@ export default function Login({ onLoginSuccess }) {
       >
         <div style={styles.header}>
           <div style={styles.logoContainer}>
-            <img src={logo} alt="ApexCart Logo" style={{ width: '48px', height: '48px', objectFit: 'contain' }} />
+            <img src={logo} alt="ApexCart Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           </div>
           <h1 style={styles.title}>ApexCart</h1>
           <p style={styles.subtitle}>Superstore Control Center</p>
@@ -284,10 +284,15 @@ const styles = {
   },
   logoContainer: {
     display: 'inline-flex',
-    padding: '1rem',
+    padding: '0',
     borderRadius: '50%',
     backgroundColor: 'var(--color-primary-light)',
     marginBottom: '1rem',
+    width: '84px',
+    height: '84px',
+    overflow: 'hidden',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   title: {
     fontSize: '2rem',
