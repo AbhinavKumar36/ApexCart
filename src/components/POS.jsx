@@ -400,8 +400,8 @@ export default function POS({ products, setProducts, sales, setSales, categories
             style={{
               ...styles.tabBtn,
               borderColor: activeCategory === 'All' ? 'var(--color-primary)' : 'var(--color-border)',
-              backgroundColor: activeCategory === 'All' ? 'var(--color-primary-light)' : 'var(--color-bg-surface)',
-              color: activeCategory === 'All' ? 'var(--color-primary)' : 'var(--color-text-primary)',
+              backgroundColor: activeCategory === 'All' ? 'var(--color-primary)' : 'transparent',
+              color: activeCategory === 'All' ? '#ffffff' : 'var(--color-text-primary)',
             }}
           >
             All Products
@@ -413,8 +413,8 @@ export default function POS({ products, setProducts, sales, setSales, categories
               style={{
                 ...styles.tabBtn,
                 borderColor: activeCategory === cat ? 'var(--color-primary)' : 'var(--color-border)',
-                backgroundColor: activeCategory === cat ? 'var(--color-primary-light)' : 'var(--color-bg-surface)',
-                color: activeCategory === cat ? 'var(--color-primary)' : 'var(--color-text-primary)',
+                backgroundColor: activeCategory === cat ? 'var(--color-primary)' : 'transparent',
+                color: activeCategory === cat ? '#ffffff' : 'var(--color-text-primary)',
               }}
             >
               {cat}
@@ -812,6 +812,8 @@ const styles = {
   searchIcon: {
     position: 'absolute',
     left: '1rem',
+    top: '50%',
+    transform: 'translateY(-50%)',
     color: 'var(--color-text-muted)',
     pointerEvents: 'none',
   },
