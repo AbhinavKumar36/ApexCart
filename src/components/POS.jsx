@@ -401,7 +401,7 @@ export default function POS({ products, setProducts, sales, setSales, categories
               ...styles.tabBtn,
               borderColor: activeCategory === 'All' ? 'var(--color-primary)' : 'var(--color-border)',
               backgroundColor: activeCategory === 'All' ? 'var(--color-primary-light)' : 'var(--color-bg-surface)',
-              color: activeCategory === 'All' ? 'var(--color-primary)' : 'var(--color-text-secondary)',
+              color: activeCategory === 'All' ? 'var(--color-primary)' : 'var(--color-text-primary)',
             }}
           >
             All Products
@@ -414,7 +414,7 @@ export default function POS({ products, setProducts, sales, setSales, categories
                 ...styles.tabBtn,
                 borderColor: activeCategory === cat ? 'var(--color-primary)' : 'var(--color-border)',
                 backgroundColor: activeCategory === cat ? 'var(--color-primary-light)' : 'var(--color-bg-surface)',
-                color: activeCategory === cat ? 'var(--color-primary)' : 'var(--color-text-secondary)',
+                color: activeCategory === cat ? 'var(--color-primary)' : 'var(--color-text-primary)',
               }}
             >
               {cat}
@@ -476,19 +476,19 @@ export default function POS({ products, setProducts, sales, setSales, categories
                   </span>
                   <div style={styles.stockLabel}>
                     {isOut ? (
-                      <span className="badge badge-danger">Out of Stock</span>
+                      <span className="badge badge-danger" style={{ whiteSpace: 'nowrap', padding: '0.15rem 0.4rem', fontSize: '0.65rem' }}>Out of Stock</span>
                     ) : isExpired ? (
-                      <span className="badge badge-danger" style={{ fontSize: '0.65rem' }}>Expired</span>
+                      <span className="badge badge-danger" style={{ fontSize: '0.65rem', whiteSpace: 'nowrap', padding: '0.15rem 0.4rem' }}>Expired</span>
                     ) : isExpiringSoon ? (
-                      <span className="badge badge-warning font-mono" style={{ fontSize: '0.65rem' }}>
+                      <span className="badge badge-warning font-mono" style={{ fontSize: '0.65rem', whiteSpace: 'nowrap', padding: '0.15rem 0.4rem' }}>
                         Expiring ({diffDays}d)
                       </span>
                     ) : remainingStock <= (storeSettings?.lowStockThreshold || p.minStock) ? (
-                      <span className="badge badge-warning font-mono" style={{ fontSize: '0.65rem' }}>
+                      <span className="badge badge-warning font-mono" style={{ fontSize: '0.65rem', whiteSpace: 'nowrap', padding: '0.15rem 0.4rem' }}>
                         {remainingStock} left
                       </span>
                     ) : (
-                      <span className="badge badge-success font-mono" style={{ fontSize: '0.65rem' }}>
+                      <span className="badge badge-success font-mono" style={{ fontSize: '0.65rem', whiteSpace: 'nowrap', padding: '0.15rem 0.4rem' }}>
                         {remainingStock} units
                       </span>
                     )}

@@ -6,19 +6,19 @@
   --font-heading: 'Inter', var(--font-sans);
   --font-mono: 'JetBrains Mono', monospace;
 
-  /* Light Theme Variables */
+  /* Light Theme Variables (Midnight & Indigo) */
   --color-bg-base: #f8fafc;
   --color-bg-surface: #ffffff;
-  --color-bg-surface-glass: rgba(255, 255, 255, 0.75);
+  --color-bg-surface-glass: rgba(255, 255, 255, 0.85);
   --color-border: #e2e8f0;
   --color-text-primary: #0f172a;
   --color-text-secondary: #475569;
   --color-text-muted: #94a3b8;
   
-  --color-primary: #A3E635; /* Lime */
-  --color-primary-hover: #84cc16;
-  --color-primary-light: rgba(163, 230, 53, 0.1);
-  --color-primary-glow: rgba(163, 230, 53, 0.25);
+  --color-primary: #6366f1; /* Indigo 500 */
+  --color-primary-hover: #4f46e5; /* Indigo 600 */
+  --color-primary-light: rgba(99, 102, 241, 0.1);
+  --color-primary-glow: rgba(99, 102, 241, 0.25);
 
   --color-success: #10b981; /* Emerald */
   --color-success-light: rgba(16, 185, 129, 0.1);
@@ -31,32 +31,33 @@
   --color-danger-light: rgba(239, 68, 68, 0.1);
   --color-danger-hover: #dc2626;
 
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
-  --shadow-glow: 0 0 15px var(--color-primary-glow);
+  --shadow-sm: 0 1px 2px 0 rgba(15, 23, 42, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.08), 0 2px 4px -2px rgba(15, 23, 42, 0.04);
+  --shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.04);
+  --shadow-glow: 0 0 20px var(--color-primary-glow);
   --radius-lg: 16px;
   --radius-md: 12px;
   --radius-sm: 8px;
 
-  --glass-blur: 16px;
+  --glass-blur: 20px;
   --transition-fast: 0.15s ease;
-  --transition-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .theme-dark {
-  --color-bg-base: #0D1117;
-  --color-bg-surface: #161B22;
-  --color-bg-surface-glass: rgba(22, 27, 34, 0.75);
-  --color-border: #30363D;
-  --color-text-primary: #f0f6fc;
-  --color-text-secondary: #8b949e;
-  --color-text-muted: #484f58;
+  /* Dark Theme Variables (Slate & Indigo) */
+  --color-bg-base: #0f172a; /* Slate 900 */
+  --color-bg-surface: #1e293b; /* Slate 800 */
+  --color-bg-surface-glass: rgba(30, 41, 59, 0.75);
+  --color-border: #334155; /* Slate 700 */
+  --color-text-primary: #f8fafc;
+  --color-text-secondary: #cbd5e1;
+  --color-text-muted: #64748b;
 
-  --color-primary: #A3E635; /* Lime Accent */
-  --color-primary-hover: #84cc16;
-  --color-primary-light: rgba(163, 230, 53, 0.12);
-  --color-primary-glow: rgba(163, 230, 53, 0.25);
+  --color-primary: #818cf8; /* Indigo 400 */
+  --color-primary-hover: #6366f1; /* Indigo 500 */
+  --color-primary-light: rgba(129, 140, 248, 0.15);
+  --color-primary-glow: rgba(129, 140, 248, 0.3);
 
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.6), 0 2px 4px -2px rgba(0, 0, 0, 0.5);
@@ -64,6 +65,10 @@
 }
 
 /* Base Styles */
+html {
+  font-size: 14px; /* Zooms out the UI slightly as requested */
+}
+
 * {
   box-sizing: border-box;
   margin: 0;

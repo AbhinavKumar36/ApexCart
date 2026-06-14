@@ -250,7 +250,7 @@ export default function Sidebar({
             <button 
               onClick={toggleTheme} 
               style={{ ...styles.footerBtn, justifyContent: isCollapsed ? 'center' : 'center' }} 
-              className="btn-secondary nav-item-container"
+              className="nav-item-container"
             >
               {theme === 'dark' ? <Sun size={18} color="var(--color-warning)" /> : <Moon size={18} color="var(--color-primary)" />}
               {!isCollapsed && <span>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>}
@@ -260,7 +260,7 @@ export default function Sidebar({
             <button 
               onClick={onLogout} 
               style={{ ...styles.logoutBtn, justifyContent: isCollapsed ? 'center' : 'center' }} 
-              className="btn-secondary nav-item-container"
+              className="nav-item-container"
             >
               <LogOut size={18} color="var(--color-danger)" />
               {!isCollapsed && <span>Sign Out</span>}
@@ -515,6 +515,9 @@ const styles = {
     fontWeight: '600',
     background: 'none',
     transition: 'all 0.15s ease',
+    boxSizing: 'border-box',
+    margin: 0,
+    color: 'var(--color-text-primary)'
   },
   logoutBtn: {
     display: 'flex',
@@ -529,6 +532,9 @@ const styles = {
     fontWeight: '600',
     background: 'none',
     transition: 'all 0.15s ease',
+    boxSizing: 'border-box',
+    margin: 0,
+    color: 'var(--color-text-primary)'
   },
   collapseToggle: {
     background: 'var(--color-bg-base)',

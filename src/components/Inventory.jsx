@@ -280,8 +280,8 @@ Low Stock Products Data:
 ${JSON.stringify(lowStockData, null, 2)}
 `;
 
-    // Model chain — gemini-1.5-flash is deprecated
-    const MODELS_TO_TRY = ['gemini-2.5-flash', 'gemini-2.0-flash'];
+    // Model chain — gemini-3.5-flash is currently primary/stable
+    const MODELS_TO_TRY = ['gemini-3.5-flash', 'gemini-2.5-flash', 'gemini-2.0-flash'];
 
     // Offline fallback: generate rule-based restock recommendations locally
     const generateOfflineProcurement = () => {
@@ -1272,6 +1272,9 @@ const styles = {
     borderRadius: '20px',
     overflow: 'hidden',
     boxShadow: 'var(--shadow-lg)',
+    maxHeight: '90vh',
+    display: 'flex',
+    flexDirection: 'column',
   },
   modalHeader: {
     display: 'flex',
@@ -1297,6 +1300,9 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     gap: '1.5rem',
+    overflowY: 'auto',
+    flex: 1,
+    minHeight: 0,
   },
   formGrid: {
     display: 'grid',

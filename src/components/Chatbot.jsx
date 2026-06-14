@@ -203,8 +203,8 @@ Analyze the SYSTEM STORE CONTEXT above to answer the User Query.
     };
     // ── End Offline Fallback Engine ─────────────────────────────────────────
 
-    // Model chain to try in order — gemini-2.5-flash confirmed working with this API key
-    const MODELS_TO_TRY = ['gemini-2.5-flash', 'gemini-2.0-flash'];
+    // Model chain to try in order — gemini-3.5-flash is currently primary/stable
+    const MODELS_TO_TRY = ['gemini-3.5-flash', 'gemini-2.5-flash', 'gemini-2.0-flash'];
 
     try {
       const rawApiKey = storeSettings?.geminiApiKey || (import.meta.env.VITE_GEMINI_API_KEY_B64 ? atob(import.meta.env.VITE_GEMINI_API_KEY_B64) : '');
@@ -408,7 +408,7 @@ Analyze the SYSTEM STORE CONTEXT above to answer the User Query.
       <motion.button 
         onClick={() => setIsOpen(!isOpen)} 
         style={styles.launcher} 
-        className="btn btn-primary glow no-print"
+        className="glow no-print"
         title="Open ApexCart AI Assistant"
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
@@ -531,7 +531,7 @@ Analyze the SYSTEM STORE CONTEXT above to answer the User Query.
                           }} />
                           {msg.source === 'offline'
                             ? '⚙ Local engine · offline analysis'
-                            : `✦ Gemini AI · ${msg.model || 'gemini-2.5-flash'}`}
+                            : `✦ Gemini AI · ${msg.model || 'gemini-3.5-flash'}`}
                         </div>
                       )}
                     </div>
@@ -589,7 +589,7 @@ Analyze the SYSTEM STORE CONTEXT above to answer the User Query.
 const styles = {
   launcher: {
     position: 'fixed',
-    bottom: '2rem',
+    bottom: '6rem',
     right: '2rem',
     width: '60px',
     height: '60px',
@@ -600,6 +600,10 @@ const styles = {
     cursor: 'pointer',
     zIndex: 99,
     boxShadow: 'var(--shadow-lg)',
+    backgroundColor: 'var(--color-primary)',
+    color: '#ffffff',
+    border: 'none',
+    padding: 0,
   },
   chatCard: {
     position: 'fixed',
