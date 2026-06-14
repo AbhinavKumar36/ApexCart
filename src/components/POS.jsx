@@ -369,7 +369,7 @@ export default function POS({ products, setProducts, sales, setSales, categories
 
         {/* Toolbar */}
         <div style={styles.toolbar} className="glass">
-          <div style={styles.searchWrapper} style={{ display: 'flex', gap: '0.75rem', width: '100%', alignItems: 'center' }}>
+          <div style={{ ...styles.searchWrapper, display: 'flex', gap: '0.75rem', width: '100%', alignItems: 'center' }}>
             <div style={{ position: 'relative', flex: 1 }}>
               <Search size={18} style={styles.searchIcon} />
               <input
