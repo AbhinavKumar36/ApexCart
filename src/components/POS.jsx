@@ -825,6 +825,7 @@ const styles = {
     gap: '0.5rem',
     overflowX: 'auto',
     paddingBottom: '0.5rem',
+    flexShrink: 0,
   },
   tabBtn: {
     padding: '0.5rem 1rem',
