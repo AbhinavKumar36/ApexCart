@@ -160,7 +160,7 @@ export default function Login({ onLoginSuccess }) {
       >
         <div style={styles.header}>
           <div style={styles.logoContainer}>
-            <Store size={32} color="var(--color-primary)" />
+            <img src="/logo.png" alt="ApexCart Logo" style={{ width: '48px', height: '48px', objectFit: 'contain' }} />
           </div>
           <h1 style={styles.title}>ApexCart</h1>
           <p style={styles.subtitle}>Superstore Control Center</p>
@@ -236,11 +236,6 @@ export default function Login({ onLoginSuccess }) {
               {isAuthenticating ? 'Authenticating...' : 'Authenticate'}
             </button>
 
-            <div style={styles.hintBox}>
-              <p style={styles.hintTitle}>Demo Access Accounts:</p>
-              <p style={styles.hintValue}>🔑 Admin: <strong className="font-mono">admin@apexcart.com</strong> / <strong className="font-mono">admin123</strong></p>
-              <p style={styles.hintValue}>👤 Employee: <strong className="font-mono">employee@apexcart.com</strong> / <strong className="font-mono">emp123</strong></p>
-            </div>
           </form>
         )}
       </motion.div>
