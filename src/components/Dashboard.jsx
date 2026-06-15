@@ -1,6 +1,5 @@
-
 import { motion } from 'framer-motion';
-import { ResponsiveContainer, AreaChart, Area, XAxis, Tooltip } from 'recharts';
+import { ResponsiveContainer, AreaChart, Area, XAxis, Tooltip, CartesianGrid } from 'recharts';
 import { 
   IndianRupee, 
   Receipt, 
@@ -10,7 +9,9 @@ import {
   ArrowUpRight, 
   PlusCircle, 
   ShoppingBag,
-  Inbox
+  Inbox,
+  Clock,
+  Activity
 } from 'lucide-react';
 
 const CustomTooltip = ({ active, payload, label, currencySymbol }) => {
@@ -32,28 +33,20 @@ export default function Dashboard({ products, sales, setProducts, setActiveTab, 
     hidden: { opacity: 0 },
     show: {
       opacity: 1,
-      transition: {
-        staggerChildren: 0.05
-      }
+      transition: { staggerChildren: 0.08 }
     }
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 15 },
+    hidden: { opacity: 0, y: 20 },
     show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
   };
 
-  // Filter products and sales based on the assigned vendor stall for isolated metrics
-  const filteredProducts = vendor === 'all' 
-    ? products 
-    : products.filter(p => p.vendor === vendor);
-
-  const filteredSales = vendor === 'all'
-    ? sales
-    : sales.filter(s => s.items.some(item => {
-        const prod = products.find(p => p.id === item.id);
-        return prod && prod.vendor === vendor;
-      }));
+  const filteredProducts = vendor === 'all' ? products : products.filter(p => p.vendor === vendor);
+  const filteredSales = vendor === 'all' ? sales : sales.filter(s => s.items.some(item => {
+    const prod = products.find(p => p.id === item.id);
+    return prod && prod.vendor === vendor;
+  }));
 
   const totalRevenue = vendor === 'all'
     ? sales.reduce((acc, sale) => acc + sale.totalPrice, 0)
@@ -85,25 +78,14 @@ export default function Dashboard({ products, sales, setProducts, setActiveTab, 
   const expiredCount = expiredProducts.length;
   const expiringSoonCount = expiringSoonProducts.length;
 
-  // Restock handler directly from dashboard
   const handleQuickRestock = (productId, amount) => {
-    setProducts(prevProducts => 
-      prevProducts.map(p => 
-        p.id === productId ? { ...p, quantity: p.quantity + amount } : p
-      )
-    );
+    setProducts(prevProducts => prevProducts.map(p => p.id === productId ? { ...p, quantity: p.quantity + amount } : p));
   };
 
-  // Clearance markdown discount handler
   const handleClearanceDiscount = (productId, discountAmount) => {
-    setProducts(prevProducts => 
-      prevProducts.map(p => 
-        p.id === productId ? { ...p, discount: discountAmount } : p
-      )
-    );
+    setProducts(prevProducts => prevProducts.map(p => p.id === productId ? { ...p, discount: discountAmount } : p));
   };
 
-  // Group products by category to show distribution
   const categoryCounts = products.reduce((acc, p) => {
     acc[p.category] = (acc[p.category] || 0) + 1;
     return acc;
@@ -116,7 +98,6 @@ export default function Dashboard({ products, sales, setProducts, setActiveTab, 
     percentage: Math.round((count / totalProductsCount) * 100)
   })).sort((a, b) => b.count - a.count);
 
-  // Helper: normalize date strings to YYYY-MM-DD regardless of input format (DD/MM/YYYY or YYYY-MM-DD)
   const normalizeDateStr = (dateStr) => {
     if (!dateStr) return '';
     if (dateStr.includes('/')) {
@@ -126,7 +107,6 @@ export default function Dashboard({ products, sales, setProducts, setActiveTab, 
     return dateStr;
   };
 
-  // Helper: get local YYYY-MM-DD string (avoids UTC timezone shift from toISOString)
   const toLocalDateStr = (date) => {
     const yyyy = date.getFullYear();
     const mm = String(date.getMonth() + 1).padStart(2, '0');
@@ -134,7 +114,6 @@ export default function Dashboard({ products, sales, setProducts, setActiveTab, 
     return `${yyyy}-${mm}-${dd}`;
   };
 
-  // Real sparkline: calculate last-7-days revenue from actual sales data
   const dailySales = (() => {
     const result = [];
     for (let i = 6; i >= 0; i--) {
@@ -158,32 +137,33 @@ export default function Dashboard({ products, sales, setProducts, setActiveTab, 
   })();
 
   return (
-    <motion.div 
-      variants={containerVariants}
-      initial="hidden"
-      animate="show"
-      style={styles.container}
-    >
+    <motion.div variants={containerVariants} initial="hidden" animate="show" style={styles.container}>
+      
       {/* Top Welcome Title */}
       <motion.div variants={itemVariants} style={styles.welcomeRow}>
         <div>
-          <h1 style={styles.pageTitle}>{storeSettings?.storeName || 'Logistics Dashboard'}</h1>
-          <p style={styles.pageSubtitle}>{storeSettings?.storeAddress || 'Real-time metrics and store inventory operations control.'}</p>
+          <h1 style={styles.pageTitle}>{storeSettings?.storeName || 'Control Center'}</h1>
+          <p style={styles.pageSubtitle}>{storeSettings?.storeAddress || 'Real-time metrics and operations intelligence.'}</p>
         </div>
-        <button onClick={() => setActiveTab('pos')} className="btn btn-primary" style={styles.posShortcut}>
+        <motion.button 
+          onClick={() => setActiveTab('pos')} 
+          className="btn btn-primary" 
+          style={styles.posShortcut}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
           <ShoppingBag size={18} />
-          <span>Launch POS Register</span>
-        </button>
+          <span>Launch POS</span>
+        </motion.button>
       </motion.div>
 
       {/* KPI Cards Grid */}
       <div style={styles.kpiGrid}>
-        {/* KPI 1 */}
-        <motion.div variants={itemVariants} whileHover={{ y: -4, boxShadow: 'var(--shadow-glow)' }} style={styles.kpiCard} className="card glow">
+        <motion.div variants={itemVariants} whileHover={{ y: -6, scale: 1.02 }} style={styles.kpiCard} className="glass-panel">
           <div style={styles.kpiHeader}>
             <span style={styles.kpiTitle}>Total Revenue</span>
-            <div style={{ ...styles.kpiIconBox, backgroundColor: 'var(--color-success-light)' }}>
-              <IndianRupee size={20} color="var(--color-success)" />
+            <div style={{ ...styles.kpiIconBox, backgroundColor: 'var(--color-primary-light)' }}>
+              <IndianRupee size={22} color="var(--color-primary)" />
             </div>
           </div>
           <div style={styles.kpiValRow}>
@@ -191,51 +171,48 @@ export default function Dashboard({ products, sales, setProducts, setActiveTab, 
               {storeSettings?.currencySymbol || '₹'}{totalRevenue.toFixed(2)}
             </span>
             <span style={styles.kpiChange}>
-              <TrendingUp size={14} /> +12.4%
+              <TrendingUp size={16} /> +12.4%
             </span>
           </div>
           <span style={styles.kpiSubtext}>Calculated from {totalBills} sales invoices</span>
         </motion.div>
 
-        {/* KPI 2 */}
-        <motion.div variants={itemVariants} whileHover={{ y: -4, boxShadow: 'var(--shadow-md)' }} style={styles.kpiCard} className="card">
+        <motion.div variants={itemVariants} whileHover={{ y: -6, scale: 1.02 }} style={styles.kpiCard} className="glass-panel">
           <div style={styles.kpiHeader}>
             <span style={styles.kpiTitle}>Invoices Printed</span>
-            <div style={{ ...styles.kpiIconBox, backgroundColor: 'var(--color-primary-light)' }}>
-              <Receipt size={20} color="var(--color-primary)" />
+            <div style={{ ...styles.kpiIconBox, backgroundColor: 'rgba(99, 102, 241, 0.15)' }}>
+              <Receipt size={22} color="#6366f1" />
             </div>
           </div>
           <div style={styles.kpiValRow}>
             <span style={styles.kpiValue} className="font-mono">{totalBills}</span>
-            <span style={styles.kpiSubtext2}>Active sales records</span>
+            <span style={styles.kpiSubtext2}>Active records</span>
           </div>
           <span style={styles.kpiSubtext}>Stock values auto-deducted</span>
         </motion.div>
 
-        {/* KPI 3 */}
-        <motion.div variants={itemVariants} whileHover={{ y: -4, boxShadow: 'var(--shadow-md)' }} style={styles.kpiCard} className="card">
+        <motion.div variants={itemVariants} whileHover={{ y: -6, scale: 1.02 }} style={styles.kpiCard} className="glass-panel">
           <div style={styles.kpiHeader}>
             <span style={styles.kpiTitle}>Product SKUs</span>
-            <div style={{ ...styles.kpiIconBox, backgroundColor: 'var(--color-primary-light)' }}>
-              <PackageCheck size={20} color="var(--color-primary)" />
+            <div style={{ ...styles.kpiIconBox, backgroundColor: 'rgba(16, 185, 129, 0.15)' }}>
+              <PackageCheck size={22} color="var(--color-success)" />
             </div>
           </div>
           <div style={styles.kpiValRow}>
             <span style={styles.kpiValue} className="font-mono">{totalProducts}</span>
-            <span style={styles.kpiSubtext2}>Across {categoryCounts ? Object.keys(categoryCounts).length : 0} categories</span>
+            <span style={styles.kpiSubtext2}>In {categoryCounts ? Object.keys(categoryCounts).length : 0} categories</span>
           </div>
           <span style={styles.kpiSubtext}>Check catalog status in real-time</span>
         </motion.div>
 
-        {/* KPI 4 - Combined Alerts */}
         <motion.div 
           variants={itemVariants} 
-          whileHover={{ y: -4, boxShadow: 'var(--shadow-md)' }}
+          whileHover={{ y: -6, scale: 1.02 }}
           style={{
             ...styles.kpiCard,
-            borderColor: (lowStockCount > 0 || expiredCount > 0) ? 'var(--color-danger)' : 'var(--color-border)',
+            border: (lowStockCount > 0 || expiredCount > 0) ? '1px solid var(--color-danger)' : undefined,
           }} 
-          className="card"
+          className="glass-panel"
         >
           <div style={styles.kpiHeader}>
             <span style={styles.kpiTitle}>Security & Alerts</span>
@@ -243,7 +220,7 @@ export default function Dashboard({ products, sales, setProducts, setActiveTab, 
               ...styles.kpiIconBox, 
               backgroundColor: (lowStockCount > 0 || expiredCount > 0) ? 'var(--color-danger-light)' : 'var(--color-success-light)' 
             }}>
-              <AlertTriangle size={20} color={(lowStockCount > 0 || expiredCount > 0) ? 'var(--color-danger)' : 'var(--color-success)'} />
+              <AlertTriangle size={22} color={(lowStockCount > 0 || expiredCount > 0) ? 'var(--color-danger)' : 'var(--color-success)'} />
             </div>
           </div>
           <div style={styles.kpiValRow}>
@@ -260,75 +237,98 @@ export default function Dashboard({ products, sales, setProducts, setActiveTab, 
         </motion.div>
       </div>
 
-      {/* Main Charts & Lists Grid */}
-      <div style={styles.mainGrid}>
+      {/* Top Row: Chart & Categories */}
+      <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
         {/* Sales Trend Chart Card */}
-        <motion.div variants={itemVariants} whileHover={{ y: -2 }} style={styles.chartCard} className="card">
+        <motion.div variants={itemVariants} style={{...styles.chartCard, flex: '2 1 600px', gridColumn: 'unset'}} className="glass-panel">
           <div style={styles.cardHeader}>
-            <h2 style={styles.cardTitle}>Sales Velocity (Weekly Trend)</h2>
-            <span style={styles.cardInfo}>₹ INR Daily sales turnover</span>
+            <div>
+              <h2 style={styles.cardTitle}>Velocity Trend</h2>
+              <span style={styles.cardInfo}>Weekly sales turnover</span>
+            </div>
+            <div style={styles.chartAction}>
+               <Activity size={20} color="var(--color-primary)" />
+            </div>
           </div>
           <div style={styles.chartWrapper}>
-            <ResponsiveContainer width="100%" height={140}>
-              <AreaChart data={dailySales} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
+            <ResponsiveContainer width="100%" height={200}>
+              <AreaChart data={dailySales} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="dashboardChartGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.3}/>
+                    <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.4}/>
                     <stop offset="95%" stopColor="var(--color-primary)" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" opacity={0.5} />
                 <XAxis 
                   dataKey="day" 
                   stroke="var(--color-text-secondary)" 
-                  fontSize={10}
+                  fontSize={12}
                   tickLine={false}
                   axisLine={false}
-                  dy={5}
+                  dy={10}
                 />
                 <Tooltip 
                   content={<CustomTooltip currencySymbol={storeSettings?.currencySymbol || '₹'} />}
-                  cursor={{ stroke: 'var(--color-border)', strokeWidth: 1 }}
+                  cursor={{ stroke: 'var(--color-primary)', strokeWidth: 2, strokeDasharray: '4 4' }}
                 />
                 <Area 
                   type="monotone" 
                   dataKey="amount" 
                   stroke="var(--color-primary)" 
-                  strokeWidth={2}
+                  strokeWidth={3}
                   fillOpacity={1} 
                   fill="url(#dashboardChartGradient)" 
+                  animationDuration={1500}
                 />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </motion.div>
 
-        {/* Categories Share Card */}
-        <motion.div variants={itemVariants} whileHover={{ y: -2 }} style={styles.categoriesCard} className="card">
+        {/* Inventory Categories Card */}
+        <motion.div variants={itemVariants} style={{...styles.categoriesCard, flex: '1 1 300px', gridColumn: 'unset'}} className="glass-panel">
           <div style={styles.cardHeader}>
-            <h2 style={styles.cardTitle}>Inventory Categories</h2>
-            <span style={styles.cardInfo}>Distribution of items in warehouse</span>
+            <div>
+              <h2 style={styles.cardTitle}>Inventory Categories</h2>
+              <span style={styles.cardInfo}>Distribution of items in warehouse</span>
+            </div>
           </div>
           <div style={styles.categoriesList}>
-            {categoriesList.map((cat, idx) => (
-              <div key={idx} style={styles.catItem}>
-                <div style={styles.catHeader}>
-                  <span style={styles.catName}>{cat.name}</span>
-                  <span style={styles.catStat} className="font-mono">{cat.count} items ({cat.percentage}%)</span>
+            {categoriesList.map((cat, idx) => {
+              const catColors = [
+                'var(--color-primary)', 
+                'var(--color-success)', 
+                'var(--color-text-muted)', 
+                'var(--color-warning)', 
+                'var(--color-danger)'
+              ];
+              return (
+                <div key={idx} style={styles.catItem}>
+                  <div style={styles.catHeader}>
+                    <span style={styles.catName}>{cat.name}</span>
+                    <span style={styles.catStat} className="font-mono">{cat.count} items ({cat.percentage}%)</span>
+                  </div>
+                  <div style={styles.progressContainer}>
+                    <motion.div 
+                      initial={{ width: 0 }}
+                      animate={{ width: `${cat.percentage}%` }}
+                      transition={{ duration: 1, ease: "easeOut" }}
+                      style={{ 
+                        ...styles.progressBar, 
+                        backgroundColor: catColors[idx % catColors.length]
+                      }} 
+                    />
+                  </div>
                 </div>
-                <div style={styles.progressContainer}>
-                  <div 
-                    style={{ 
-                       ...styles.progressBar, 
-                      width: `${cat.percentage}%`,
-                      backgroundColor: idx === 0 ? 'var(--color-primary)' : idx === 1 ? 'var(--color-success)' : 'var(--color-text-muted)'
-                    }} 
-                  />
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </motion.div>
+      </div>
 
+      {/* Main Charts & Lists Grid */}
+      <div style={styles.mainGrid}>
         {/* Payment Channels Share Card */}
         {(() => {
           const paymentMethodStats = filteredSales.reduce((acc, sale) => {
@@ -351,10 +351,12 @@ export default function Dashboard({ products, sales, setProducts, setActiveTab, 
           });
 
           return (
-            <motion.div variants={itemVariants} whileHover={{ y: -2 }} style={styles.categoriesCard} className="card">
+            <motion.div variants={itemVariants} style={styles.categoriesCard} className="glass-panel">
               <div style={styles.cardHeader}>
-                <h2 style={styles.cardTitle}>Payment Channels</h2>
-                <span style={styles.cardInfo}>Revenue share by billing route</span>
+                <div>
+                  <h2 style={styles.cardTitle}>Payment Channels</h2>
+                  <span style={styles.cardInfo}>Revenue share by billing route</span>
+                </div>
               </div>
               <div style={styles.categoriesList}>
                 {paymentStatsList.map((pay, idx) => (
@@ -364,10 +366,12 @@ export default function Dashboard({ products, sales, setProducts, setActiveTab, 
                       <span style={styles.catStat} className="font-mono">{storeSettings?.currencySymbol || '₹'}{pay.amount.toFixed(2)} ({pay.percentage}%)</span>
                     </div>
                     <div style={styles.progressContainer}>
-                      <div 
+                      <motion.div 
+                        initial={{ width: 0 }}
+                        animate={{ width: `${pay.percentage}%` }}
+                        transition={{ duration: 1, ease: "easeOut" }}
                         style={{ 
                           ...styles.progressBar, 
-                          width: `${pay.percentage}%`,
                           backgroundColor: pay.name === 'UPI' ? 'var(--color-primary)' : pay.name === 'Card' ? 'var(--color-success)' : 'var(--color-text-muted)'
                         }} 
                       />
@@ -380,21 +384,23 @@ export default function Dashboard({ products, sales, setProducts, setActiveTab, 
         })()}
 
         {/* Low Stock Alerts Replenishment Console */}
-        <motion.div variants={itemVariants} whileHover={{ y: -2 }} style={styles.alertsCard} className="card">
+        <motion.div variants={itemVariants} style={styles.alertsCard} className="glass-panel">
           <div style={styles.cardHeader}>
-            <h2 style={styles.cardTitle}>Replenishment Alerts</h2>
-            <span style={styles.cardInfo}>Low stock items requiring updates</span>
+            <div>
+              <h2 style={styles.cardTitle}>Replenishment Alerts</h2>
+              <span style={styles.cardInfo}>Low stock items requiring updates</span>
+            </div>
           </div>
           
           {lowStockItems.length === 0 ? (
             <div style={styles.emptyAlerts}>
-              <Inbox size={40} color="var(--color-text-muted)" />
+              <Inbox size={48} color="var(--color-border)" strokeWidth={1} />
               <p style={styles.emptyAlertsText}>All inventory items are healthy.</p>
             </div>
           ) : (
             <div style={styles.alertsList}>
               {lowStockItems.map((item) => (
-                <div key={item.id} style={styles.alertItem}>
+                <div key={item.id} style={styles.alertItem} className="glass">
                   <div style={styles.alertInfo}>
                     <span style={styles.alertName}>{item.name}</span>
                     <div style={styles.alertSub}>
@@ -406,8 +412,6 @@ export default function Dashboard({ products, sales, setProducts, setActiveTab, 
                       }}>
                         {item.quantity === 0 ? 'OUT OF STOCK' : <><span className="font-mono">{item.quantity}</span> units left</>}
                       </span>
-                      <span style={styles.divider}>•</span>
-                      <span style={styles.alertMin}>Limit: {storeSettings?.lowStockThreshold || item.minStock}</span>
                     </div>
                   </div>
                   {role === 'admin' && (
@@ -415,18 +419,15 @@ export default function Dashboard({ products, sales, setProducts, setActiveTab, 
                       <button 
                         onClick={() => handleQuickRestock(item.id, 10)} 
                         style={styles.actionBtn} 
-                        title="Add 10 units"
+                        className="btn-secondary"
                       >
-                        <PlusCircle size={14} />
-                        <span>+10</span>
+                        <PlusCircle size={14} /> 10
                       </button>
                       <button 
                         onClick={() => handleQuickRestock(item.id, 50)} 
-                        style={styles.actionBtn} 
-                        title="Add 50 units"
+                        style={{...styles.actionBtn, backgroundColor: 'var(--color-primary)', color: 'white', borderColor: 'var(--color-primary)'}} 
                       >
-                        <PlusCircle size={14} />
-                        <span>+50</span>
+                        <PlusCircle size={14} /> 50
                       </button>
                     </div>
                   )}
@@ -436,73 +437,80 @@ export default function Dashboard({ products, sales, setProducts, setActiveTab, 
           )}
         </motion.div>
 
-        {/* Perishables Expiry Console */}
-        <motion.div variants={itemVariants} whileHover={{ y: -2 }} style={styles.alertsCard} className="card">
+        {/* Expired Products Console */}
+        <motion.div variants={itemVariants} style={styles.alertsCard} className="glass-panel">
           <div style={styles.cardHeader}>
-            <h2 style={styles.cardTitle}>Perishables Expiry Console</h2>
-            <span style={styles.cardInfo}>Perishable goods status & markdown clearance</span>
+            <div>
+              <h2 style={{...styles.cardTitle, color: 'var(--color-danger)'}}>Expired Products</h2>
+              <span style={styles.cardInfo}>Items requiring immediate disposal</span>
+            </div>
           </div>
           
-          {expiredProducts.length === 0 && expiringSoonProducts.length === 0 ? (
+          {expiredProducts.length === 0 ? (
             <div style={styles.emptyAlerts}>
-              <Inbox size={40} color="var(--color-text-muted)" />
-              <p style={styles.emptyAlertsText}>No perishable expiration alerts.</p>
+              <Clock size={48} color="var(--color-border)" strokeWidth={1} />
+              <p style={styles.emptyAlertsText}>No expired products.</p>
             </div>
           ) : (
             <div style={styles.alertsList}>
-              {/* Expired Products */}
               {expiredProducts.map((item) => (
-                <div key={item.id} style={{ ...styles.alertItem, borderColor: 'rgba(239, 68, 68, 0.3)' }}>
+                <div key={item.id} style={{ ...styles.alertItem, borderColor: 'var(--color-danger)' }} className="glass">
                   <div style={styles.alertInfo}>
                     <span style={{ ...styles.alertName, color: 'var(--color-danger)' }}>{item.name}</span>
                     <div style={styles.alertSub}>
-                      <span style={styles.alertSku}>{item.id}</span>
-                      <span style={styles.divider}>•</span>
                       <span style={{ color: 'var(--color-danger)', fontWeight: '700' }}>EXPIRED: {item.expiryDate}</span>
                     </div>
                   </div>
-                  <span className="badge badge-danger">Dispose</span>
+                  <span className="badge badge-danger" style={{padding: '0.25rem 0.5rem', fontSize: '0.75rem', borderRadius: '4px', backgroundColor: 'var(--color-danger-light)', color: 'var(--color-danger)', fontWeight: '700', border: '1px solid rgba(239, 68, 68, 0.2)'}}>DISPOSE</span>
                 </div>
               ))}
-              
-              {/* Expiring Soon Products */}
+            </div>
+          )}
+        </motion.div>
+
+        {/* Expiring Soon Console */}
+        <motion.div variants={itemVariants} style={styles.alertsCard} className="glass-panel">
+          <div style={styles.cardHeader}>
+            <div>
+              <h2 style={styles.cardTitle}>Expiring Soon</h2>
+              <span style={styles.cardInfo}>Approaching expiration & markdown clearance</span>
+            </div>
+          </div>
+          
+          {expiringSoonProducts.length === 0 ? (
+            <div style={styles.emptyAlerts}>
+              <Clock size={48} color="var(--color-border)" strokeWidth={1} />
+              <p style={styles.emptyAlertsText}>No upcoming expirations.</p>
+            </div>
+          ) : (
+            <div style={styles.alertsList}>
               {expiringSoonProducts.map((item) => {
                 const exp = new Date(item.expiryDate);
                 const td = new Date(today);
                 const diffDays = Math.ceil((exp - td) / (1000 * 60 * 60 * 24));
                 return (
-                  <div key={item.id} style={{ ...styles.alertItem, borderColor: 'rgba(245, 158, 11, 0.3)' }}>
+                  <div key={item.id} style={{ ...styles.alertItem, borderColor: 'var(--color-warning)' }} className="glass">
                     <div style={styles.alertInfo}>
                       <span style={styles.alertName}>{item.name}</span>
                       <div style={styles.alertSub}>
                         <span style={styles.alertSku}>{item.id}</span>
                         <span style={styles.divider}>•</span>
-                        <span style={{ color: 'var(--color-warning)', fontWeight: '700' }}>Expires: {item.expiryDate} ({diffDays}d left)</span>
+                        <span style={{ color: 'var(--color-warning)', fontWeight: '700' }}>Expires in {diffDays}d</span>
                         {item.discount > 0 && (
                           <>
                             <span style={styles.divider}>•</span>
-                            <span style={{ color: 'var(--color-success)', fontWeight: '700' }}>Markdown: {item.discount}%</span>
+                            <span style={{ color: 'var(--color-success)', fontWeight: '700' }}>{item.discount}% off</span>
                           </>
                         )}
                       </div>
                     </div>
                     {role === 'admin' && (
                       <div style={styles.alertActions}>
-                        <button 
-                          onClick={() => { handleClearanceDiscount(item.id, 30); alert(`Applied 30% markdown to ${item.name}`); }} 
-                          style={styles.actionBtn} 
-                          title="Apply 30% discount"
-                          className="dashboard-action-btn"
-                        >
-                          <span>Disc 30%</span>
+                        <button onClick={() => { handleClearanceDiscount(item.id, 30); }} style={styles.actionBtn} className="btn-secondary">
+                          30%
                         </button>
-                        <button 
-                          onClick={() => { handleClearanceDiscount(item.id, 50); alert(`Applied 50% markdown to ${item.name}`); }} 
-                          style={styles.actionBtn} 
-                          title="Apply 50% discount"
-                          className="dashboard-action-btn"
-                        >
-                          <span>Disc 50%</span>
+                        <button onClick={() => { handleClearanceDiscount(item.id, 50); }} style={{...styles.actionBtn, color: 'var(--color-danger)'}} className="btn-secondary">
+                          50%
                         </button>
                       </div>
                     )}
@@ -514,10 +522,12 @@ export default function Dashboard({ products, sales, setProducts, setActiveTab, 
         </motion.div>
 
         {/* Recent Invoices Feed */}
-        <motion.div variants={itemVariants} whileHover={{ y: -2 }} style={styles.recentFeedCard} className="card">
+        <motion.div variants={itemVariants} style={{...styles.recentFeedCard, gridColumn: '1 / -1'}} className="glass-panel">
           <div style={styles.cardHeader}>
-            <h2 style={styles.cardTitle}>Recent Store Sales</h2>
-            <span style={styles.cardInfo}>Latest billing checkout actions</span>
+            <div>
+              <h2 style={styles.cardTitle}>Recent Store Sales</h2>
+              <span style={styles.cardInfo}>Latest billing checkout actions</span>
+            </div>
           </div>
           
           {filteredSales.length === 0 ? (
@@ -528,9 +538,9 @@ export default function Dashboard({ products, sales, setProducts, setActiveTab, 
           ) : (
             <div style={styles.feedList}>
               {filteredSales.slice(-4).reverse().map((sale) => (
-                <div key={sale.id} style={styles.feedItem}>
+                <div key={sale.id} style={styles.feedItem} className="glass">
                   <div style={styles.feedIcon}>
-                    <ArrowUpRight size={16} color="var(--color-success)" />
+                    <ArrowUpRight size={18} color="var(--color-success)" />
                   </div>
                   <div style={styles.feedInfo}>
                     <span style={styles.feedTitle}>Invoice #{sale.id}</span>
@@ -552,63 +562,71 @@ export default function Dashboard({ products, sales, setProducts, setActiveTab, 
 
 const styles = {
   glassTooltip: {
-    backgroundColor: 'rgba(22, 27, 34, 0.8)',
-    backdropFilter: 'blur(12px)',
-    WebkitBackdropFilter: 'blur(12px)',
+    backgroundColor: 'var(--color-bg-surface-glass)',
+    backdropFilter: 'blur(16px)',
+    WebkitBackdropFilter: 'blur(16px)',
     border: '1px solid var(--color-border)',
-    padding: '0.5rem 0.75rem',
-    borderRadius: '8px',
-    boxShadow: 'var(--shadow-md)',
+    padding: '0.75rem 1rem',
+    borderRadius: '12px',
+    boxShadow: 'var(--shadow-lg)',
   },
   tooltipLabel: {
-    fontSize: '0.75rem',
+    fontSize: '0.8125rem',
     color: 'var(--color-text-secondary)',
     margin: 0,
-    fontWeight: '600',
+    fontWeight: '700',
+    textTransform: 'uppercase',
   },
   tooltipValue: {
-    fontSize: '0.875rem',
+    fontSize: '1.25rem',
     fontFamily: 'var(--font-mono)',
     color: 'var(--color-primary)',
     fontWeight: '800',
-    margin: '0.1rem 0 0 0',
+    margin: '0.25rem 0 0 0',
   },
   container: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '2rem',
+    gap: '2.5rem',
   },
   welcomeRow: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
     flexWrap: 'wrap',
-    gap: '1rem',
+    gap: '1.5rem',
   },
   pageTitle: {
-    fontSize: '2rem',
+    fontSize: '2.5rem',
     fontFamily: 'var(--font-heading)',
     fontWeight: '800',
-    letterSpacing: '-0.5px',
-    lineHeight: '1.2',
+    letterSpacing: '-0.04em',
+    lineHeight: '1.1',
+    background: 'linear-gradient(90deg, var(--color-text-primary), var(--color-primary))',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
   },
   pageSubtitle: {
     color: 'var(--color-text-secondary)',
-    fontSize: '0.9375rem',
+    fontSize: '1rem',
+    fontWeight: '500',
+    marginTop: '0.25rem'
   },
   posShortcut: {
-    padding: '0.6rem 1.2rem',
-    fontSize: '0.875rem',
+    padding: '0.875rem 1.5rem',
+    fontSize: '1rem',
+    boxShadow: '0 8px 20px var(--color-primary-glow)',
   },
   kpiGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
     gap: '1.5rem',
   },
   kpiCard: {
+    padding: '1.75rem',
     display: 'flex',
     flexDirection: 'column',
-    gap: '0.75rem',
+    gap: '1rem',
   },
   kpiHeader: {
     display: 'flex',
@@ -620,12 +638,12 @@ const styles = {
     fontWeight: '700',
     color: 'var(--color-text-secondary)',
     textTransform: 'uppercase',
-    letterSpacing: '0.5px',
+    letterSpacing: '0.05em',
   },
   kpiIconBox: {
     display: 'flex',
-    padding: '0.5rem',
-    borderRadius: '10px',
+    padding: '0.6rem',
+    borderRadius: '12px',
   },
   kpiValRow: {
     display: 'flex',
@@ -634,160 +652,165 @@ const styles = {
     gap: '0.5rem',
   },
   kpiValue: {
-    fontSize: '2rem',
+    fontSize: '2.25rem',
     fontWeight: '800',
     fontFamily: 'var(--font-heading)',
-    letterSpacing: '-0.5px',
+    letterSpacing: '-0.02em',
   },
   kpiChange: {
-    fontSize: '0.75rem',
+    fontSize: '0.875rem',
     fontWeight: '700',
     color: 'var(--color-success)',
     display: 'flex',
     alignItems: 'center',
-    gap: '0.15rem',
+    gap: '0.25rem',
+    backgroundColor: 'var(--color-success-light)',
+    padding: '0.25rem 0.6rem',
+    borderRadius: '20px',
   },
   kpiSubtext: {
-    fontSize: '0.75rem',
+    fontSize: '0.8125rem',
     color: 'var(--color-text-muted)',
     fontWeight: '600',
   },
   kpiSubtext2: {
-    fontSize: '0.8125rem',
+    fontSize: '0.875rem',
     color: 'var(--color-text-secondary)',
     fontWeight: '600',
   },
   mainGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(480px, 1fr))',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))',
     gap: '1.5rem',
   },
   chartCard: {
-    gridColumn: 'span 1',
+    gridColumn: '1 / -1',
+    padding: '1.75rem',
     display: 'flex',
     flexDirection: 'column',
-    gap: '1rem',
+    gap: '1.5rem',
   },
   categoriesCard: {
     gridColumn: 'span 1',
+    padding: '1.75rem',
     display: 'flex',
     flexDirection: 'column',
-    gap: '1rem',
+    gap: '1.5rem',
   },
   alertsCard: {
     gridColumn: 'span 1',
+    padding: '1.75rem',
     display: 'flex',
     flexDirection: 'column',
-    gap: '1.25rem',
-    maxHeight: '380px',
+    gap: '1.5rem',
+    maxHeight: '420px',
     overflowY: 'auto',
   },
   recentFeedCard: {
-    gridColumn: 'span 1',
+    padding: '1.75rem',
     display: 'flex',
     flexDirection: 'column',
-    gap: '1.25rem',
+    gap: '1.5rem',
   },
   cardHeader: {
     display: 'flex',
-    flexDirection: 'column',
-    borderBottom: '1px solid var(--color-border)',
-    paddingBottom: '0.75rem',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    borderBottom: '1px solid rgba(150, 150, 150, 0.15)',
+    paddingBottom: '1rem',
   },
   cardTitle: {
-    fontSize: '1.125rem',
+    fontSize: '1.25rem',
     fontFamily: 'var(--font-heading)',
     fontWeight: '700',
+    letterSpacing: '-0.01em',
   },
   cardInfo: {
-    fontSize: '0.75rem',
+    fontSize: '0.8125rem',
     color: 'var(--color-text-muted)',
-    fontWeight: '600',
+    fontWeight: '500',
+    marginTop: '0.25rem',
+    display: 'block'
   },
   chartWrapper: {
     width: '100%',
     height: '100%',
+    minHeight: '200px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  svgChart: {
-    width: '100%',
-    maxHeight: '160px',
-  },
   categoriesList: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '1rem',
+    gap: '1.25rem',
   },
   catItem: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '0.35rem',
+    gap: '0.5rem',
   },
   catHeader: {
     display: 'flex',
     justifyContent: 'space-between',
-    fontSize: '0.875rem',
+    fontSize: '0.9375rem',
   },
   catName: {
     fontWeight: '600',
     color: 'var(--color-text-primary)',
   },
   catStat: {
-    fontWeight: '600',
+    fontWeight: '700',
     color: 'var(--color-text-secondary)',
   },
   progressContainer: {
     width: '100%',
-    height: '6px',
+    height: '8px',
     backgroundColor: 'var(--color-bg-base)',
-    borderRadius: '3px',
+    borderRadius: '4px',
     overflow: 'hidden',
   },
   progressBar: {
     height: '100%',
-    borderRadius: '3px',
+    borderRadius: '4px',
   },
   alertsList: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '0.75rem',
+    gap: '1rem',
   },
   alertItem: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: '0.75rem 1rem',
-    backgroundColor: 'var(--color-bg-base)',
+    padding: '1rem',
     borderRadius: 'var(--radius-md)',
-    border: '1px solid var(--color-border)',
   },
   alertInfo: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '0.15rem',
+    gap: '0.25rem',
   },
   alertName: {
-    fontSize: '0.875rem',
+    fontSize: '0.9375rem',
     fontWeight: '700',
   },
   alertSub: {
     display: 'flex',
     alignItems: 'center',
     gap: '0.5rem',
-    fontSize: '0.75rem',
+    fontSize: '0.8125rem',
     color: 'var(--color-text-muted)',
     fontWeight: '600',
   },
   alertSku: {
     fontFamily: 'monospace',
+    backgroundColor: 'var(--color-bg-base)',
+    padding: '0.1rem 0.3rem',
+    borderRadius: '4px',
   },
   divider: {
     color: 'var(--color-border)',
-  },
-  alertMin: {
-    fontStyle: 'italic',
   },
   alertActions: {
     display: 'flex',
@@ -796,15 +819,13 @@ const styles = {
   actionBtn: {
     display: 'flex',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: '0.25rem',
-    padding: '0.35rem 0.6rem',
-    fontSize: '0.75rem',
-    backgroundColor: 'var(--color-bg-surface)',
-    border: '1px solid var(--color-border)',
-    borderRadius: '6px',
+    padding: '0.4rem 0.75rem',
+    fontSize: '0.8125rem',
+    borderRadius: '8px',
     cursor: 'pointer',
     fontWeight: '700',
-    color: 'var(--color-text-secondary)',
     transition: 'all 0.15s ease',
   },
   emptyAlerts: {
@@ -812,43 +833,45 @@ const styles = {
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: '0.75rem',
-    padding: '2rem 0',
+    gap: '1rem',
+    padding: '3rem 0',
     color: 'var(--color-text-muted)',
   },
   emptyAlertsText: {
-    fontSize: '0.875rem',
+    fontSize: '1rem',
     fontWeight: '600',
   },
   feedList: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '0.85rem',
+    gap: '1rem',
   },
   feedItem: {
     display: 'flex',
     alignItems: 'center',
-    gap: '0.75rem',
-    padding: '0.65rem 0',
-    borderBottom: '1px solid var(--color-border)',
+    gap: '1rem',
+    padding: '0.875rem',
+    borderRadius: 'var(--radius-md)',
+    transition: 'transform 0.2s',
   },
   feedIcon: {
     display: 'flex',
-    padding: '0.4rem',
-    borderRadius: '8px',
+    padding: '0.6rem',
+    borderRadius: '10px',
     backgroundColor: 'var(--color-success-light)',
   },
   feedInfo: {
     display: 'flex',
     flexDirection: 'column',
     flex: 1,
+    gap: '0.15rem'
   },
   feedTitle: {
-    fontSize: '0.875rem',
+    fontSize: '1rem',
     fontWeight: '700',
   },
   feedSubtitle: {
-    fontSize: '0.75rem',
+    fontSize: '0.8125rem',
     color: 'var(--color-text-muted)',
     fontWeight: '600',
   },
@@ -856,25 +879,13 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'flex-end',
-    fontSize: '0.875rem',
-    fontWeight: '700',
+    fontSize: '1.125rem',
+    fontWeight: '800',
     color: 'var(--color-success)',
   },
   feedTime: {
-    fontSize: '0.6875rem',
+    fontSize: '0.75rem',
     color: 'var(--color-text-muted)',
-    fontWeight: '500',
+    fontWeight: '600',
   }
 };
-// Add custom hover styles for dashboard action buttons
-if (typeof document !== 'undefined') {
-  const style = document.createElement('style');
-  style.innerHTML = `
-    .dashboard-action-btn:hover {
-      border-color: var(--color-primary) !important;
-      color: var(--color-primary) !important;
-      background-color: var(--color-primary-light) !important;
-    }
-  `;
-  document.head.appendChild(style);
-}

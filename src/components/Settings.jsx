@@ -289,7 +289,7 @@ export default function Settings({
         {/* Sidebar Navigation */}
         <motion.div 
           style={styles.sectionNav} 
-          className="card"
+          className="glass-panel card"
           variants={itemVariants}
           whileHover={{ y: -2 }}
         >
@@ -320,7 +320,7 @@ export default function Settings({
           {/* === STORE PROFILE === */}
           {activeSection === 'store' && (
             <motion.div 
-              className="card" 
+              className="glass-panel card" 
               style={styles.panel}
               variants={itemVariants}
               initial="hidden"
@@ -461,7 +461,7 @@ export default function Settings({
             >
               {/* Existing accounts overview */}
               <motion.div 
-                className="card" 
+                className="glass-panel card" 
                 style={styles.panel}
                 variants={itemVariants}
                 whileHover={{ y: -2 }}
@@ -505,7 +505,7 @@ export default function Settings({
 
               {/* Create new account */}
               <motion.div 
-                className="card" 
+                className="glass-panel card" 
                 style={styles.panel}
                 variants={itemVariants}
                 whileHover={{ y: -2 }}
@@ -603,7 +603,7 @@ export default function Settings({
           {/* === THEME === */}
           {activeSection === 'theme' && (
             <motion.div 
-              className="card" 
+              className="glass-panel card" 
               style={styles.panel}
               variants={itemVariants}
               initial="hidden"
@@ -663,7 +663,7 @@ export default function Settings({
           {/* === DATA BACKUP === */}
           {activeSection === 'data' && (
             <motion.div 
-              className="card" 
+              className="glass-panel card" 
               style={styles.panel}
               variants={itemVariants}
               initial="hidden"
@@ -728,7 +728,7 @@ export default function Settings({
           {/* === AUDIT LOGS === */}
           {activeSection === 'logs' && (
             <motion.div 
-              className="card" 
+              className="glass-panel card" 
               style={styles.panel}
               variants={itemVariants}
               initial="hidden"
@@ -831,7 +831,7 @@ export default function Settings({
           {/* === DANGER ZONE === */}
           {activeSection === 'danger' && (
             <motion.div 
-              className="card" 
+              className="glass-panel card" 
               style={{ ...styles.panel, borderColor: 'rgba(239, 68, 68, 0.4)' }}
               variants={itemVariants}
               initial="hidden"

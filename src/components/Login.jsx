@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../firebase';
-import { Lock, Mail, AlertTriangle, KeyRound, Eye, EyeOff, Store } from 'lucide-react';
+import { Lock, Mail, AlertTriangle, KeyRound, Eye, EyeOff, Package } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function Login({ onLoginSuccess }) {
@@ -12,7 +12,6 @@ export default function Login({ onLoginSuccess }) {
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [attempts, setAttempts] = useState(3);
   const [lockoutTime, setLockoutTime] = useState(() => {
-    // Check if there is an active lockout in localStorage from a previous refresh
     const savedLockoutEnd = localStorage.getItem('login_lockout_end');
     if (savedLockoutEnd) {
       const remaining = Math.ceil((parseInt(savedLockoutEnd, 10) - Date.now()) / 1000);
@@ -62,29 +61,21 @@ export default function Login({ onLoginSuccess }) {
     } catch (err) {
       console.error("Auth error code:", err.code);
 
-      // On first run, if default accounts don't exist in the new Auth console, auto-create them!
+      // Seed fallback
       if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
         if (
           (email === 'admin@apexcart.com' && password === 'admin123') ||
-          (email === 'staff@apexcart.com' && password === 'staff123') ||
-          (email === 'employee@apexcart.com' && password === 'emp123') ||
-          (email === 'grocery_staff@apexcart.com' && password === 'staff123') ||
-          (email === 'fresh_staff@apexcart.com' && password === 'staff123')
+          (email === 'staff@apexcart.com' && password === 'staff123')
         ) {
           try {
-            console.log("Seeding default account on Firebase Authentication...");
             const userCredential = await createUserWithEmailAndPassword(auth, email.trim(), password);
             setError('');
             setIsAuthenticating(false);
             onLoginSuccess(userCredential.user);
             return;
           } catch (createErr) {
-            console.warn("Auto-signup failed, probably already created or password policy issue:", createErr);
-            // If it failed because user already exists (wrong password was entered), allow it to fall through to standard error
-            if (createErr.code === 'auth/email-already-in-use') {
-              // Proceed to show standard incorrect password error
-            } else {
-              setError(`System configuration error: ${createErr.message}`);
+            if (createErr.code !== 'auth/email-already-in-use') {
+              setError(`System error: ${createErr.message}`);
               setIsAuthenticating(false);
               return;
             }
@@ -97,10 +88,7 @@ export default function Login({ onLoginSuccess }) {
         const localUser = email.split('@')[0];
         if (
           (email === 'admin@apexcart.com' && password === 'admin123') ||
-          (email === 'staff@apexcart.com' && password === 'staff123') ||
-          (email === 'employee@apexcart.com' && password === 'emp123') ||
-          (email === 'grocery_staff@apexcart.com' && password === 'staff123') ||
-          (email === 'fresh_staff@apexcart.com' && password === 'staff123')
+          (email === 'staff@apexcart.com' && password === 'staff123')
         ) {
           setError('');
           setIsAuthenticating(false);
@@ -124,7 +112,6 @@ export default function Login({ onLoginSuccess }) {
         setLockoutTime(lockDuration);
         setError('Maximum login attempts exceeded. System locked for 10 minutes.');
       } else {
-        // Format common firebase error codes
         let msg = 'Incorrect email or password.';
         if (err.code === 'auth/invalid-email') {
           msg = 'Please enter a valid email address.';
@@ -133,14 +120,16 @@ export default function Login({ onLoginSuccess }) {
         } else if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
           msg = `Incorrect password. ${remainingAttempts} attempt${remainingAttempts > 1 ? 's' : ''} remaining.`;
         } else if (err.code === 'auth/too-many-requests') {
-          msg = 'Account has been temporarily disabled due to unusual activity. Try again later.';
+          msg = 'Account disabled due to unusual activity. Try again later.';
         } else if (err.code === 'auth/network-request-failed') {
-          msg = 'Network connection failed. Double-check your Wi-Fi/Internet.';
+          msg = 'Network connection failed. Double-check your Wi-Fi.';
         }
         setError(msg);
       }
     }
   };
+
+
 
   const formatLockoutTime = (seconds) => {
     const m = Math.floor(seconds / 60).toString().padStart(2, '0');
@@ -150,31 +139,43 @@ export default function Login({ onLoginSuccess }) {
 
   return (
     <div style={styles.container}>
-      <div style={styles.backgroundGlow} />
+      <div style={styles.ambientBackground}>
+        <div style={styles.orb1} />
+        <div style={styles.orb2} />
+      </div>
+      
       <motion.div 
         style={styles.card} 
-        className="glass glow"
-        initial={{ y: 80, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ type: "spring", stiffness: 100, damping: 15 }}
+        className="glass-panel"
+        initial={{ y: 40, opacity: 0, scale: 0.95 }}
+        animate={{ y: 0, opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
       >
         <div style={styles.header}>
-          <div style={styles.logoContainer}>
-            <img src={`${import.meta.env.BASE_URL}logo.png`} alt="ApexCart Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          </div>
+          <motion.div 
+            style={styles.logoContainer}
+            whileHover={{ rotate: 10, scale: 1.05 }}
+            transition={{ type: "spring", stiffness: 300 }}
+          >
+            <Package size={36} color="var(--color-primary)" strokeWidth={2.5} />
+          </motion.div>
           <h1 style={styles.title}>ApexCart</h1>
           <p style={styles.subtitle}>Superstore Control Center</p>
         </div>
 
         {error && (
-          <div style={lockoutTime > 0 ? styles.errorContainerLock : styles.errorContainer} className="animate-fade">
+          <motion.div 
+            style={lockoutTime > 0 ? styles.errorContainerLock : styles.errorContainer}
+            initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+            animate={{ opacity: 1, height: 'auto', marginBottom: '1.25rem' }}
+          >
             <AlertTriangle size={18} style={{ flexShrink: 0 }} />
             <span>{error}</span>
-          </div>
+          </motion.div>
         )}
 
         {lockoutTime > 0 ? (
-          <div style={styles.lockoutContent} className="animate-fade">
+          <motion.div style={styles.lockoutContent} className="animate-fade">
             <div style={styles.lockIconContainer}>
               <KeyRound size={40} color="var(--color-danger)" />
             </div>
@@ -184,11 +185,11 @@ export default function Login({ onLoginSuccess }) {
               <span style={styles.countdownLabel}>TRY AGAIN IN</span>
               <span style={styles.countdownTime} className="font-mono">{formatLockoutTime(lockoutTime)}</span>
             </div>
-          </div>
+          </motion.div>
         ) : (
           <form onSubmit={handleLogin} style={styles.form}>
             <div style={styles.inputGroup}>
-              <label style={styles.label}>Operator Email</label>
+              <label style={styles.label}>Operator ID / Email</label>
               <div style={styles.inputWrapper}>
                 <Mail size={18} style={styles.inputIcon} />
                 <input
@@ -197,7 +198,7 @@ export default function Login({ onLoginSuccess }) {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   style={styles.input}
-                  className="input-field font-mono"
+                  className="input-field"
                   autoFocus
                   required
                 />
@@ -205,7 +206,7 @@ export default function Login({ onLoginSuccess }) {
             </div>
 
             <div style={styles.inputGroup}>
-              <label style={styles.label}>Password</label>
+              <label style={styles.label}>Security Key</label>
               <div style={styles.inputWrapper}>
                 <Lock size={18} style={styles.inputIcon} />
                 <input
@@ -214,7 +215,7 @@ export default function Login({ onLoginSuccess }) {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   style={styles.input}
-                  className="input-field font-mono"
+                  className="input-field"
                   required
                 />
                 <button
@@ -227,15 +228,30 @@ export default function Login({ onLoginSuccess }) {
               </div>
             </div>
 
-            <button 
+            <div style={styles.actionRow}>
+              <a href="#" style={styles.forgotLink}>Forgot credentials?</a>
+            </div>
+
+            <div style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)', backgroundColor: 'var(--color-bg-surface)', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px dashed var(--color-border)' }}>
+              <strong style={{display: 'block', marginBottom: '0.25rem', color: 'var(--color-text-primary)'}}>Test Credentials:</strong>
+              <div>Admin: <b>admin@apexcart.com</b> / <b>admin123</b></div>
+              <div>Staff: <b>staff@apexcart.com</b> / <b>staff123</b></div>
+            </div>
+
+            <motion.button 
               type="submit" 
               disabled={isAuthenticating}
               style={styles.submitButton} 
               className="btn btn-primary"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
-              {isAuthenticating ? 'Authenticating...' : 'Authenticate'}
-            </button>
-
+              {isAuthenticating ? 'Authenticating Sequence...' : 'Authenticate'}
+            </motion.button>
+            
+            <div style={styles.footerInfo}>
+              <Lock size={12} style={{marginRight: '4px'}}/> End-to-end encrypted session
+            </div>
           </form>
         )}
       </motion.div>
@@ -255,61 +271,70 @@ const styles = {
     overflow: 'hidden',
     padding: '1.5rem',
   },
-  backgroundGlow: {
+  ambientBackground: {
     position: 'absolute',
-    width: '400px',
-    height: '400px',
-    borderRadius: '50%',
-    background: 'radial-gradient(circle, var(--color-primary-glow) 0%, rgba(0,0,0,0) 70%)',
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
+    inset: 0,
     zIndex: 0,
+    overflow: 'hidden',
     pointerEvents: 'none',
+  },
+  orb1: {
+    position: 'absolute',
+    top: '-10%',
+    left: '-10%',
+    width: '60vw',
+    height: '60vw',
+    borderRadius: '50%',
+    background: 'radial-gradient(circle, var(--color-primary-light) 0%, rgba(255,255,255,0) 70%)',
+    filter: 'blur(60px)',
+    animation: 'pulseGlow 8s infinite alternate',
+  },
+  orb2: {
+    position: 'absolute',
+    bottom: '-20%',
+    right: '-10%',
+    width: '50vw',
+    height: '50vw',
+    borderRadius: '50%',
+    background: 'radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, rgba(255,255,255,0) 70%)',
+    filter: 'blur(60px)',
+    animation: 'pulseGlow 12s infinite alternate-reverse',
   },
   card: {
     width: '100%',
     maxWidth: '440px',
-    padding: '2.5rem',
-    borderRadius: '24px',
+    padding: '3rem 2.5rem',
     zIndex: 1,
     display: 'flex',
     flexDirection: 'column',
-    boxShadow: 'var(--shadow-lg)',
   },
   header: {
     textAlign: 'center',
-    marginBottom: '2rem',
+    marginBottom: '2.5rem',
   },
   logoContainer: {
     display: 'inline-flex',
-    padding: '0',
-    borderRadius: '50%',
-    backgroundColor: 'var(--color-primary-light)',
-    marginBottom: '1rem',
-    width: '84px',
-    height: '84px',
-    overflow: 'hidden',
-    justifyContent: 'center',
-    alignItems: 'center',
+    padding: '1.25rem',
+    borderRadius: '20px',
+    backgroundColor: 'var(--color-bg-surface)',
+    boxShadow: 'var(--shadow-sm)',
+    marginBottom: '1.5rem',
+    border: '1px solid var(--color-border)',
   },
   title: {
-    fontSize: '2rem',
-    fontFamily: 'var(--font-heading)',
-    fontWeight: '800',
-    letterSpacing: '-0.5px',
-    lineHeight: '1.2',
+    fontSize: '2.25rem',
+    letterSpacing: '-0.03em',
+    marginBottom: '0.5rem',
   },
   subtitle: {
     color: 'var(--color-text-secondary)',
-    fontSize: '0.875rem',
-    marginTop: '0.25rem',
+    fontSize: '0.9375rem',
     fontWeight: '500',
   },
   form: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '1.25rem',
+    gap: '1.5rem',
   },
   inputGroup: {
     display: 'flex',
@@ -320,8 +345,7 @@ const styles = {
     fontSize: '0.8125rem',
     fontWeight: '600',
     color: 'var(--color-text-secondary)',
-    textTransform: 'uppercase',
-    letterSpacing: '0.5px',
+    letterSpacing: '0.02em',
   },
   inputWrapper: {
     position: 'relative',
@@ -330,13 +354,14 @@ const styles = {
   },
   inputIcon: {
     position: 'absolute',
-    left: '1rem',
+    left: '1.25rem',
     color: 'var(--color-text-muted)',
     pointerEvents: 'none',
   },
   input: {
-    paddingLeft: '2.75rem',
+    paddingLeft: '3.25rem',
     paddingRight: '3rem',
+    height: '3.25rem',
   },
   eyeButton: {
     position: 'absolute',
@@ -348,34 +373,57 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: '0.25rem',
+    padding: '0.5rem',
+    transition: 'color 0.2s',
+  },
+  actionRow: {
+    display: 'flex',
+    justifyContent: 'flex-end',
+    marginTop: '-0.5rem',
+  },
+  forgotLink: {
+    fontSize: '0.8125rem',
+    color: 'var(--color-primary)',
+    textDecoration: 'none',
+    fontWeight: '600',
   },
   submitButton: {
     marginTop: '0.5rem',
-    padding: '0.875rem',
+    height: '3.25rem',
+    fontSize: '1rem',
+    width: '100%',
+  },
+  footerInfo: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: '1rem',
+    fontSize: '0.75rem',
+    color: 'var(--color-text-muted)',
+    fontWeight: '500',
   },
   errorContainer: {
     backgroundColor: 'var(--color-danger-light)',
     color: 'var(--color-danger)',
-    padding: '0.75rem 1rem',
+    padding: '1rem',
     borderRadius: 'var(--radius-md)',
     fontSize: '0.875rem',
+    fontWeight: '500',
     display: 'flex',
     alignItems: 'center',
     gap: '0.75rem',
-    marginBottom: '1.25rem',
     border: '1px solid rgba(239, 68, 68, 0.2)',
   },
   errorContainerLock: {
     backgroundColor: 'var(--color-danger-light)',
     color: 'var(--color-danger)',
-    padding: '0.75rem 1rem',
+    padding: '1rem',
     borderRadius: 'var(--radius-md)',
     fontSize: '0.875rem',
+    fontWeight: '500',
     display: 'flex',
     alignItems: 'center',
     gap: '0.75rem',
-    marginBottom: '1.25rem',
     border: '1px solid rgba(239, 68, 68, 0.2)',
     animation: 'pulseGlow 2s infinite',
   },
@@ -384,69 +432,48 @@ const styles = {
     flexDirection: 'column',
     alignItems: 'center',
     textAlign: 'center',
-    padding: '1.5rem 0',
+    padding: '2rem 0',
   },
   lockIconContainer: {
     display: 'inline-flex',
-    padding: '1rem',
+    padding: '1.25rem',
     borderRadius: '50%',
     backgroundColor: 'var(--color-danger-light)',
-    marginBottom: '1rem',
+    marginBottom: '1.5rem',
+    border: '1px solid rgba(239, 68, 68, 0.2)',
   },
   lockoutTitle: {
     fontSize: '1.5rem',
     fontWeight: '700',
     marginBottom: '0.5rem',
+    color: 'var(--color-text-primary)'
   },
   lockoutText: {
     color: 'var(--color-text-secondary)',
-    fontSize: '0.875rem',
-    marginBottom: '1.5rem',
+    fontSize: '0.9375rem',
+    marginBottom: '2rem',
   },
   countdownBox: {
-    background: 'var(--color-bg-base)',
+    background: 'var(--color-bg-surface)',
     border: '1px solid var(--color-border)',
     borderRadius: 'var(--radius-lg)',
-    padding: '1rem 2rem',
+    padding: '1.25rem 2.5rem',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    gap: '0.25rem',
-    width: '100%',
+    gap: '0.5rem',
+    boxShadow: 'var(--shadow-sm)',
   },
   countdownLabel: {
     fontSize: '0.75rem',
-    fontWeight: '800',
+    fontWeight: '700',
     color: 'var(--color-text-muted)',
-    letterSpacing: '1px',
+    letterSpacing: '0.1em',
   },
   countdownTime: {
-    fontSize: '2rem',
-    fontFamily: 'var(--font-heading)',
+    fontSize: '2.5rem',
     fontWeight: '800',
     color: 'var(--color-danger)',
-    letterSpacing: '1px',
-  },
-  hintBox: {
-    marginTop: '1rem',
-    padding: '0.75rem',
-    borderRadius: 'var(--radius-md)',
-    backgroundColor: 'var(--color-primary-light)',
-    border: '1px solid var(--color-primary-glow)',
-    fontSize: '0.75rem',
-    textAlign: 'left',
-    color: 'var(--color-text-secondary)',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.2rem',
-  },
-  hintTitle: {
-    fontWeight: '700',
-    marginBottom: '0.15rem',
-    textAlign: 'center',
-  },
-  hintValue: {
-    fontFamily: 'monospace',
-    fontSize: '0.71875rem',
+    letterSpacing: '0.05em',
   }
 };

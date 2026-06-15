@@ -368,7 +368,7 @@ export default function POS({ products, setProducts, sales, setSales, categories
         </div>
 
         {/* Toolbar */}
-        <div style={styles.toolbar} className="glass">
+        <div style={styles.toolbar} className="glass-panel">
           <div style={{ ...styles.searchWrapper, display: 'flex', gap: '0.75rem', width: '100%', alignItems: 'center' }}>
             <div style={{ position: 'relative', flex: 1 }}>
               <Search size={18} style={styles.searchIcon} />
@@ -501,7 +501,7 @@ export default function POS({ products, setProducts, sales, setSales, categories
       </div>
 
       {/* Cart & Customer Panel */}
-      <div style={styles.cartPanel} className="glass">
+      <div style={styles.cartPanel} className="glass-panel">
         <div style={styles.cartHeader}>
           <ShoppingCart size={20} color="var(--color-primary)" />
           <h2 style={styles.cartTitle}>Active Invoice Cart</h2>
@@ -683,7 +683,7 @@ export default function POS({ products, setProducts, sales, setSales, categories
       {/* UPI Scan to Pay QR Modal */}
       {showUpiModal && (
         <div style={styles.modalOverlay}>
-          <div style={styles.upiModal} className="card glow animate-slide">
+          <div style={styles.upiModal} className="glass-panel glow animate-slide">
             <h3 style={styles.upiTitle}>Scan QR Code to Pay</h3>
             <p style={styles.upiSub}>{storeSettings?.storeName || 'ApexCart Supermarket'}</p>
             
@@ -728,7 +728,7 @@ export default function POS({ products, setProducts, sales, setSales, categories
       {/* Webcam Barcode Scanner Modal */}
       {showScanner && (
         <div style={styles.modalOverlay}>
-          <div style={styles.scannerModal} className="card glow animate-slide">
+          <div style={styles.scannerModal} className="glass-panel glow animate-slide">
             <div style={styles.scannerHeader}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <Camera size={20} color="var(--color-primary)" />

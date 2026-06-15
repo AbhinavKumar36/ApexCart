@@ -367,7 +367,7 @@ ${JSON.stringify(lowStockData, null, 2)}
       <motion.div variants={itemVariants} style={styles.headerRow}>
         <div>
           <h1 style={styles.pageTitle}>Inventory Catalog</h1>
-          <p style={styles.pageSubtitle}>Manage items, stocks levels, and store retail values.</p>
+          <p style={styles.pageSubtitle}>Manage items, stock levels, and store retail values.</p>
         </div>
         <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
           {role === 'admin' && (
@@ -393,7 +393,7 @@ ${JSON.stringify(lowStockData, null, 2)}
       </motion.div>
 
       {/* Filter Toolbar */}
-      <motion.div variants={itemVariants} style={styles.filterRow} className="glass">
+      <motion.div variants={itemVariants} style={styles.filterRow} className="glass-panel">
         {/* Search */}
         <div style={styles.searchWrapper}>
           <Search size={18} style={styles.searchIcon} />
@@ -453,7 +453,7 @@ ${JSON.stringify(lowStockData, null, 2)}
       </motion.div>
 
       {/* Catalog Table */}
-      <motion.div variants={itemVariants} style={styles.tableCard} className="card">
+      <motion.div variants={itemVariants} style={styles.tableCard} className="glass-panel card">
         {filteredProducts.length === 0 ? (
           <div style={styles.emptyCatalog}>
             <PackageOpen size={48} color="var(--color-text-muted)" />
@@ -620,7 +620,7 @@ ${JSON.stringify(lowStockData, null, 2)}
       {/* Add/Edit Modal */}
       {isModalOpen && (
         <div style={styles.modalOverlay}>
-          <div style={styles.modalCard} className="glass animate-slide">
+          <div style={styles.modalCard} className="glass-panel animate-slide">
             <div style={styles.modalHeader}>
               <h2 style={styles.modalTitle}>{editingProduct ? 'Update Inventory Item' : 'New Catalog Item'}</h2>
               <button onClick={closeModal} style={styles.modalClose}>
@@ -828,7 +828,7 @@ ${JSON.stringify(lowStockData, null, 2)}
       {/* Delete Confirmation Alert Overlay */}
       {deleteTarget && (
         <div style={styles.modalOverlay}>
-          <div style={styles.alertCard} className="glass glow animate-slide">
+          <div style={styles.alertCard} className="glass-panel glow animate-slide">
             <div style={styles.alertHeader}>
               <AlertTriangle size={36} color="var(--color-danger)" />
               <h2 style={styles.alertTitle}>Remove Catalog Item?</h2>
@@ -851,7 +851,7 @@ ${JSON.stringify(lowStockData, null, 2)}
       {/* AI Procurement Purchase Draft Modal Overlay */}
       {showRecsPanel && (
         <div style={styles.recsOverlay}>
-          <div style={styles.recsCard} className="card glow animate-slide">
+          <div style={styles.recsCard} className="glass-panel glow animate-slide">
             <div style={styles.recsHeader}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <Sparkles size={20} color="var(--color-success)" />
@@ -926,7 +926,7 @@ ${JSON.stringify(lowStockData, null, 2)}
       {/* Stock Transfer Modal */}
       {showTransferModal && (
         <div style={styles.modalOverlay}>
-          <div style={{ ...styles.modalCard, maxWidth: '440px' }} className="glass animate-slide">
+          <div style={{ ...styles.modalCard, maxWidth: '440px' }} className="glass-panel animate-slide">
             <div style={styles.modalHeader}>
               <h2 style={styles.modalTitle}>Stock Transfer between Stores</h2>
               <button onClick={() => setShowTransferModal(false)} style={styles.modalClose}>×</button>
@@ -993,7 +993,7 @@ ${JSON.stringify(lowStockData, null, 2)}
       {/* Barcode View & Print Modal */}
       {barcodeViewTarget && (
         <div style={styles.modalOverlay}>
-          <div style={{ ...styles.modalCard, maxWidth: '380px', textAlign: 'center' }} className="glass animate-slide">
+          <div style={{ ...styles.modalCard, maxWidth: '380px', textAlign: 'center' }} className="glass-panel animate-slide">
             <div style={styles.modalHeader}>
               <h2 style={styles.modalTitle}>Product Barcode</h2>
               <button onClick={() => setBarcodeViewTarget(null)} style={styles.modalClose}>×</button>

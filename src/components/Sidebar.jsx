@@ -14,7 +14,8 @@ import {
   Store,
   BarChart3,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  PackageCheck
 } from 'lucide-react';
 
 export default function Sidebar({ 
@@ -34,7 +35,7 @@ export default function Sidebar({
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'pos', label: 'Point of Sale (POS)', icon: ShoppingCart },
+    { id: 'pos', label: 'Point of Sale', icon: ShoppingCart },
     { id: 'inventory', label: 'Inventory Manager', icon: Package },
     { id: 'suppliers', label: 'Suppliers & POs', icon: Store },
     { id: 'history', label: 'Billing History', icon: History },
@@ -42,12 +43,11 @@ export default function Sidebar({
     { id: 'settings', label: 'Control Settings', icon: SettingsIcon }
   ];
 
-  // Filter items based on active role - employees see all except Settings and Suppliers
   const filteredMenuItems = menuItems.filter(item => {
     if (role !== 'admin') {
       return ['dashboard', 'pos', 'inventory', 'history', 'reports'].includes(item.id);
     }
-    return true; // Admin has full access
+    return true;
   });
 
   const handleNavClick = (id) => {
@@ -57,10 +57,11 @@ export default function Sidebar({
 
   return (
     <>
-      {/* Mobile Top Header */}
       <header style={styles.mobileHeader} className="glass">
         <div style={styles.logoRow}>
-          <img src={`${import.meta.env.BASE_URL}logo.png`} alt="ApexCart Logo" style={{ width: '36px', height: '36px', objectFit: 'cover', borderRadius: '8px' }} />
+          <div style={styles.mobileLogoBox}>
+            <PackageCheck size={20} color="var(--color-primary)" strokeWidth={2.5} />
+          </div>
           <span style={styles.logoText}>ApexCart</span>
         </div>
         <button onClick={() => setMobileOpen(!mobileOpen)} style={styles.menuBtn}>
@@ -68,33 +69,31 @@ export default function Sidebar({
         </button>
       </header>
 
-      {/* Sidebar Overlay for Mobile */}
       {mobileOpen && <div style={styles.overlay} onClick={() => setMobileOpen(false)} />}
 
-      {/* Sidebar Container */}
       <motion.aside 
-        animate={{ width: isCollapsed ? '80px' : '280px' }}
+        animate={{ width: isCollapsed ? '88px' : '280px' }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
         style={{
           ...styles.sidebar,
           transform: mobileOpen ? 'translateX(0)' : undefined,
         }}
-        className={`glass ${mobileOpen ? 'mobile-open' : ''}`}
+        className={`glass-panel ${mobileOpen ? 'mobile-open' : ''}`}
       >
         <div style={{
           ...styles.sidebarContent,
-          padding: isCollapsed ? '2rem 0.75rem' : '2rem 1.5rem',
+          padding: isCollapsed ? '2rem 1rem' : '2rem 1.5rem',
         }}>
           {/* Logo Section */}
           <div style={{ 
             ...styles.logoSection, 
             justifyContent: isCollapsed ? 'center' : 'space-between',
             gap: isCollapsed ? '0' : '1rem',
-            marginBottom: '2rem'
+            marginBottom: '2.5rem'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', overflow: 'hidden' }}>
               <div style={styles.logoContainer}>
-                <img src={`${import.meta.env.BASE_URL}logo.png`} alt="ApexCart Logo" style={{ width: '100%', height: '100%', objectFit: 'cover', flexShrink: 0 }} />
+                <PackageCheck size={24} color="var(--color-primary)" strokeWidth={2.5} />
               </div>
               {!isCollapsed && (
                 <motion.div
@@ -105,12 +104,11 @@ export default function Sidebar({
                   style={{ display: 'flex', flexDirection: 'column' }}
                 >
                   <h2 style={styles.brandName}>ApexCart</h2>
-                  <span style={styles.brandTagline}>v1.0 Enterprise</span>
+                  <span style={styles.brandTagline}>v2.0 Enterprise</span>
                 </motion.div>
               )}
             </div>
             
-            {/* Collapse Toggle Button (Desktop Only) */}
             <button 
               onClick={() => setIsCollapsed(!isCollapsed)} 
               style={styles.collapseToggle} 
@@ -124,33 +122,34 @@ export default function Sidebar({
           {/* Store Switcher */}
           {isCollapsed ? (
             <div 
-              style={{ ...styles.storeSwitcher, justifyContent: 'center', cursor: 'pointer', padding: '0.65rem 0', position: 'relative' }}
+              style={{ ...styles.storeSwitcherCollapsed, cursor: 'pointer' }}
               onClick={() => setCurrentStore(prev => prev === 'Store A' ? 'Store B' : 'Store A')}
-              title={`Switch Store (Current: ${currentStore}) - Click to toggle`}
+              title={`Toggle Outlet (Current: ${currentStore})`}
               className="nav-item-container"
             >
-              <Store size={16} color="var(--color-primary)" />
+              <Store size={20} color="var(--color-primary)" />
               <div style={{
                 position: 'absolute',
-                bottom: '4px',
-                right: '4px',
-                width: '6px',
-                height: '6px',
+                bottom: '8px',
+                right: '8px',
+                width: '8px',
+                height: '8px',
                 borderRadius: '50%',
-                backgroundColor: currentStore === 'Store A' ? 'var(--color-primary)' : '#10b981'
+                backgroundColor: currentStore === 'Store A' ? 'var(--color-primary)' : 'var(--color-success)',
+                border: '2px solid var(--color-bg-base)'
               }} />
               <div className="sidebar-tooltip">Toggle Outlet: {currentStore}</div>
             </div>
           ) : (
             <div style={styles.storeSwitcher}>
-              <Store size={16} color="var(--color-primary)" style={{ flexShrink: 0 }} />
+              <Store size={18} color="var(--color-primary)" style={{ flexShrink: 0 }} />
               <select
                 value={currentStore}
                 onChange={(e) => setCurrentStore(e.target.value)}
                 style={styles.storeSelect}
               >
-                <option value="Store A">Store A (Main)</option>
-                <option value="Store B">Store B (Secondary)</option>
+                <option value="Store A">Store A (Main Outlet)</option>
+                <option value="Store B">Store B (Express)</option>
               </select>
             </div>
           )}
@@ -159,7 +158,9 @@ export default function Sidebar({
           <div style={{ 
             ...styles.userBox, 
             justifyContent: isCollapsed ? 'center' : 'flex-start', 
-            padding: isCollapsed ? '0.5rem 0' : '0.85rem',
+            padding: isCollapsed ? '0' : '1rem',
+            background: isCollapsed ? 'transparent' : 'var(--color-bg-surface)',
+            border: isCollapsed ? 'none' : '1px solid var(--color-border)',
             marginBottom: '2rem'
           }}>
             <div style={styles.avatar} title={`${username} (${role === 'admin' ? 'Admin' : 'Employee'})`}>
@@ -199,9 +200,7 @@ export default function Sidebar({
                     ...styles.navBtn,
                     justifyContent: isCollapsed ? 'center' : 'flex-start',
                     color: isActive ? 'var(--color-bg-base)' : 'var(--color-text-secondary)',
-                    position: 'relative',
-                    zIndex: 1,
-                    backgroundColor: 'transparent',
+                    padding: isCollapsed ? '0.85rem 0' : '0.85rem 1rem',
                   }}
                   className="nav-item-container nav-btn-hover"
                 >
@@ -221,20 +220,19 @@ export default function Sidebar({
                       transition={{ type: "spring", stiffness: 380, damping: 30 }}
                     />
                   )}
-                  <Icon size={20} style={{ flexShrink: 0 }} />
+                  <Icon size={22} style={{ flexShrink: 0 }} />
                   {!isCollapsed && (
                     <motion.span
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
                       transition={{ duration: 0.15 }}
-                      style={{ whiteSpace: 'nowrap' }}
+                      style={{ whiteSpace: 'nowrap', fontWeight: isActive ? '700' : '600' }}
                     >
                       {item.label}
                     </motion.span>
                   )}
                   
-                  {/* Collapsed Tooltip */}
                   {isCollapsed && (
                     <div className="sidebar-tooltip">
                       {item.label}
@@ -249,42 +247,44 @@ export default function Sidebar({
           <div style={{ ...styles.footer, alignItems: isCollapsed ? 'center' : 'stretch', padding: isCollapsed ? '1.5rem 0 0 0' : '1.5rem 0' }}>
             <button 
               onClick={toggleTheme} 
-              style={{ ...styles.footerBtn, justifyContent: isCollapsed ? 'center' : 'center' }} 
-              className="nav-item-container"
+              style={{ ...styles.footerBtn, justifyContent: isCollapsed ? 'center' : 'flex-start' }} 
+              className="nav-item-container btn-secondary"
             >
-              {theme === 'dark' ? <Sun size={18} color="var(--color-warning)" /> : <Moon size={18} color="var(--color-primary)" />}
+              {theme === 'dark' ? <Sun size={20} color="var(--color-warning)" /> : <Moon size={20} color="var(--color-primary)" />}
               {!isCollapsed && <span>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>}
               {isCollapsed && <div className="sidebar-tooltip">{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</div>}
             </button>
 
             <button 
               onClick={onLogout} 
-              style={{ ...styles.logoutBtn, justifyContent: isCollapsed ? 'center' : 'center' }} 
-              className="nav-item-container"
+              style={{ ...styles.logoutBtn, justifyContent: isCollapsed ? 'center' : 'flex-start' }} 
+              className="nav-item-container btn-secondary"
             >
-              <LogOut size={18} color="var(--color-danger)" />
-              {!isCollapsed && <span>Sign Out</span>}
+              <LogOut size={20} color="var(--color-danger)" />
+              {!isCollapsed && <span style={{ color: 'var(--color-danger)' }}>Sign Out</span>}
               {isCollapsed && <div className="sidebar-tooltip">Sign Out</div>}
             </button>
           </div>
         </div>
       </motion.aside>
 
-      {/* Global CSS for hover effects that are cleaner inline */}
       <style>{`
         .nav-btn-hover {
           transition: all 0.2s ease;
+          position: relative;
+          z-index: 1;
+          background-color: transparent;
         }
         .nav-btn-hover:hover {
-          background-color: var(--color-primary-light) !important;
           color: var(--color-primary) !important;
         }
         .sidebar-tooltip {
           position: absolute;
-          left: 70px;
-          background-color: var(--color-bg-surface);
+          left: 80px;
+          background-color: var(--color-bg-surface-glass);
+          backdrop-filter: blur(8px);
           color: var(--color-text-primary);
-          padding: 0.5rem 0.75rem;
+          padding: 0.5rem 0.85rem;
           border-radius: var(--radius-sm);
           border: 1px solid var(--color-border);
           box-shadow: var(--shadow-md);
@@ -294,7 +294,7 @@ export default function Sidebar({
           opacity: 0;
           pointer-events: none;
           transform: translateX(-10px);
-          transition: all 0.2s ease;
+          transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
           z-index: 100;
         }
         .nav-item-container {
@@ -332,7 +332,7 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: '1rem 1.5rem',
-    height: '60px',
+    height: '64px',
     position: 'fixed',
     top: 0,
     left: 0,
@@ -345,11 +345,18 @@ const styles = {
     alignItems: 'center',
     gap: '0.75rem',
   },
+  mobileLogoBox: {
+    display: 'flex',
+    padding: '0.5rem',
+    borderRadius: '10px',
+    backgroundColor: 'var(--color-bg-surface)',
+    border: '1px solid var(--color-border)',
+  },
   logoText: {
     fontFamily: 'var(--font-heading)',
     fontWeight: '800',
     fontSize: '1.25rem',
-    letterSpacing: '-0.5px',
+    letterSpacing: '-0.02em',
   },
   menuBtn: {
     background: 'none',
@@ -365,7 +372,7 @@ const styles = {
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0,0,0,0.6)',
     zIndex: 45,
     backdropFilter: 'blur(4px)',
   },
@@ -377,7 +384,9 @@ const styles = {
     height: '100vh',
     zIndex: 50,
     borderRight: '1px solid var(--color-border)',
-    transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+    transition: 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+    borderRadius: '0', // Keep flush to the edge
+    margin: 0,
   },
   sidebarContent: {
     display: 'flex',
@@ -390,44 +399,56 @@ const styles = {
   },
   logoContainer: {
     display: 'flex',
-    padding: '0',
-    borderRadius: '10px',
-    backgroundColor: 'var(--color-primary-light)',
-    width: '42px',
-    height: '42px',
-    overflow: 'hidden',
+    padding: '0.5rem',
+    borderRadius: '12px',
+    backgroundColor: 'var(--color-bg-surface)',
+    border: '1px solid var(--color-border)',
+    width: '44px',
+    height: '44px',
     justifyContent: 'center',
     alignItems: 'center',
+    boxShadow: 'var(--shadow-sm)',
   },
   brandName: {
     fontSize: '1.5rem',
     fontFamily: 'var(--font-heading)',
     fontWeight: '800',
-    letterSpacing: '-0.5px',
-    lineHeight: '1',
+    letterSpacing: '-0.03em',
+    lineHeight: '1.1',
+    background: 'linear-gradient(90deg, var(--color-text-primary), var(--color-primary))',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
   },
   brandTagline: {
     fontSize: '0.75rem',
-    fontWeight: '600',
+    fontWeight: '700',
     color: 'var(--color-text-muted)',
+    letterSpacing: '0.05em',
+    textTransform: 'uppercase',
   },
   userBox: {
     display: 'flex',
     alignItems: 'center',
-    gap: '0.75rem',
-    borderRadius: 'var(--radius-md)',
-    backgroundColor: 'var(--color-bg-base)',
-    border: '1px solid var(--color-border)',
+    gap: '0.85rem',
+    borderRadius: 'var(--radius-lg)',
   },
   storeSwitcher: {
     display: 'flex',
     alignItems: 'center',
-    gap: '0.5rem',
-    padding: '0.65rem 0.85rem',
+    gap: '0.75rem',
+    padding: '0.85rem 1rem',
     borderRadius: 'var(--radius-md)',
-    backgroundColor: 'var(--color-bg-base)',
+    backgroundColor: 'var(--color-bg-surface)',
     border: '1px solid var(--color-border)',
-    marginBottom: '1.25rem',
+    marginBottom: '1.5rem',
+  },
+  storeSwitcherCollapsed: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: '0.75rem 0',
+    marginBottom: '1.5rem',
+    position: 'relative',
   },
   storeSelect: {
     border: 'none',
@@ -441,17 +462,17 @@ const styles = {
     padding: 0,
   },
   avatar: {
-    width: '40px',
-    height: '40px',
+    width: '44px',
+    height: '44px',
     borderRadius: '50%',
-    backgroundColor: 'var(--color-primary)',
-    color: 'var(--color-bg-base)',
+    background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-glow))',
+    color: '#ffffff',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     fontWeight: '800',
     fontSize: '1.25rem',
-    boxShadow: 'var(--shadow-sm)',
+    boxShadow: 'var(--shadow-md)',
     flexShrink: 0,
   },
   userInfo: {
@@ -463,13 +484,13 @@ const styles = {
     fontSize: '0.625rem',
     fontWeight: '800',
     color: 'var(--color-primary)',
-    letterSpacing: '0.5px',
+    letterSpacing: '0.05em',
   },
   userName: {
     fontSize: '0.9375rem',
-    fontWeight: '600',
+    fontWeight: '700',
     color: 'var(--color-text-primary)',
-    lineHeight: '1.2',
+    lineHeight: '1.3',
   },
   vendorBadge: {
     fontSize: '0.625rem',
@@ -478,8 +499,8 @@ const styles = {
     backgroundColor: 'var(--color-success-light)',
     padding: '0.1rem 0.4rem',
     borderRadius: '9999px',
-    marginTop: '0.1rem',
-    letterSpacing: '0.3px',
+    marginTop: '0.2rem',
+    letterSpacing: '0.02em',
     display: 'inline-block',
   },
   nav: {
@@ -487,66 +508,57 @@ const styles = {
     flexDirection: 'column',
     gap: '0.5rem',
     flex: 1,
+    overflowY: 'auto',
+    minHeight: 0,
+    paddingRight: '0.5rem',
   },
   navBtn: {
     display: 'flex',
     alignItems: 'center',
     gap: '1rem',
-    width: '100%',
-    padding: '0.85rem 1rem',
+    alignSelf: 'stretch',
     border: 'none',
     borderRadius: 'var(--radius-md)',
     cursor: 'pointer',
-    fontWeight: '600',
     textAlign: 'left',
-    transition: 'all 0.15s ease',
   },
   footer: {
     display: 'flex',
     flexDirection: 'column',
     gap: '0.75rem',
-    borderTop: '1px solid var(--color-border)',
+    borderTop: '1px solid rgba(150, 150, 150, 0.15)',
+    marginTop: 'auto',
   },
   footerBtn: {
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'center',
     gap: '0.75rem',
-    width: '100%',
-    padding: '0.75rem',
+    alignSelf: 'stretch',
+    padding: '0.85rem 1rem',
     border: '1px solid var(--color-border)',
     borderRadius: 'var(--radius-md)',
     cursor: 'pointer',
     fontWeight: '600',
-    background: 'none',
-    transition: 'all 0.15s ease',
-    boxSizing: 'border-box',
     margin: 0,
-    color: 'var(--color-text-primary)'
   },
   logoutBtn: {
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'center',
     gap: '0.75rem',
-    width: '100%',
-    padding: '0.75rem',
+    alignSelf: 'stretch',
+    padding: '0.85rem 1rem',
     border: '1px solid var(--color-border)',
     borderRadius: 'var(--radius-md)',
     cursor: 'pointer',
     fontWeight: '600',
-    background: 'none',
-    transition: 'all 0.15s ease',
-    boxSizing: 'border-box',
     margin: 0,
-    color: 'var(--color-text-primary)'
   },
   collapseToggle: {
-    background: 'var(--color-bg-base)',
+    background: 'var(--color-bg-surface)',
     border: '1px solid var(--color-border)',
     borderRadius: '50%',
-    width: '24px',
-    height: '24px',
+    width: '28px',
+    height: '28px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
