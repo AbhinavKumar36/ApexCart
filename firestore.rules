@@ -56,5 +56,11 @@ service cloud.firestore {
       allow create: if isAuth(); // cashiers and admins can log actions
       allow update, delete: if false; // activity logs are read-only once written
     }
+
+    // Expenses collection rules
+    match /expenses/{expenseId} {
+      allow read: if isAuth();
+      allow write: if isAdmin();
+    }
   }
 }

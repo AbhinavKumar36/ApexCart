@@ -453,11 +453,7 @@ export default function POS({ products, setProducts, sales, setSales, categories
                 variants={itemVariants}
                 whileHover={isOut || remainingStock === 0 ? {} : { y: -4, boxShadow: 'var(--shadow-glow)' }}
               >
-                {isExpired && (
-                  <div style={{ ...styles.cartBadge, backgroundColor: 'var(--color-danger)' }}>
-                    <span>Expired</span>
-                  </div>
-                )}
+
                 {!isExpired && cartQty > 0 && (
                   <div style={styles.cartBadge}>
                     <span className="font-mono">{cartQty} in Cart</span>

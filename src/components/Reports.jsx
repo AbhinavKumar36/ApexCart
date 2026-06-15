@@ -63,11 +63,13 @@ const CustomTooltip = ({ active, payload, label, currencySymbol }) => {
   return null;
 };
 
-export default function Reports({ products, sales, storeSettings, vendor, currentStore }) {
-  const [activeReportTab, setActiveReportTab] = useState('dashboard'); // 'dashboard', 'forecasting'
+export default function Reports({ products, sales, storeSettings, vendor, currentStore, expenses = [] }) {
+  const [activeReportTab, setActiveReportTab] = useState('dashboard'); // 'dashboard', 'financials', 'forecasting'
   const [dateRange, setDateRange] = useState('30'); // days
   const [forecastSearch, setForecastSearch] = useState('');
   const [showExportMenu, setShowExportMenu] = useState(false);
+  const [aiForecastText, setAiForecastText] = useState('');
+  const [isGeneratingForecast, setIsGeneratingForecast] = useState(false);
 
   const sym = storeSettings?.currencySymbol || '₹';
 
@@ -187,6 +189,20 @@ export default function Reports({ products, sales, storeSettings, vendor, curren
   const grossMargin = totalRevenue > 0 ? ((grossProfit / totalRevenue) * 100).toFixed(1) : 0;
   const totalOrders = filteredSales.length;
   const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+
+  const totalOverhead = useMemo(() => {
+    let eList = expenses.filter(e => e.store === currentStore);
+    if (dateRange !== 'all') {
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - parseInt(dateRange, 10));
+      const cutoffStr = toISOStringLocalDate(cutoff);
+      eList = eList.filter(e => getStandardDateStr(e.date) >= cutoffStr);
+    }
+    return eList.reduce((acc, e) => acc + (parseFloat(e.amount) || 0), 0);
+  }, [expenses, currentStore, dateRange]);
+
+  const netProfit = grossProfit - totalOverhead;
+  const netMargin = totalRevenue > 0 ? ((netProfit / totalRevenue) * 100).toFixed(1) : 0;
 
   // Daily revenue for chart (last 14 days)
   const dailyRevenue = useMemo(() => {
@@ -398,40 +414,81 @@ export default function Reports({ products, sales, storeSettings, vendor, curren
       });
     });
     
-    return fp.map(p => {
-      const unitsSold = productUnitsSold[p.id] || 0;
-      const salesVelocity = unitsSold / velocityDays; // units sold per day
-      const demand7Day = salesVelocity * 7;
+    const results = fp.map(p => {
+      const stock = p.quantity || 0;
+      const pastSales = productUnitsSold[p.id] || 0;
+      const velocity = pastSales / velocityDays;
       
-      let stockoutDays = Infinity;
-      let stockoutText = 'Safe (No demand)';
-      if (salesVelocity > 0) {
-        stockoutDays = p.quantity / salesVelocity;
-        if (p.quantity === 0) {
-          stockoutText = 'Out of Stock';
-        } else {
-          stockoutText = `${Math.ceil(stockoutDays)} days`;
-        }
+      let item = { ...p };
+      item.salesVelocity = Math.max(0, velocity).toFixed(2);
+      item.demand7Day = Math.ceil(velocity * 7);
+      
+      let daysOfStockLeft = 999;
+      if (velocity > 0) {
+        daysOfStockLeft = stock / velocity;
+      } else if (stock === 0 && pastSales === 0) {
+        daysOfStockLeft = 999;
+      } else if (stock === 0) {
+        daysOfStockLeft = 0;
       }
+      item.stockoutDays = daysOfStockLeft;
       
-      return {
-        id: p.id,
-        name: p.name,
-        category: p.category,
-        quantity: p.quantity,
-        salesVelocity: salesVelocity.toFixed(2),
-        demand7Day: Math.ceil(demand7Day),
-        stockoutDays,
-        stockoutText
-      };
-    }).sort((a, b) => {
-      if (a.quantity === 0 && b.quantity > 0) return -1;
-      if (b.quantity === 0 && a.quantity > 0) return 1;
-      if (a.stockoutDays === Infinity) return 1;
-      if (b.stockoutDays === Infinity) return -1;
+      return item;
+    });
+    
+    // Sort by stockout days (ascending), then by sales velocity (descending)
+    return results.sort((a, b) => {
+      if (a.stockoutDays === b.stockoutDays) {
+        return b.salesVelocity - a.salesVelocity;
+      }
       return a.stockoutDays - b.stockoutDays;
     });
-  }, [products, sales, currentStore, vendor]);
+  }, [products, rangedSales, vendor, currentStore]);
+
+  const handleGenerateAIForecast = async () => {
+    if (!storeSettings?.geminiApiKey) {
+      alert("Please configure your Gemini API Key in Settings to use AI Forecasting.");
+      return;
+    }
+    setIsGeneratingForecast(true);
+    setAiForecastText('');
+
+    try {
+      const topItems = forecastingData.slice(0, 15).map(i => `${i.name} (Stock: ${i.quantity}, Velocity: ${i.salesVelocity}/day, Days Left: ${i.stockoutDays === 999 ? 'Unknown' : i.stockoutDays.toFixed(1)})`).join('\n');
+      
+      const promptText = `
+        You are an AI Inventory Forecasting Analyst. I will provide you with data for the top 15 items closest to stocking out.
+        Analyze the data and provide a concise 2-paragraph summary on what I should order urgently and what trends you see.
+        Data:
+        ${topItems}
+      `;
+
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${storeSettings.geminiApiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: promptText }] }],
+          generationConfig: { maxOutputTokens: 300, temperature: 0.3 }
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('API error');
+      }
+      const data = await response.json();
+      const reply = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (reply) {
+        setAiForecastText(reply.trim());
+      } else {
+        setAiForecastText("AI couldn't generate a response. Please try again later.");
+      }
+    } catch (err) {
+      console.error(err);
+      setAiForecastText("Failed to generate AI insights. Check your API key and connection.");
+    } finally {
+      setIsGeneratingForecast(false);
+    }
+  };
 
   const filteredForecast = useMemo(() => {
     return forecastingData.filter(item => 
@@ -664,6 +721,18 @@ export default function Reports({ products, sales, storeSettings, vendor, curren
             <span>Sales Analytics Dashboard</span>
           </button>
           <button
+            onClick={() => setActiveReportTab('financials')}
+            style={{
+              ...styles.tabLink,
+              backgroundColor: activeReportTab === 'financials' ? 'var(--color-primary-light)' : 'transparent',
+              color: activeReportTab === 'financials' ? 'var(--color-primary)' : 'var(--color-text-secondary)',
+              borderColor: activeReportTab === 'financials' ? 'var(--color-primary)' : 'transparent',
+            }}
+          >
+            <IndianRupee size={16} />
+            <span>Profit &amp; Loss</span>
+          </button>
+          <button
             onClick={() => setActiveReportTab('forecasting')}
             style={{
               ...styles.tabLink,
@@ -679,7 +748,7 @@ export default function Reports({ products, sales, storeSettings, vendor, curren
 
         {/* Global actions */}
         <div style={styles.headerActions}>
-          {activeReportTab === 'dashboard' && (
+          {(activeReportTab === 'dashboard' || activeReportTab === 'financials') && (
             <select
               value={dateRange}
               onChange={e => setDateRange(e.target.value)}
@@ -1118,6 +1187,42 @@ export default function Reports({ products, sales, storeSettings, vendor, curren
             </div>
           </motion.div>
         </>
+      ) : activeReportTab === 'financials' ? (
+        <motion.div variants={containerVariants} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <div style={styles.cardHeader}>
+            <div style={styles.cardTitleRow}>
+              <IndianRupee size={20} color="var(--color-primary)" />
+              <h2 style={styles.cardTitle}>Profit &amp; Loss Statement</h2>
+            </div>
+            <span style={styles.cardSubtext}>For {dateRange === 'all' ? 'All Time' : `Last ${dateRange} Days`}</span>
+          </div>
+          <div className="card" style={{ padding: '2rem' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <tbody>
+                <tr style={{ borderBottom: '1px solid var(--color-border)' }}>
+                  <td style={{ padding: '1rem', fontWeight: 'bold' }}>Gross Revenue</td>
+                  <td style={{ padding: '1rem', textAlign: 'right', fontWeight: 'bold' }} className="font-mono">{sym}{totalRevenue.toFixed(2)}</td>
+                </tr>
+                <tr style={{ borderBottom: '1px solid var(--color-border)' }}>
+                  <td style={{ padding: '1rem' }}>Cost of Goods Sold (COGS)</td>
+                  <td style={{ padding: '1rem', textAlign: 'right', color: 'var(--color-danger)' }} className="font-mono">- {sym}{totalCOGS.toFixed(2)}</td>
+                </tr>
+                <tr style={{ borderBottom: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-base)' }}>
+                  <td style={{ padding: '1rem', fontWeight: 'bold' }}>Gross Profit</td>
+                  <td style={{ padding: '1rem', textAlign: 'right', fontWeight: 'bold', color: 'var(--color-success)' }} className="font-mono">{sym}{grossProfit.toFixed(2)}</td>
+                </tr>
+                <tr style={{ borderBottom: '1px solid var(--color-border)' }}>
+                  <td style={{ padding: '1rem' }}>Total Overhead (Expenses)</td>
+                  <td style={{ padding: '1rem', textAlign: 'right', color: 'var(--color-danger)' }} className="font-mono">- {sym}{totalOverhead.toFixed(2)}</td>
+                </tr>
+                <tr style={{ backgroundColor: netProfit >= 0 ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)' }}>
+                  <td style={{ padding: '1.5rem 1rem', fontWeight: '900', fontSize: '1.1rem' }}>NET PROFIT</td>
+                  <td style={{ padding: '1.5rem 1rem', textAlign: 'right', fontWeight: '900', fontSize: '1.1rem', color: netProfit >= 0 ? 'var(--color-success)' : 'var(--color-danger)' }} className="font-mono">{sym}{netProfit.toFixed(2)}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </motion.div>
       ) : (
         /* Demand Forecasting Tab View */
         <motion.div variants={containerVariants} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -1134,6 +1239,30 @@ export default function Reports({ products, sales, storeSettings, vendor, curren
                 </p>
               </div>
             </div>
+          </motion.div>
+
+          {/* AI Insights Section */}
+          <motion.div variants={itemVariants} className="card" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--color-border)', paddingBottom: '0.75rem' }}>
+              <div style={styles.cardTitleRow}>
+                <Zap size={20} color="var(--color-primary)" />
+                <h2 style={styles.cardTitle}>AI Forecasting Analyst</h2>
+              </div>
+              <button 
+                onClick={handleGenerateAIForecast} 
+                className="btn btn-primary"
+                disabled={isGeneratingForecast}
+              >
+                {isGeneratingForecast ? 'Generating...' : 'Generate AI Insight'}
+              </button>
+            </div>
+            {aiForecastText ? (
+              <div style={{ padding: '1rem', backgroundColor: 'var(--color-primary-light)', borderRadius: 'var(--radius-md)', color: 'var(--color-text-primary)', whiteSpace: 'pre-wrap', lineHeight: '1.6' }}>
+                {aiForecastText}
+              </div>
+            ) : (
+              <p style={{ color: 'var(--color-text-muted)' }}>Click to generate insights based on current stock velocities.</p>
+            )}
           </motion.div>
 
           {/* Search bar & statistics */}

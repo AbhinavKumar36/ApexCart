@@ -367,3 +367,38 @@ export const generateMockSales = (productsList) => {
 
   return sales;
 };
+
+export const DEFAULT_EXPENSES = [
+  {
+    id: 'EX3001',
+    date: new Date().toISOString(),
+    category: 'Rent',
+    amount: '1500',
+    description: 'Monthly store lease',
+    store: 'Store A'
+  },
+  {
+    id: 'EX3002',
+    date: new Date().toISOString(),
+    category: 'Utilities',
+    amount: '350',
+    description: 'Electricity and Water',
+    store: 'Store A'
+  },
+  {
+    id: 'EX3003',
+    date: new Date().toISOString(),
+    category: 'Payroll',
+    amount: '4200',
+    description: 'Staff salaries for the month',
+    store: 'Store A'
+  },
+  {
+    id: 'EX3004',
+    date: new Date().toISOString(),
+    category: 'Marketing',
+    amount: '200',
+    description: 'Social media ads',
+    store: 'Store B'
+  }
+];

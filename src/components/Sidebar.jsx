@@ -15,7 +15,8 @@ import {
   BarChart3,
   ChevronLeft,
   ChevronRight,
-  PackageCheck
+  PackageCheck,
+  Receipt
 } from 'lucide-react';
 
 export default function Sidebar({ 
@@ -38,6 +39,7 @@ export default function Sidebar({
     { id: 'pos', label: 'Point of Sale', icon: ShoppingCart },
     { id: 'inventory', label: 'Inventory Manager', icon: Package },
     { id: 'suppliers', label: 'Suppliers & POs', icon: Store },
+    { id: 'expenses', label: 'Expenses & Overhead', icon: Receipt },
     { id: 'history', label: 'Billing History', icon: History },
     { id: 'reports', label: 'Reports & Analytics', icon: BarChart3 },
     { id: 'settings', label: 'Control Settings', icon: SettingsIcon }
@@ -199,10 +201,10 @@ export default function Sidebar({
                   style={{
                     ...styles.navBtn,
                     justifyContent: isCollapsed ? 'center' : 'flex-start',
-                    color: isActive ? 'var(--color-bg-base)' : 'var(--color-text-secondary)',
+                    color: isActive ? '#ffffff' : 'var(--color-text-secondary)',
                     padding: isCollapsed ? '0.85rem 0' : '0.85rem 1rem',
                   }}
-                  className="nav-item-container nav-btn-hover"
+                  className={`nav-item-container ${isActive ? '' : 'nav-btn-hover'}`}
                 >
                   {isActive && (
                     <motion.div
@@ -215,23 +217,25 @@ export default function Sidebar({
                         bottom: 0,
                         backgroundColor: 'var(--color-primary)',
                         borderRadius: 'var(--radius-md)',
-                        zIndex: -1,
+                        zIndex: 0,
                       }}
                       transition={{ type: "spring", stiffness: 380, damping: 30 }}
                     />
                   )}
-                  <Icon size={22} style={{ flexShrink: 0 }} />
-                  {!isCollapsed && (
-                    <motion.span
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.15 }}
-                      style={{ whiteSpace: 'nowrap', fontWeight: isActive ? '700' : '600' }}
-                    >
-                      {item.label}
-                    </motion.span>
-                  )}
+                  <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: '1rem', width: '100%' }}>
+                    <Icon size={22} style={{ flexShrink: 0 }} />
+                    {!isCollapsed && (
+                      <motion.span
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.15 }}
+                        style={{ whiteSpace: 'nowrap', fontWeight: isActive ? '700' : '600' }}
+                      >
+                        {item.label}
+                      </motion.span>
+                    )}
+                  </div>
                   
                   {isCollapsed && (
                     <div className="sidebar-tooltip">

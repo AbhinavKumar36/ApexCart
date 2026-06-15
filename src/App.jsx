@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { doc, getDoc, setDoc, deleteDoc, collection, onSnapshot } from 'firebase/firestore';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth, db } from './firebase';
-import { INITIAL_PRODUCTS, CATEGORIES, DEFAULT_SUPPLIERS, generateMockSales } from './data/mockData';
+import { INITIAL_PRODUCTS, CATEGORIES, DEFAULT_SUPPLIERS, generateMockSales, DEFAULT_EXPENSES } from './data/mockData';
 import Login from './components/Login';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
@@ -14,6 +14,7 @@ import Settings from './components/Settings';
 import Chatbot from './components/Chatbot';
 import Reports from './components/Reports';
 import Suppliers from './components/Suppliers';
+import Expenses from './components/Expenses';
 
 export default function App() {
   // Authentication states
@@ -28,6 +29,7 @@ export default function App() {
   const [suppliers, setSuppliers] = useState([]);
   const [purchaseOrders, setPurchaseOrders] = useState([]);
   const [activityLogs, setActivityLogs] = useState([]);
+  const [expenses, setExpenses] = useState([]);
   const [currentStore, setCurrentStore] = useState(() => {
     return localStorage.getItem('apexcart_current_store') || 'Store A';
   });
@@ -136,6 +138,7 @@ export default function App() {
     let unsubSuppliers = () => {};
     let unsubPOs = () => {};
     let unsubLogs = () => {};
+    let unsubExpenses = () => {};
     let connectionTimeout;
 
     const unsubAuth = onAuthStateChanged(auth, async (user) => {
@@ -313,6 +316,20 @@ export default function App() {
           console.error("Logs sync error:", error);
         });
 
+        // 8. Sync Expenses
+        unsubExpenses = onSnapshot(collection(db, 'expenses'), (snapshot) => {
+          const items = [];
+          snapshot.forEach(docSnap => {
+            items.push({ id: docSnap.id, ...docSnap.data() });
+          });
+          setExpenses(items);
+          localStorage.setItem('apexcart_expenses', JSON.stringify(items));
+        }, (error) => {
+          console.error("Expenses sync error, falling back to local data:", error);
+          const savedExpenses = localStorage.getItem('apexcart_expenses');
+          setExpenses(savedExpenses ? JSON.parse(savedExpenses) : DEFAULT_EXPENSES);
+        });
+
       } else {
         // Logged out
         setIsAuthenticated(false);
@@ -343,6 +360,9 @@ export default function App() {
       const savedLogs = localStorage.getItem('apexcart_activity_logs');
       setActivityLogs(savedLogs ? JSON.parse(savedLogs) : []);
 
+      const savedExpenses = localStorage.getItem('apexcart_expenses');
+      setExpenses(savedExpenses ? JSON.parse(savedExpenses) : []);
+
       const savedSettings = localStorage.getItem('apexcart_settings');
       let parsedSettings = savedSettings ? JSON.parse(savedSettings) : {
         storeName: "ApexCart Supermarket",
@@ -372,6 +392,7 @@ export default function App() {
       unsubSuppliers();
       unsubPOs();
       unsubLogs();
+      unsubExpenses();
     };
   }, []);
 
@@ -494,6 +515,26 @@ export default function App() {
     });
   };
 
+  const handleSetExpenses = (updater) => {
+    setExpenses(prev => {
+      const next = typeof updater === 'function' ? updater(prev) : updater;
+      localStorage.setItem('apexcart_expenses', JSON.stringify(next));
+      if (!isOfflineMode) {
+        next.forEach(async (e) => {
+          const { id, ...data } = e;
+          await setDoc(doc(db, 'expenses', id), data);
+        });
+        const nextIds = next.map(e => e.id);
+        prev.forEach(async (e) => {
+          if (!nextIds.includes(e.id)) {
+            await deleteDoc(doc(db, 'expenses', e.id));
+          }
+        });
+      }
+      return next;
+    });
+  };
+
   // Wrapper set state calls that sync to both LocalStorage and Cloud Firestore
   const handleSetProducts = (updater) => {
     setProducts(prev => {
@@ -605,12 +646,14 @@ export default function App() {
     localStorage.setItem('apexcart_suppliers', JSON.stringify(DEFAULT_SUPPLIERS));
     localStorage.setItem('apexcart_pos', JSON.stringify([]));
     localStorage.setItem('apexcart_activity_logs', JSON.stringify([]));
+    localStorage.setItem('apexcart_expenses', JSON.stringify(DEFAULT_EXPENSES));
 
     setProducts(doubledProducts);
     setSales(generatedSales);
     setSuppliers(DEFAULT_SUPPLIERS);
     setPurchaseOrders([]);
     setActivityLogs([]);
+    setExpenses(DEFAULT_EXPENSES);
 
     if (!isOfflineMode) {
       products.forEach(async (p) => {
@@ -637,6 +680,12 @@ export default function App() {
       activityLogs.forEach(async (log) => {
         await deleteDoc(doc(db, 'activityLogs', log.id));
       });
+      expenses.forEach(async (e) => {
+        await deleteDoc(doc(db, 'expenses', e.id)).catch(() => {});
+      });
+      DEFAULT_EXPENSES.forEach(async (e) => {
+        await setDoc(doc(db, 'expenses', e.id), e).catch(() => {});
+      });
     }
     
     await logActivity('DATABASE_RESET', 'Database was reset to default mock items for Store A & B');
@@ -649,12 +698,14 @@ export default function App() {
     localStorage.setItem('apexcart_suppliers', JSON.stringify([]));
     localStorage.setItem('apexcart_pos', JSON.stringify([]));
     localStorage.setItem('apexcart_activity_logs', JSON.stringify([]));
+    localStorage.setItem('apexcart_expenses', JSON.stringify([]));
 
     setProducts([]);
     setSales([]);
     setSuppliers([]);
     setPurchaseOrders([]);
     setActivityLogs([]);
+    setExpenses([]);
 
     if (!isOfflineMode) {
       products.forEach(async (p) => {
@@ -773,11 +824,22 @@ export default function App() {
             storeSettings={storeSettings}
           />
         );
+      case 'expenses':
+        return (
+          <Expenses
+            expenses={expenses}
+            setExpenses={handleSetExpenses}
+            currentStore={currentStore}
+            logActivity={logActivity}
+            storeSettings={storeSettings}
+          />
+        );
       case 'reports':
         return (
           <Reports
             products={products}
             sales={sales}
+            expenses={expenses}
             storeSettings={storeSettings}
             vendor={vendor}
             currentStore={currentStore}
@@ -902,11 +964,13 @@ export default function App() {
           }
         }
       `}</style>
+      {/* Floating Chat Assistant */}
       <Chatbot 
         products={products} 
-        sales={sales} 
+        sales={sales}
+        expenses={expenses}
         role={role} 
-        username={currentUser} 
+        username={currentUser}
         vendor={vendor}
         storeSettings={storeSettings}
       />

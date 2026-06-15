@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { MessageSquare, X, Send, Bot, Sparkles, AlertCircle, TrendingUp } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 
-export default function Chatbot({ products, sales, role, username, vendor, storeSettings }) {
+export default function Chatbot({ products, sales, role, username, vendor, storeSettings, expenses = [] }) {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
     {
@@ -59,6 +59,14 @@ export default function Chatbot({ products, sales, role, username, vendor, store
       Items: s.items.map(i => `${i.name} (Qty:${i.quantity})`)
     }));
 
+    const expensesContext = expenses.map(e => ({
+      ID: e.id,
+      Date: e.date,
+      Category: e.category,
+      Amount: e.amount,
+      Description: e.description
+    }));
+
     // Create prompt with embedded context
     const prompt = `
 === SYSTEM STORE CONTEXT ===
@@ -72,6 +80,9 @@ ${JSON.stringify(catalogContext, null, 2)}
 
 Recent Sales Transaction History (Sales JSON):
 ${JSON.stringify(salesContext, null, 2)}
+
+Recent Expenses / Overhead (Expenses JSON):
+${JSON.stringify(expensesContext, null, 2)}
 =============================
 
 User Query: "${query}"
@@ -158,19 +169,33 @@ Analyze the SYSTEM STORE CONTEXT above to answer the User Query.
       }
 
       // ── Margin / profit queries ──
-      if (q.includes('margin') || q.includes('profit') || q.includes('markup')) {
+      if (q.includes('margin') || q.includes('profit') || q.includes('markup') || q.includes('expense') || q.includes('overhead')) {
+        const totalRev = visibleSales.reduce((acc, s) => acc + (s.totalPrice || 0), 0);
+        const totalCOGS = visibleSales.reduce((acc, s) => acc + (s.items || []).reduce((sum, item) => {
+          const prod = products.find(p => p.id === item.id);
+          return sum + ((prod?.costPrice || 0) * item.quantity);
+        }, 0), 0);
+        const totalExp = expenses.reduce((acc, e) => acc + (parseFloat(e.amount) || 0), 0);
+        const grossProfit = totalRev - totalCOGS;
+        const netProfit = grossProfit - totalExp;
+        const margin = totalRev > 0 ? ((netProfit / totalRev) * 100).toFixed(1) : 0;
+
         const withMargin = visibleProducts.map(p => ({
           ...p,
           margin: p.costPrice > 0 ? Math.round(((p.price - p.costPrice) / p.costPrice) * 100) : 0
         })).sort((a, b) => b.margin - a.margin);
         const top5 = withMargin.slice(0, 5);
-        const bottom5 = withMargin.slice(-5).reverse();
-        return `**💰 Profit Margin Analysis (Offline Analysis)**\n\n` +
-          `**🏆 Top 5 Highest Margin Products:**\n` +
+
+        let reply = `**💰 Financials & Profitability (Offline Analysis)**\n\n`;
+        reply += `* **Total Revenue:** ${sym}${totalRev.toFixed(2)}\n`;
+        reply += `* **COGS:** ${sym}${totalCOGS.toFixed(2)}\n`;
+        reply += `* **Total Overhead:** ${sym}${totalExp.toFixed(2)}\n`;
+        reply += `* **Net Profit:** ${sym}${netProfit.toFixed(2)} (Margin: ${margin}%)\n\n`;
+        
+        reply += `**🏆 Top 5 Highest Margin Products:**\n` +
           top5.map(p => `* **${p.name}** — Margin: ${p.margin}%, Price: ${sym}${p.price}, Cost: ${sym}${p.costPrice}`).join('\n') +
-          `\n\n**📉 Bottom 5 Lowest Margin Products:**\n` +
-          bottom5.map(p => `* **${p.name}** — Margin: ${p.margin}%, Price: ${sym}${p.price}, Cost: ${sym}${p.costPrice}`).join('\n') +
           `\n\n> ⚠️ *Offline mode — using real-time local data analysis.*`;
+        return reply;
       }
 
       // ── Stock / inventory count queries ──
