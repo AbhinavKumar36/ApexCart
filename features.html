@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Features Overview | ApexCart 2.0</title>
+    <link rel="icon" type="image/png" href="./favicon.png" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Hanken+Grotesk:wght@600;700;800&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-fixed": "#d4e3ff",
+                        "surface-container-highest": "#2e3447",
+                        "secondary-fixed": "#e0e0ff",
+                        "inverse-on-surface": "#2a3043",
+                        "tertiary-fixed": "#dae2fd",
+                        "warning-amber": "#f59e0b",
+                        "tertiary-fixed-dim": "#bec6e0",
+                        "on-secondary-fixed-variant": "#2f3aa3",
+                        "error": "#ffb4ab",
+                        "secondary-container": "#2f3aa3",
+                        "on-tertiary-fixed-variant": "#3f465c",
+                        "danger-rose": "#f43f5e",
+                        "secondary": "#bdc2ff",
+                        "success-emerald": "#10b981",
+                        "on-secondary": "#131e8c",
+                        "primary-container": "#60a5fa",
+                        "border-glass": "rgba(255, 255, 255, 0.08)",
+                        "secondary-fixed-dim": "#bdc2ff",
+                        "tertiary-container": "#9aa2bb",
+                        "outline-variant": "#414751",
+                        "on-secondary-fixed": "#000767",
+                        "surface-variant": "#2e3447",
+                        "on-primary-fixed": "#001c39",
+                        "on-secondary-container": "#a8afff",
+                        "on-tertiary": "#283044",
+                        "on-tertiary-fixed": "#131b2e",
+                        "inverse-primary": "#0060ac",
+                        "background": "#0c1324",
+                        "outline": "#8b919d",
+                        "surface": "#0c1324",
+                        "tertiary": "#bec6e0",
+                        "on-error-container": "#ffdad6",
+                        "surface-container-lowest": "#070d1f",
+                        "surface-tint": "#a4c9ff",
+                        "on-surface-variant": "#c1c7d3",
+                        "on-primary-fixed-variant": "#004883",
+                        "on-primary-container": "#003a6b",
+                        "surface-bright": "#33394c",
+                        "error-container": "#93000a",
+                        "on-surface": "#dce1fb",
+                        "surface-container-low": "#151b2d",
+                        "primary": "#a4c9ff",
+                        "on-primary": "#00315d",
+                        "surface-container": "#191f31",
+                        "inverse-surface": "#dce1fb",
+                        "on-tertiary-container": "#31384d",
+                        "on-error": "#690005",
+                        "primary-fixed-dim": "#a4c9ff",
+                        "surface-container-high": "#23293c",
+                        "glow-indigo": "rgba(96, 165, 250, 0.15)",
+                        "surface-glass": "rgba(15, 23, 42, 0.75)",
+                        "on-background": "#dce1fb",
+                        "surface-dim": "#0c1324"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "margin-desktop": "32px",
+                        "gutter": "24px",
+                        "container-max": "1440px",
+                        "margin-mobile": "16px",
+                        "unit": "4px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Inter"],
+                        "headline-lg": ["Hanken Grotesk"],
+                        "display-lg": ["Hanken Grotesk"],
+                        "body-lg": ["Inter"],
+                        "label-sm": ["JetBrains Mono"],
+                        "headline-md": ["Hanken Grotesk"],
+                        "label-md": ["JetBrains Mono"]
+                    },
+                    "fontSize": {
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "600"}],
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "500"}]
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .glass-panel:hover {
+            border-color: rgba(96, 165, 250, 0.3);
+            background: rgba(15, 23, 42, 0.8);
+            box-shadow: 0 0 30px rgba(96, 165, 250, 0.1);
+        }
+        .glow-text {
+            text-shadow: 0 0 12px rgba(96, 165, 250, 0.4);
+        }
+        .primary-gradient-bg {
+            background: linear-gradient(135deg, #0060ac 0%, #60a5fa 100%);
+        }
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 24px;
+        }
+        .hero-mesh {
+            background-image: radial-gradient(at 0% 0%, rgba(96, 165, 250, 0.15) 0px, transparent 50%),
+                              radial-gradient(at 100% 100%, rgba(13, 30, 140, 0.2) 0px, transparent 50%);
+        }
+        .scanner-beam {
+            position: relative;
+            overflow: hidden;
+        }
+        .scanner-beam::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 2px;
+            background: #60a5fa;
+            box-shadow: 0 0 15px #60a5fa;
+            animation: scan 3s infinite linear;
+        }
+        @keyframes scan {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(100%); }
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md selection:bg-primary/30 selection:text-primary">
+<!-- Top Navigation Bar -->
+<nav class="fixed top-0 w-full z-50 bg-surface-glass backdrop-blur-3xl border-b border-glass shadow-sm">
+    <div class="flex justify-between items-center px-margin-desktop py-4 max-w-container-max mx-auto">
+        <div class="flex items-center gap-3">
+            <img alt="ApexCart Logo" class="w-8 h-8 drop-shadow-[0_0_8px_rgba(96,165,250,0.4)]" src="./logo.png"/>
+            <span class="font-headline-md text-headline-md font-bold text-on-surface drop-shadow-[0_0_8px_rgba(96,165,250,0.4)]">ApexCart 2.0</span>
+        </div>
+        <div class="hidden md:flex items-center gap-8">
+            <a class="font-label-md text-label-md uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors" href="#">POS</a>
+            <a class="font-label-md text-label-md uppercase tracking-wider text-primary border-b-2 border-primary pb-1" href="./features.html">Features</a>
+            <a class="font-label-md text-label-md uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors" href="#">Reports</a>
+            <a class="font-label-md text-label-md uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors" href="#">Analytics</a>
+            <a class="font-label-md text-label-md uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors" href="./enterprise.html">Enterprise</a>
+        </div>
+        <div class="flex items-center gap-4">
+            <a class="font-label-md text-label-md uppercase tracking-wider text-on-surface-variant hover:text-on-surface px-4 py-2 hover:bg-white/5 transition-all duration-300 rounded-lg" href="./index.html">Login</a>
+            <button class="primary-gradient-bg px-6 py-2 rounded-lg font-label-md text-label-md uppercase tracking-wider text-white shadow-[0_0_20px_rgba(96,165,250,0.3)] scale-95 active:scale-90 transition-transform">Request Demo</button>
+        </div>
+    </div>
+</nav>
+<main class="pt-24 pb-16 min-h-screen hero-mesh px-margin-desktop">
+    <div class="max-w-container-max mx-auto">
+        <!-- Hero Header -->
+        <div class="mb-16 text-center md:text-left">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary font-label-sm text-label-sm mb-4">
+                <span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+                EVOLUTION IN RETAIL
+            </div>
+            <h1 class="font-display-lg text-display-lg text-white mb-4 glow-text">Precision Engineering for <span class="text-primary">Modern Commerce</span></h1>
+            <p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">Discover the unified ecosystem designed to scale your enterprise from localized shopfronts to global retail operations with real-time intelligence.</p>
+        </div>
+        <!-- Bento Features Grid -->
+        <div class="bento-grid">
+            <!-- Feature: Offline-First POS -->
+            <div class="glass-panel col-span-12 md:col-span-8 p-8 rounded-xl group relative overflow-hidden">
+                <div class="flex flex-col md:flex-row gap-8 items-center h-full">
+                    <div class="flex-1 space-y-4">
+                        <div class="w-12 h-12 rounded-lg bg-primary-container/20 flex items-center justify-center text-primary-container mb-2">
+                            <span class="material-symbols-outlined text-3xl">wifi_off</span>
+                        </div>
+                        <h3 class="font-headline-lg text-headline-lg text-white">Offline-First POS</h3>
+                        <p class="text-on-surface-variant font-body-md">Never miss a sale. Our proprietary local-sync engine allows full transactional capability without an internet connection. Data replicates instantly once connectivity is restored.</p>
+                        <div class="flex gap-4 pt-4">
+                            <div class="flex items-center gap-2 text-primary font-label-md">
+                                <span class="material-symbols-outlined">bolt</span> High-Speed Engine
+                            </div>
+                            <div class="flex items-center gap-2 text-primary font-label-md">
+                                <span class="material-symbols-outlined">sync</span> Real-time Sync
+                            </div>
+                        </div>
+                    </div>
+                    <div class="w-full md:w-64 h-48 bg-surface-container-highest rounded-lg border border-glass relative flex items-end justify-center overflow-hidden">
+                        <div class="absolute inset-0 opacity-20">
+                            <div class="w-full h-full" style="background-image: radial-gradient(circle, #60a5fa 1px, transparent 1px); background-size: 20px 20px;"></div>
+                        </div>
+                        <img class="w-4/5 h-4/5 object-cover rounded-t-lg shadow-2xl translate-y-4 group-hover:translate-y-2 transition-transform duration-500" data-alt="A sleek modern point-of-sale terminal positioned on a high-end dark marble retail counter. The lighting is low-key and dramatic with deep indigo and sapphire blue accents. The interface on the screen displays a complex but clean retail dashboard with glowing data points. The atmosphere is professional, enterprise-grade, and technologically advanced." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCiAX41lAu_6-n8zvxt68Ep4e8ZZIgX_bvc8nBE5VT1GgRzCudiRqjvqRYZRcSafH5lFaDFZdM6TCXDbxRBUMBsWWFNQH2VaEifVPs1OU5EuHik3SDQF5U6sOjgF3O2CGM2AAVbt6nzVkBiZbfXOpKqlfn3aIls4ARomh7--oD1M21WngXAVgwCkBNZGy_Rucw38nqBNbwJm0Wqsg5eOxQr0tH1LDT7_VEK4QvSYNZw-MWpLNMZgaqBX7ItA3cycHVapU4eoeVK130"/>
+                    </div>
+                </div>
+            </div>
+            <!-- Feature: Scanner Feed -->
+            <div class="glass-panel col-span-12 md:col-span-4 p-8 rounded-xl group">
+                <div class="space-y-4">
+                    <div class="w-12 h-12 rounded-lg bg-secondary-container/20 flex items-center justify-center text-secondary-container mb-2">
+                        <span class="material-symbols-outlined text-3xl">qr_code_scanner</span>
+                    </div>
+                    <h3 class="font-headline-md text-headline-md text-white">Scanner Integration</h3>
+                    <p class="text-on-surface-variant font-body-md">Universal compatibility with Bluetooth and HID-mode laser scanners. Native mobile camera scanning built-in for rapid stocktaking.</p>
+                    <div class="scanner-beam h-32 w-full bg-surface-container-low rounded-lg mt-6 border border-glass relative flex items-center justify-center">
+                        <span class="material-symbols-outlined text-5xl text-primary/30">barcode</span>
+                    </div>
+                </div>
+            </div>
+            <!-- Feature: Gemini AI Predictions -->
+            <div class="glass-panel col-span-12 md:col-span-4 p-8 rounded-xl border-primary/20 bg-primary/5">
+                <div class="space-y-4">
+                    <div class="flex justify-between items-start">
+                        <div class="w-12 h-12 rounded-lg bg-primary-container/30 flex items-center justify-center text-primary-container">
+                            <span class="material-symbols-outlined text-3xl">model_training</span>
+                        </div>
+                        <span class="bg-primary/20 text-primary px-2 py-1 rounded font-label-sm text-label-sm">BETA</span>
+                    </div>
+                    <h3 class="font-headline-md text-headline-md text-white">Gemini AI Predictions</h3>
+                    <p class="text-on-surface-variant font-body-md">Predict stock depletion before it happens. Gemini models analyze seasonal trends and local events to automate purchase orders.</p>
+                    <div class="pt-4">
+                        <div class="h-2 w-full bg-surface-container rounded-full overflow-hidden">
+                            <div class="h-full bg-primary w-2/3 shadow-[0_0_10px_#60a5fa]"></div>
+                        </div>
+                        <p class="mt-2 font-label-sm text-label-sm text-primary">Demand Confidence: 88%</p>
+                    </div>
+                </div>
+            </div>
+            <!-- Feature: Real-Time BI Reports -->
+            <div class="glass-panel col-span-12 md:col-span-8 p-8 rounded-xl group">
+                <div class="flex flex-col md:flex-row gap-8">
+                    <div class="flex-1 space-y-4">
+                        <div class="w-12 h-12 rounded-lg bg-tertiary-container/20 flex items-center justify-center text-tertiary">
+                            <span class="material-symbols-outlined text-3xl">insights</span>
+                        </div>
+                        <h3 class="font-headline-lg text-headline-lg text-white">Real-Time BI Reports</h3>
+                        <p class="text-on-surface-variant font-body-md">Transform raw transactions into executive insights. High-density data visualizations that update per transaction with zero latency.</p>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="p-3 bg-white/5 rounded-lg border border-glass">
+                                <div class="text-label-sm font-label-sm text-on-surface-variant uppercase">GMV Growth</div>
+                                <div class="text-headline-md text-success-emerald">+24.5%</div>
+                            </div>
+                            <div class="p-3 bg-white/5 rounded-lg border border-glass">
+                                <div class="text-label-sm font-label-sm text-on-surface-variant uppercase">Retention</div>
+                                <div class="text-headline-md text-primary">62.8%</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex-1 min-h-[200px] bg-surface-container-highest rounded-lg overflow-hidden border border-glass relative">
+                        <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" data-alt="A macro shot of a high-resolution data visualization screen displaying neon blue and green line charts on a deep midnight black background. The interface is futuristic, showing financial candlesticks and enterprise performance metrics. The scene is shot with a shallow depth of field, emphasizing the crisp digital lines and the soft glow emanating from the screen into a dark retail office space." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDJQyHnItkMYPlBlSU7JsoP2EOH9MpKqN_BzNK7R40Svs0hfZn-IAjvD30a9T5Cq6lMDSeeSlnjj94WYTPsXPcrQXMz_VwVaoFhAyhVCAi5Wypm1kdryagYth_1RYyxpSnIbOhJyZjzpKuby83VrPdswzhQBB2q4nwvZCOsZaIywmOrfSaMISEVsDjKybQzRDMrJomBtHDRyNaGTBoVS_3JuT-oNjgieNLVoCSvTvWP-Ee3dBptJQMI4B8JbXDlJckkc9b33T_Bv8s"/>
+                    </div>
+                </div>
+            </div>
+            <!-- Standout: Smart Chatbot -->
+            <div class="glass-panel col-span-12 p-12 rounded-3xl relative overflow-hidden bg-gradient-to-br from-background to-surface-container-low border-primary/30">
+                <div class="absolute -right-20 -top-20 w-80 h-80 bg-primary/10 blur-[100px] rounded-full"></div>
+                <div class="absolute -left-20 -bottom-20 w-80 h-80 bg-secondary/10 blur-[100px] rounded-full"></div>
+                <div class="relative flex flex-col md:flex-row items-center gap-12">
+                    <div class="flex-1 space-y-6">
+                        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/20 text-primary font-label-sm text-label-sm">
+                            <span class="material-symbols-outlined text-[14px]">chat_bubble</span>
+                            STANDOUT FEATURE
+                        </div>
+                        <h2 class="font-display-lg text-display-lg text-white glow-text">Meet your virtual Operations Manager</h2>
+                        <p class="font-body-lg text-body-lg text-on-surface-variant">The Apex Smart Chatbot isn't just for FAQ. Use natural language to query your database. "Which SKU is underperforming in the Seattle branch?" or "Generate a stock report for the electronics department."</p>
+                        <button class="flex items-center gap-2 font-label-md text-label-md text-primary group">
+                            EXPLORE AI CAPABILITIES <span class="material-symbols-outlined group-hover:translate-x-2 transition-transform">arrow_forward</span>
+                        </button>
+                    </div>
+                    <!-- Chatbot Interface Mockup -->
+                    <div class="w-full md:w-[400px] h-[500px] glass-panel rounded-2xl p-6 shadow-2xl relative flex flex-col">
+                        <div class="flex items-center gap-3 border-b border-glass pb-4 mb-4">
+                            <div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center">
+                                <span class="material-symbols-outlined text-white">smart_toy</span>
+                            </div>
+                            <div>
+                                <div class="text-on-surface font-body-md font-semibold">Apex AI Core</div>
+                                <div class="text-success-emerald text-[10px] font-label-sm uppercase">Active • Analyzing</div>
+                            </div>
+                        </div>
+                        <div class="flex-1 space-y-4 overflow-hidden">
+                            <div class="flex gap-2">
+                                <div class="p-3 bg-white/5 rounded-2xl rounded-tl-none border border-glass max-w-[80%] text-on-surface-variant font-body-md">
+                                    "How are my sales for the last 24 hours?"
+                                </div>
+                            </div>
+                            <div class="flex gap-2 justify-end">
+                                <div class="p-3 bg-primary/10 rounded-2xl rounded-tr-none border border-primary/20 max-w-[80%] text-primary font-body-md">
+                                    Sales are up by 12% compared to yesterday. Primary driver: Holiday electronics promotion.
+                                </div>
+                            </div>
+                            <div class="flex gap-2">
+                                <div class="p-3 bg-white/5 rounded-2xl rounded-tl-none border border-glass max-w-[80%] text-on-surface-variant font-body-md">
+                                    "Show me the top selling product in the Midwest region."
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-4 p-3 bg-surface-container-highest rounded-xl border border-glass flex items-center gap-3">
+                            <span class="material-symbols-outlined text-on-surface-variant">keyboard</span>
+                            <span class="text-on-surface-variant text-label-md">Analyze Q3 logistics...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container-lowest py-16 border-t border-glass">
+    <div class="max-w-container-max mx-auto px-margin-desktop">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-gutter mb-12">
+            <div class="col-span-2 md:col-span-1 space-y-6">
+                <div class="flex items-center gap-2">
+                    <img alt="Logo" class="w-6 h-6" src="./logo.png"/>
+                    <span class="font-headline-md text-headline-md font-bold text-primary">ApexCart 2.0</span>
+                </div>
+                <p class="text-on-surface-variant text-body-md max-w-xs">Precision Engineering for Modern Retail. Redefining how enterprises manage scale.</p>
+            </div>
+            <div class="space-y-4">
+                <h4 class="text-white font-label-md uppercase tracking-widest">Solutions</h4>
+                <ul class="space-y-2">
+                    <li><a class="text-on-surface-variant hover:text-primary transition-transform duration-200 hover:translate-x-1 block" href="#">POS System</a></li>
+                    <li><a class="text-on-surface-variant hover:text-primary transition-transform duration-200 hover:translate-x-1 block" href="./features.html">Features</a></li>
+                    <li><a class="text-on-surface-variant hover:text-primary transition-transform duration-200 hover:translate-x-1 block" href="#">Business Intelligence</a></li>
+                </ul>
+            </div>
+            <div class="space-y-4">
+                <h4 class="text-white font-label-md uppercase tracking-widest">Platform</h4>
+                <ul class="space-y-2">
+                    <li><a class="text-on-surface-variant hover:text-primary transition-transform duration-200 hover:translate-x-1 block" href="#">Real-time Analytics</a></li>
+                    <li><a class="text-on-surface-variant hover:text-primary transition-transform duration-200 hover:translate-x-1 block" href="#">Hardware Bundles</a></li>
+                    <li><a class="text-on-surface-variant hover:text-primary transition-transform duration-200 hover:translate-x-1 block" href="#">Enterprise API</a></li>
+                </ul>
+            </div>
+            <div class="space-y-4">
+                <h4 class="text-white font-label-md uppercase tracking-widest">Legal</h4>
+                <ul class="space-y-2">
+                    <li><a class="text-on-surface-variant hover:text-primary transition-transform duration-200 hover:translate-x-1 block" href="#">Privacy Policy</a></li>
+                    <li><a class="text-on-surface-variant hover:text-primary transition-transform duration-200 hover:translate-x-1 block" href="#">Terms of Service</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 text-on-surface-variant text-body-md opacity-80">
+            <p>© 2024 ApexCart Enterprise. All rights reserved.</p>
+            <div class="flex gap-6">
+                <a class="material-symbols-outlined hover:text-primary transition-colors" href="#">language</a>
+                <a class="material-symbols-outlined hover:text-primary transition-colors" href="#">contact_support</a>
+            </div>
+        </div>
+    </div>
+</footer>
+<script>
+    // Subtle interaction: Reveal glass cards on scroll
+    const observerOptions = {
+        threshold: 0.1
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('opacity-100', 'translate-y-0');
+                entry.target.classList.remove('opacity-0', 'translate-y-8');
+            }
+        });
+    }, observerOptions);
+
+    document.querySelectorAll('.glass-panel').forEach(card => {
+        card.classList.add('opacity-0', 'translate-y-8', 'transition-all', 'duration-700');
+        observer.observe(card);
+    });
+</script>
+</body>
+</html>
