@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>ApexCart 2.0 | Enterprise Retail Solutions</title>
+    <link rel="icon" type="image/png" href="./favicon.png" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700&amp;family=Inter:wght@400;500&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-fixed": "#d4e3ff",
+                        "surface-container-highest": "#2e3447",
+                        "secondary-fixed": "#e0e0ff",
+                        "inverse-on-surface": "#2a3043",
+                        "tertiary-fixed": "#dae2fd",
+                        "warning-amber": "#f59e0b",
+                        "tertiary-fixed-dim": "#bec6e0",
+                        "on-secondary-fixed-variant": "#2f3aa3",
+                        "error": "#ffb4ab",
+                        "secondary-container": "#2f3aa3",
+                        "on-tertiary-fixed-variant": "#3f465c",
+                        "danger-rose": "#f43f5e",
+                        "secondary": "#bdc2ff",
+                        "success-emerald": "#10b981",
+                        "on-secondary": "#131e8c",
+                        "primary-container": "#60a5fa",
+                        "border-glass": "rgba(255, 255, 255, 0.08)",
+                        "secondary-fixed-dim": "#bdc2ff",
+                        "tertiary-container": "#9aa2bb",
+                        "outline-variant": "#414751",
+                        "on-secondary-fixed": "#000767",
+                        "surface-variant": "#2e3447",
+                        "on-primary-fixed": "#001c39",
+                        "on-secondary-container": "#a8afff",
+                        "on-tertiary": "#283044",
+                        "on-tertiary-fixed": "#131b2e",
+                        "inverse-primary": "#0060ac",
+                        "background": "#0c1324",
+                        "outline": "#8b919d",
+                        "surface": "#0c1324",
+                        "tertiary": "#bec6e0",
+                        "on-error-container": "#ffdad6",
+                        "surface-container-lowest": "#070d1f",
+                        "surface-tint": "#a4c9ff",
+                        "on-surface-variant": "#c1c7d3",
+                        "on-primary-fixed-variant": "#004883",
+                        "on-primary-container": "#003a6b",
+                        "surface-bright": "#33394c",
+                        "error-container": "#93000a",
+                        "on-surface": "#dce1fb",
+                        "surface-container-low": "#151b2d",
+                        "primary": "#a4c9ff",
+                        "on-primary": "#00315d",
+                        "surface-container": "#191f31",
+                        "inverse-surface": "#dce1fb",
+                        "on-tertiary-container": "#31384d",
+                        "on-error": "#690005",
+                        "primary-fixed-dim": "#a4c9ff",
+                        "surface-container-high": "#23293c",
+                        "glow-indigo": "rgba(96, 165, 250, 0.15)",
+                        "surface-glass": "rgba(15, 23, 42, 0.75)",
+                        "on-background": "#dce1fb",
+                        "surface-dim": "#0c1324"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "margin-desktop": "32px",
+                        "gutter": "24px",
+                        "container-max": "1440px",
+                        "margin-mobile": "16px",
+                        "unit": "4px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Inter"],
+                        "headline-lg": ["Hanken Grotesk"],
+                        "display-lg": ["Hanken Grotesk"],
+                        "body-lg": ["Inter"],
+                        "label-sm": ["JetBrains Mono"],
+                        "headline-md": ["Hanken Grotesk"],
+                        "label-md": ["JetBrains Mono"]
+                    },
+                    "fontSize": {
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "600"}],
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "500"}]
+                    }
+                },
+            }
+        }
+    </script>
+    <style>
+        .glass-panel {
+            background: rgba(25, 31, 49, 0.6);
+            backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+        .glow-hover:hover {
+            box-shadow: 0 0 20px rgba(96, 165, 250, 0.15);
+        }
+        .mesh-bg {
+            background-image: radial-gradient(at 0% 0%, hsla(222,47%,11%,1) 0, transparent 50%), 
+                              radial-gradient(at 50% 0%, hsla(217,91%,60%,0.05) 0, transparent 50%), 
+                              radial-gradient(at 100% 0%, hsla(222,47%,11%,1) 0, transparent 50%);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md overflow-x-hidden mesh-bg selection:bg-primary selection:text-on-primary">
+<!-- TopNavBar Navigation Shell -->
+<nav class="fixed top-0 w-full z-50 bg-surface-glass backdrop-blur-3xl shadow-sm border-b border-glass">
+    <div class="flex justify-between items-center px-margin-desktop py-4 max-w-container-max mx-auto">
+        <div class="flex items-center gap-3">
+            <img alt="ApexCart 2.0 Logo" class="w-10 h-10 drop-shadow-[0_0_8px_rgba(96,165,250,0.4)]" src="./logo.png"/>
+            <span class="font-headline-md text-headline-md font-bold text-on-surface drop-shadow-[0_0_8px_rgba(96,165,250,0.4)]">ApexCart 2.0</span>
+        </div>
+        <div class="hidden md:flex items-center gap-8 font-label-md text-label-md uppercase tracking-wider">
+            <a class="text-on-surface-variant hover:text-on-surface transition-colors" href="#">POS</a>
+            <a class="text-on-surface-variant hover:text-on-surface transition-colors" href="./features.html">Features</a>
+            <a class="text-on-surface-variant hover:text-on-surface transition-colors" href="#">Reports</a>
+            <a class="text-on-surface-variant hover:text-on-surface transition-colors" href="#">Analytics</a>
+            <a class="text-primary border-b-2 border-primary pb-1" href="./enterprise.html">Enterprise</a>
+        </div>
+        <div class="flex items-center gap-4">
+            <a class="text-on-surface-variant hover:text-on-surface transition-colors font-label-md uppercase" href="./index.html">Login</a>
+            <a class="bg-primary-container text-on-primary-container px-6 py-2 rounded-lg font-label-md uppercase tracking-wide hover:scale-95 active:scale-90 transition-transform glow-hover" href="#demo">Request Demo</a>
+        </div>
+    </div>
+</nav>
+<main class="pt-32 pb-16">
+    <!-- Hero Section -->
+    <section class="px-margin-desktop max-w-container-max mx-auto mb-24 text-center">
+        <div class="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-1.5 rounded-full border border-primary/20 mb-6 animate-pulse">
+            <span class="material-symbols-outlined text-[18px]">domain</span>
+            <span class="font-label-sm uppercase">Enterprise Mall Edition</span>
+        </div>
+        <h1 class="font-display-lg text-display-lg mb-6 max-w-4xl mx-auto leading-tight">
+            Architecting the Future of <span class="text-primary">Hyper-Scale</span> Retail
+        </h1>
+        <p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto mb-12">
+            Precision-engineered for supermarkets and multi-tenant retail malls. A single glass pane for unified management with sovereign autonomy for every vendor.
+        </p>
+        <div class="relative rounded-2xl overflow-hidden glass-panel p-4 group">
+            <img class="w-full h-[500px] object-cover rounded-xl opacity-80 group-hover:opacity-100 transition-opacity duration-700" data-alt="A futuristic and sophisticated aerial view of a modern luxury retail mall interior at night. The architecture features sweeping glass curves, integrated neon indigo lighting strips, and digital signage. Several high-end boutique stalls are visible, separated by clean architectural lines. The atmosphere is professional, quiet, and technologically advanced, rendered in a palette of deep navy and electric blue." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAuz9SU8yLCYphGNfAyZSNi_aKnpU9pm9B3iC75aY8Bm9o4ZquzmRAYHHfNCt69g4KFm9Xci-JxIFsuXbKaRXcjkU-r1Z1CHClhrxIadAI6rB28BK3Lo8C3veOeKZsA-PuUDPXmskI07CzaxSdTyUuJaySYqrX3ysLcCyVYXQnrcOmhLvqqAsmKzZykGliNPBqD7en6pzBIYi2djz--4B-_-e07L25v16xLmCj-w-bqUqnIa5Lo_IWBTiXX8kXhITjmZNP1rZmXRbs"/>
+            <div class="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent"></div>
+        </div>
+    </section>
+    <!-- Multi-Stall & Multi-Tenancy Logic -->
+    <section class="px-margin-desktop max-w-container-max mx-auto mb-24">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+            <div>
+                <h2 class="font-headline-lg text-headline-lg mb-8">Multi-Stall Logical Segregation</h2>
+                <div class="space-y-8">
+                    <div class="flex gap-6">
+                        <div class="w-12 h-12 flex-shrink-0 bg-primary/20 rounded-xl flex items-center justify-center border border-primary/30">
+                            <span class="material-symbols-outlined text-primary">hub</span>
+                        </div>
+                        <div>
+                            <h3 class="font-headline-md text-headline-md text-primary mb-2">Unified Core, Sovereign Edge</h3>
+                            <p class="text-on-surface-variant">Run individual stalls as independent business units on a shared infrastructure. Each stall maintains its own SKU hierarchy, tax configurations, and staff assignments.</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-6">
+                        <div class="w-12 h-12 flex-shrink-0 bg-secondary/20 rounded-xl flex items-center justify-center border border-secondary/30">
+                            <span class="material-symbols-outlined text-secondary">database</span>
+                        </div>
+                        <div>
+                            <h3 class="font-headline-md text-headline-md text-secondary mb-2">Vendor-Based Multi-Tenancy</h3>
+                            <p class="text-on-surface-variant">Securely host external brands within your mall. Vendors access their own dashboards without seeing global mall data, while management receives real-time aggregated sell-through reports.</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-6">
+                        <div class="w-12 h-12 flex-shrink-0 bg-tertiary/20 rounded-xl flex items-center justify-center border border-tertiary/30">
+                            <span class="material-symbols-outlined text-tertiary">swap_horiz</span>
+                        </div>
+                        <div>
+                            <h3 class="font-headline-md text-headline-md text-tertiary mb-2">Inter-Stall Logic</h3>
+                            <p class="text-on-surface-variant">Enable seamless cross-stall gift cards and loyalty programs. Track mall-wide traffic while maintaining individual profit/loss accounting for every tenant.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="glass-panel p-6 rounded-2xl glow-hover transition-all">
+                    <span class="font-label-sm text-primary mb-2 block uppercase">Tenant 01</span>
+                    <div class="h-24 bg-surface-container-highest rounded-lg mb-4 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-4xl opacity-20">local_grocery_store</span>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="h-2 w-full bg-primary/20 rounded"></div>
+                        <div class="h-2 w-2/3 bg-primary/20 rounded"></div>
+                    </div>
+                </div>
+                <div class="glass-panel p-6 rounded-2xl glow-hover transition-all translate-y-8">
+                    <span class="font-label-sm text-secondary mb-2 block uppercase">Tenant 02</span>
+                    <div class="h-24 bg-surface-container-highest rounded-lg mb-4 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-4xl opacity-20">checkroom</span>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="h-2 w-full bg-secondary/20 rounded"></div>
+                        <div class="h-2 w-1/2 bg-secondary/20 rounded"></div>
+                    </div>
+                </div>
+                <div class="glass-panel p-6 rounded-2xl glow-hover transition-all">
+                    <span class="font-label-sm text-tertiary mb-2 block uppercase">Tenant 03</span>
+                    <div class="h-24 bg-surface-container-highest rounded-lg mb-4 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-4xl opacity-20">restaurant</span>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="h-2 w-full bg-tertiary/20 rounded"></div>
+                        <div class="h-2 w-3/4 bg-tertiary/20 rounded"></div>
+                    </div>
+                </div>
+                <div class="glass-panel p-6 rounded-2xl glow-hover transition-all translate-y-8">
+                    <span class="font-label-sm text-on-surface-variant mb-2 block uppercase">Global Mall Admin</span>
+                    <div class="h-24 bg-primary-container rounded-lg mb-4 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-4xl text-on-primary-container">dashboard</span>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="h-2 w-full bg-on-primary-container/20 rounded"></div>
+                        <div class="h-2 w-full bg-on-primary-container/20 rounded"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- Security Section -->
+    <section class="bg-surface-container-lowest py-24 border-y border-glass">
+        <div class="px-margin-desktop max-w-container-max mx-auto">
+            <div class="text-center mb-16">
+                <h2 class="font-headline-lg text-headline-lg mb-4">Fortified Security Framework</h2>
+                <p class="text-on-surface-variant max-w-2xl mx-auto">Enterprise compliance isn't a feature; it's the foundation of ApexCart 2.0.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="glass-panel p-8 rounded-3xl relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-4">
+                        <span class="material-symbols-outlined text-6xl text-primary opacity-10">verified_user</span>
+                    </div>
+                    <h3 class="font-headline-md text-headline-md mb-4 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary">lock</span>
+                        Role-Based Access (RBAC)
+                    </h3>
+                    <p class="text-on-surface-variant mb-6">Granular permission matrices allow you to define exactly what staff can see and do. From "Cashier - Refund Only" to "Regional Manager - Multi-Store Analytics," your data remains strictly need-to-know.</p>
+                    <ul class="space-y-3 font-label-sm uppercase">
+                        <li class="flex items-center gap-2 text-primary"><span class="material-symbols-outlined text-sm">check_circle</span> Hardware Device Binding</li>
+                        <li class="flex items-center gap-2 text-primary"><span class="material-symbols-outlined text-sm">check_circle</span> Bio-Metric Auth Support</li>
+                        <li class="flex items-center gap-2 text-primary"><span class="material-symbols-outlined text-sm">check_circle</span> Multi-Factor Core Actions</li>
+                    </ul>
+                </div>
+                <div class="glass-panel p-8 rounded-3xl relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-4">
+                        <span class="material-symbols-outlined text-6xl text-success-emerald opacity-10">history_edu</span>
+                    </div>
+                    <h3 class="font-headline-md text-headline-md mb-4 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-success-emerald">history_toggle_off</span>
+                        Append-Only Auditing
+                    </h3>
+                    <p class="text-on-surface-variant mb-6">Our transaction ledger is immutable. Every modification, discount, or void is recorded in an append-only cryptographic log, ensuring zero possibility of data tampering or "off-the-book" sales.</p>
+                    <ul class="space-y-3 font-label-sm uppercase">
+                        <li class="flex items-center gap-2 text-success-emerald"><span class="material-symbols-outlined text-sm">check_circle</span> Transaction Watermarking</li>
+                        <li class="flex items-center gap-2 text-success-emerald"><span class="material-symbols-outlined text-sm">check_circle</span> Real-time Anomaly Detection</li>
+                        <li class="flex items-center gap-2 text-success-emerald"><span class="material-symbols-outlined text-sm">check_circle</span> Exportable Forensic Logs</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- Request Demo Form -->
+    <section class="px-margin-desktop max-w-container-max mx-auto py-24" id="demo">
+        <div class="glass-panel rounded-[2rem] p-8 md:p-16 grid grid-cols-1 lg:grid-cols-2 gap-16">
+            <div>
+                <h2 class="font-display-lg text-display-lg mb-6 leading-tight">Ready for the Next <span class="text-primary">Generation</span>?</h2>
+                <p class="font-body-lg text-body-lg text-on-surface-variant mb-8">Schedule a deep-dive walkthrough with our enterprise solutions architects. We'll map your mall's topology and demonstrate the multi-tenancy logic in action.</p>
+                <div class="space-y-6">
+                    <div class="flex items-center gap-4">
+                        <span class="material-symbols-outlined p-3 bg-surface-container rounded-full text-primary">done_all</span>
+                        <span class="font-body-md">Personalized deployment roadmap</span>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <span class="material-symbols-outlined p-3 bg-surface-container rounded-full text-primary">done_all</span>
+                        <span class="font-body-md">Hardware compatibility audit</span>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <span class="material-symbols-outlined p-3 bg-surface-container rounded-full text-primary">done_all</span>
+                        <span class="font-body-md">Vendor onboarding strategy</span>
+                    </div>
+                </div>
+            </div>
+            <form class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-2">
+                        <label class="font-label-sm uppercase text-on-surface-variant block px-1">First Name</label>
+                        <input class="w-full bg-surface-container-highest border-border-glass rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none" placeholder="John" type="text"/>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="font-label-sm uppercase text-on-surface-variant block px-1">Last Name</label>
+                        <input class="w-full bg-surface-container-highest border-border-glass rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none" placeholder="Doe" type="text"/>
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <label class="font-label-sm uppercase text-on-surface-variant block px-1">Work Email</label>
+                    <input class="w-full bg-surface-container-highest border-border-glass rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none" placeholder="john.doe@enterprise.com" type="email"/>
+                </div>
+                <div class="space-y-2">
+                    <label class="font-label-sm uppercase text-on-surface-variant block px-1">Retail Format</label>
+                    <select class="w-full bg-surface-container-highest border-border-glass rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-on-surface-variant">
+                        <option>Multi-Store Supermarket</option>
+                        <option>Retail Shopping Mall</option>
+                        <option>Hypermarket Chain</option>
+                        <option>Distributor/Wholesale</option>
+                    </select>
+                </div>
+                <div class="space-y-2">
+                    <label class="font-label-sm uppercase text-on-surface-variant block px-1">Implementation Scope</label>
+                    <textarea class="w-full bg-surface-container-highest border-border-glass rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none" placeholder="Briefly describe your requirements..." rows="3"></textarea>
+                </div>
+                <button class="w-full bg-primary text-on-primary py-4 rounded-xl font-label-md uppercase tracking-widest hover:brightness-110 active:scale-[0.98] transition-all shadow-lg shadow-primary/20" type="submit">
+                    Request Private Demo
+                </button>
+                <p class="text-center font-label-sm text-on-surface-variant">By submitting, you agree to our Enterprise Privacy Terms.</p>
+            </form>
+        </div>
+    </section>
+</main>
+<!-- Footer Shell -->
+<footer class="bg-surface-container-lowest w-full py-16 border-t border-glass">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-gutter px-margin-desktop max-w-container-max mx-auto">
+        <div class="col-span-2 md:col-span-1">
+            <div class="flex items-center gap-3 mb-6">
+                <img alt="Logo" class="w-8 h-8" src="./logo.png"/>
+                <span class="font-headline-md text-headline-md font-bold text-primary">ApexCart</span>
+            </div>
+            <p class="font-body-md text-body-md text-on-surface-variant mb-4">Precision Engineering for Modern Retail. Redefining the point of sale since 2024.</p>
+        </div>
+        <div class="flex flex-col gap-4">
+            <span class="font-label-md text-primary font-bold uppercase">Solutions</span>
+            <a class="text-on-surface-variant hover:text-primary hover:translate-x-1 transition-transform duration-200" href="#">POS System</a>
+            <a class="text-on-surface-variant hover:text-primary hover:translate-x-1 transition-transform duration-200" href="./features.html">Features</a>
+            <a class="text-on-surface-variant hover:text-primary hover:translate-x-1 transition-transform duration-200" href="#">Business Intelligence</a>
+            <a class="text-on-surface-variant hover:text-primary hover:translate-x-1 transition-transform duration-200" href="#">Real-time Analytics</a>
+        </div>
+        <div class="flex flex-col gap-4">
+            <span class="font-label-md text-primary font-bold uppercase">Enterprise</span>
+            <a class="text-on-surface-variant hover:text-primary hover:translate-x-1 transition-transform duration-200" href="#">Hardware Bundles</a>
+            <a class="text-on-surface-variant hover:text-primary hover:translate-x-1 transition-transform duration-200" href="#">Enterprise API</a>
+            <a class="text-on-surface-variant hover:text-primary hover:translate-x-1 transition-transform duration-200" href="#">Privacy Policy</a>
+            <a class="text-on-surface-variant hover:text-primary hover:translate-x-1 transition-transform duration-200" href="#">Terms of Service</a>
+        </div>
+        <div class="flex flex-col gap-4">
+            <span class="font-label-md text-primary font-bold uppercase">Support</span>
+            <a class="text-on-surface-variant hover:text-primary hover:translate-x-1 transition-transform duration-200" href="#">Documentation</a>
+            <a class="text-on-surface-variant hover:text-primary hover:translate-x-1 transition-transform duration-200" href="#">24/7 Concierge</a>
+            <a class="text-on-surface-variant hover:text-primary hover:translate-x-1 transition-transform duration-200" href="#">Security Audit</a>
+            <a class="text-on-surface-variant hover:text-primary hover:translate-x-1 transition-transform duration-200" href="#">SLA Status</a>
+        </div>
+    </div>
+    <div class="px-margin-desktop max-w-container-max mx-auto mt-16 pt-8 border-t border-glass text-center text-on-surface-variant font-label-sm">
+        © 2024 ApexCart Enterprise. All rights reserved. Precision Engineering for Modern Retail.
+    </div>
+</footer>
+<script>
+    // Micro-interaction: Scroll Reveal
+    const observerOptions = {
+        threshold: 0.1
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.remove('opacity-0', 'translate-y-10');
+                entry.target.classList.add('opacity-100', 'translate-y-0');
+            }
+        });
+    }, observerOptions);
+
+    document.querySelectorAll('.glass-panel').forEach(el => {
+        el.classList.add('transition-all', 'duration-700', 'opacity-0', 'translate-y-10');
+        observer.observe(el);
+    });
+
+    // Form handling micro-interaction
+    document.querySelector('form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const btn = e.target.querySelector('button');
+        const originalText = btn.innerText;
+        btn.innerText = "Processing Request...";
+        btn.classList.add('opacity-80', 'pointer-events-none');
+        
+        setTimeout(() => {
+            btn.innerText = "Request Sent Successfully";
+            btn.classList.remove('bg-primary');
+            btn.classList.add('bg-success-emerald');
+            setTimeout(() => {
+                btn.innerText = originalText;
+                btn.classList.add('bg-primary');
+                btn.classList.remove('bg-success-emerald', 'opacity-80', 'pointer-events-none');
+                e.target.reset();
+            }, 3000);
+        }, 1500);
+    });
+</script>
+</body>
+</html>
