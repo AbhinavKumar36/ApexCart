@@ -3,7 +3,7 @@
 // cache-first only for static assets like fonts and images.
 const CACHE_NAME = 'apexcart-cache-v2';
 const STATIC_ASSETS = [
-  './favicon.svg',
+  './favicon.png',
   './manifest.json'
 ];
 
