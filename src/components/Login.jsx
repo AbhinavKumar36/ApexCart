@@ -162,6 +162,7 @@ export default function Login({ onLoginSuccess }) {
           </motion.div>
           <h1 style={styles.title}>ApexCart</h1>
           <p style={styles.subtitle}>Superstore Control Center</p>
+
         </div>
 
         {error && (

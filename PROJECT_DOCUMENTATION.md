@@ -118,11 +118,13 @@ flowchart LR
 
 The workspace files are grouped logically by functionality:
 
-- **Root Configurations**:
+- **Root Configurations & Static Assets**:
   - [package.json](file:///c:/Users/shubh/OneDrive/Desktop/sms/package.json): Lists build scripts and project dependencies.
   - [vite.config.js](file:///c:/Users/shubh/OneDrive/Desktop/sms/vite.config.js): Custom bundler configurations.
   - [firestore.rules](file:///c:/Users/shubh/OneDrive/Desktop/sms/firestore.rules): Security constraints for database reads/writes.
   - [index.html](file:///c:/Users/shubh/OneDrive/Desktop/sms/index.html): HTML5 index template containing Google Fonts linking.
+  - [public/enterprise.html](file:///c:/Users/shubh/OneDrive/Desktop/sms/public/enterprise.html): The static marketing page for enterprise supermarket/mall solutions.
+  - [public/features.html](file:///c:/Users/shubh/OneDrive/Desktop/sms/public/features.html): The static features overview page showcasing POS, inventory, and AI capabilities.
 
 - **Source Entry Points**:
   - [src/main.jsx](file:///c:/Users/shubh/OneDrive/Desktop/sms/src/main.jsx): React application bootstrapping.
