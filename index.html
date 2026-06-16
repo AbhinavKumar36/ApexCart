@@ -1,31 +1,420 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="./favicon.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="manifest" href="./manifest.json" />
-    <meta name="theme-color" content="#6366f1" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <title>ApexCart - Smart Superstore Management System</title>
-    <script type="module" crossorigin src="/ApexCart/assets/index-DRJ_-Ffk.js"></script>
-    <link rel="stylesheet" crossorigin href="/ApexCart/assets/index-UI20Sw9m.css">
-  </head>
-  <body>
-    <div id="root"></div>
-    <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('./sw.js')
-            .then(reg => console.log('PWA ServiceWorker registered with scope: ', reg.scope))
-            .catch(err => console.log('PWA ServiceWorker registration failed: ', err));
-        });
-      }
-    </script>
-  </body>
-</html>
+<!DOCTYPE html>
 
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ApexCart - Enterprise Retail POS</title>
+<link rel="icon" type="image/png" href="./favicon.png" />
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Hanken+Grotesk:wght@600;700;800&family=JetBrains+Mono:wght@500&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@100..900&family=Inter:wght@100..900&family=JetBrains+Mono:wght@100..900&display=swap" rel="stylesheet"/>
+<style>
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 20px rgba(96, 165, 250, 0.05);
+        }
+        .glow-button {
+            box-shadow: 0 0 20px rgba(96, 165, 250, 0.15);
+        }
+        .marquee {
+            display: flex;
+            width: 200%;
+            animation: scroll 30s linear infinite;
+        }
+        @keyframes scroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        .bg-mesh {
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(96, 165, 250, 0.1) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(47, 58, 163, 0.15) 0px, transparent 50%);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "primary-fixed": "#d4e3ff",
+                      "surface-container-highest": "#2e3447",
+                      "secondary-fixed": "#e0e0ff",
+                      "inverse-on-surface": "#2a3043",
+                      "tertiary-fixed": "#dae2fd",
+                      "warning-amber": "#f59e0b",
+                      "tertiary-fixed-dim": "#bec6e0",
+                      "on-secondary-fixed-variant": "#2f3aa3",
+                      "error": "#ffb4ab",
+                      "secondary-container": "#2f3aa3",
+                      "on-tertiary-fixed-variant": "#3f465c",
+                      "danger-rose": "#f43f5e",
+                      "secondary": "#bdc2ff",
+                      "success-emerald": "#10b981",
+                      "on-secondary": "#131e8c",
+                      "primary-container": "#60a5fa",
+                      "border-glass": "rgba(255, 255, 255, 0.08)",
+                      "secondary-fixed-dim": "#bdc2ff",
+                      "tertiary-container": "#9aa2bb",
+                      "outline-variant": "#414751",
+                      "on-secondary-fixed": "#000767",
+                      "surface-variant": "#2e3447",
+                      "on-primary-fixed": "#001c39",
+                      "on-secondary-container": "#a8afff",
+                      "on-tertiary": "#283044",
+                      "on-tertiary-fixed": "#131b2e",
+                      "inverse-primary": "#0060ac",
+                      "background": "#0c1324",
+                      "outline": "#8b919d",
+                      "surface": "#0c1324",
+                      "tertiary": "#bec6e0",
+                      "on-error-container": "#ffdad6",
+                      "surface-container-lowest": "#070d1f",
+                      "surface-tint": "#a4c9ff",
+                      "on-surface-variant": "#c1c7d3",
+                      "on-primary-fixed-variant": "#004883",
+                      "on-primary-container": "#003a6b",
+                      "surface-bright": "#33394c",
+                      "error-container": "#93000a",
+                      "on-surface": "#dce1fb",
+                      "surface-container-low": "#151b2d",
+                      "primary": "#a4c9ff",
+                      "on-primary": "#00315d",
+                      "surface-container": "#191f31",
+                      "inverse-surface": "#dce1fb",
+                      "on-tertiary-container": "#31384d",
+                      "on-error": "#690005",
+                      "primary-fixed-dim": "#a4c9ff",
+                      "surface-container-high": "#23293c",
+                      "glow-indigo": "rgba(96, 165, 250, 0.15)",
+                      "surface-glass": "rgba(15, 23, 42, 0.75)",
+                      "on-background": "#dce1fb",
+                      "surface-dim": "#0c1324"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "margin-desktop": "32px",
+                      "gutter": "24px",
+                      "container-max": "1440px",
+                      "margin-mobile": "16px",
+                      "unit": "4px"
+              },
+              "fontFamily": {
+                      "body-md": ["Inter"],
+                      "headline-lg": ["Hanken Grotesk"],
+                      "display-lg": ["Hanken Grotesk"],
+                      "body-lg": ["Inter"],
+                      "label-sm": ["JetBrains Mono"],
+                      "headline-md": ["Hanken Grotesk"],
+                      "label-md": ["JetBrains Mono"]
+              },
+              "fontSize": {
+                      "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "600"}],
+                      "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                      "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                      "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                      "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "500"}]
+              }
+            },
+          },
+        }
+      </script>
+</head>
+<body class="bg-surface text-on-surface font-body-md bg-mesh min-h-screen selection:bg-primary/30">
+<!-- Top Navigation Shell -->
+<nav class="fixed top-0 w-full z-50 bg-surface-glass backdrop-blur-3xl border-b border-glass shadow-sm">
+<div class="flex justify-between items-center px-margin-desktop py-4 max-w-container-max mx-auto">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 relative">
+<img alt="ApexCart Logo" class="w-full h-full object-contain drop-shadow-[0_0_8px_rgba(96,165,250,0.4)]" src="./logo.png"/>
+</div>
+<span class="font-headline-md text-headline-md font-bold text-on-surface">ApexCart</span>
+</div>
+<div class="hidden md:flex items-center gap-8">
+<a class="font-label-md text-label-md uppercase tracking-wider text-primary border-b-2 border-primary pb-1" href="./index.html">Home</a>
+<a class="font-label-md text-label-md uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-all duration-300" href="./features.html">Features</a>
+<a class="font-label-md text-label-md uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-all duration-300" href="./enterprise.html">Enterprise</a>
+            <a class="font-label-md text-label-md uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors" href="./about.html">About Us</a>
+</div>
+<div class="flex items-center gap-4">
+<a class="font-label-md text-label-md uppercase tracking-wider text-on-surface-variant hover:text-on-surface px-4 py-2 hover:bg-white/5 transition-all rounded-lg" href="./app.html">Login</a>
+<button onclick="window.location.href='./enterprise.html'" class="bg-primary-container text-on-primary-container font-label-md text-label-md uppercase tracking-wider px-6 py-2.5 rounded-lg glow-button scale-95 active:scale-90 transition-transform">Request Demo</button>
+</div>
+</div>
+</nav>
+<main class="pt-24">
+<!-- Hero Section -->
+<section class="relative overflow-hidden py-20 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
+<div class="grid lg:grid-cols-2 gap-16 items-center">
+<div class="z-10 space-y-8">
+<div class="inline-flex items-center gap-2 px-3 py-1 glass-panel rounded-full border border-primary/20">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+<span class="font-label-sm text-label-sm text-primary tracking-widest uppercase">Release 2.0 is live</span>
+</div>
+<h1 class="font-display-lg text-display-lg md:text-6xl text-on-surface leading-tight">
+                        Enterprise-Grade POS for the <span class="text-primary italic">Modern Retailer</span>
+</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-xl">
+                        A high-performance retail operating system engineered for reliability. Offline-first checkout, real-time inventory sync, and enterprise-grade intelligence.
+                    </p>
+<div class="flex flex-wrap gap-4 pt-4">
+<button onclick="window.location.href='./app.html'" class="bg-primary text-on-primary font-label-md text-label-md uppercase tracking-widest px-8 py-4 rounded-xl font-bold glow-button hover:brightness-110 transition-all flex items-center gap-2">
+                            Get Started
+                            <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+<button onclick="window.location.href='./features.html'" class="glass-panel text-on-surface font-label-md text-label-md uppercase tracking-widest px-8 py-4 rounded-xl border border-glass hover:bg-white/5 transition-all">
+                            View Ecosystem
+                        </button>
+</div>
+</div>
+<div class="relative flex justify-center items-center">
+<!-- High-tech background element -->
+<div class="absolute inset-0 bg-primary/5 rounded-full blur-[100px] scale-150"></div>
+<div class="relative w-full max-w-[500px] aspect-square flex items-center justify-center">
+<img alt="ApexCart 3D Cube Hero" class="w-4/5 h-4/5 object-contain drop-shadow-[0_0_50px_rgba(96,165,250,0.3)] animate-[bounce_10s_infinite_ease-in-out]" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBGjwnQOs7LXQPOTSCSk-aIlPoHy48HF7sMt2JqF7Q__PiXAvIPOLxRAextQKq7BIarCOwaRfu2HHdeVwOAb4Fs5ERj-lH8DaczI-NCC3H1igNHJ0YDZXv-p_Et8sd7SryqhlWZN0D9Mp--h1DgLuXAkTrGmFuim2SdcYBFPvyJhJ1lGGRxVSXVRywdYG3qcC01hjf9nqQdVOEFP93zCnwtsYT7bIm8Rnbdixcoaha1v20TyR2UuQaEiegsQrXy7Lt3FnyeIrGUu5U"/>
+<!-- Floating KPI Snippets -->
+<div class="absolute -top-4 -right-4 glass-panel p-4 rounded-2xl border border-primary/20 animate-[bounce_8s_infinite_ease-in-out_2s]">
+<div class="flex items-center gap-3">
+<div class="bg-success-emerald/20 p-2 rounded-lg">
+<span class="material-symbols-outlined text-success-emerald">bolt</span>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase">Uptime</p>
+<p class="font-label-md text-label-md text-success-emerald">99.99%</p>
+</div>
+</div>
+</div>
+<div class="absolute -bottom-4 -left-4 glass-panel p-4 rounded-2xl border border-primary/20 animate-[bounce_12s_infinite_ease-in-out_1s]">
+<div class="flex items-center gap-3">
+<div class="bg-primary/20 p-2 rounded-lg">
+<span class="material-symbols-outlined text-primary">sync</span>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase">Sync Latency</p>
+<p class="font-label-md text-label-md text-primary">&lt; 50ms</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- KPI Bento Grid -->
+<section class="py-20 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
+<div class="mb-12">
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Mission Critical <span class="text-primary">Performance</span></h2>
+<p class="text-on-surface-variant mt-2 font-body-md">Precision analytics at the speed of retail.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+<!-- Main KPI Card -->
+<div class="md:col-span-2 glass-panel p-8 rounded-3xl relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-8 opacity-20 group-hover:opacity-40 transition-opacity">
+<span class="material-symbols-outlined text-[120px] text-primary">trending_up</span>
+</div>
+<div class="relative z-10">
+<span class="font-label-sm text-label-sm text-primary uppercase tracking-widest">Real-time Performance</span>
+<h3 class="font-display-lg text-display-lg mt-4 mb-8">Sales Velocity</h3>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase">Hourly Rate</p>
+<p class="font-headline-md text-headline-md text-on-surface font-bold mt-1">$12.4k</p>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase">Active Carts</p>
+<p class="font-headline-md text-headline-md text-on-surface font-bold mt-1">482</p>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase">Peak Speed</p>
+<p class="font-headline-md text-headline-md text-success-emerald font-bold mt-1">0.8s</p>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase">Health</p>
+<p class="font-headline-md text-headline-md text-primary font-bold mt-1">Prime</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Secondary KPI Card -->
+<div class="glass-panel p-8 rounded-3xl flex flex-col justify-between border-primary/10">
+<div>
+<div class="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-6">
+<span class="material-symbols-outlined text-primary">inventory_2</span>
+</div>
+<h3 class="font-headline-md text-headline-md mb-2">Inventory</h3>
+<p class="text-on-surface-variant font-body-md">Predictive stock management with zero-latency updates across all nodes.</p>
+</div>
+<div class="mt-8 pt-6 border-t border-glass">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm uppercase">Stock Accuracy</span>
+<span class="font-label-md text-label-md text-primary">99.98%</span>
+</div>
+<div class="w-full bg-white/5 h-1.5 rounded-full mt-2 overflow-hidden">
+<div class="bg-primary h-full w-[99.98%] shadow-[0_0_10px_#a4c9ff]"></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Offline Proposition Section -->
+<section class="py-24 bg-surface-container-low/50">
+<div class="px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
+<div class="grid lg:grid-cols-2 gap-20 items-center">
+<div class="order-2 lg:order-1">
+<div class="grid grid-cols-2 gap-4">
+<div class="glass-panel p-6 rounded-2xl border-glass aspect-square flex flex-col justify-center items-center text-center">
+<span class="material-symbols-outlined text-primary text-4xl mb-4">wifi_off</span>
+<p class="font-label-md text-label-md text-on-surface uppercase">No Internet</p>
+<p class="text-on-surface-variant text-sm mt-2">Zero interruption checkout</p>
+</div>
+<div class="glass-panel p-6 rounded-2xl border-glass aspect-square flex flex-col justify-center items-center text-center mt-8">
+<span class="material-symbols-outlined text-primary text-4xl mb-4">database</span>
+<p class="font-label-md text-label-md text-on-surface uppercase">Edge Compute</p>
+<p class="text-on-surface-variant text-sm mt-2">Local data residency</p>
+</div>
+<div class="glass-panel p-6 rounded-2xl border-glass aspect-square flex flex-col justify-center items-center text-center -mt-8">
+<span class="material-symbols-outlined text-primary text-4xl mb-4">security</span>
+<p class="font-label-md text-label-md text-on-surface uppercase">Vault Locked</p>
+<p class="text-on-surface-variant text-sm mt-2">End-to-end encryption</p>
+</div>
+<div class="glass-panel p-6 rounded-2xl border-glass aspect-square flex flex-col justify-center items-center text-center">
+<span class="material-symbols-outlined text-primary text-4xl mb-4">speed</span>
+<p class="font-label-md text-label-md text-on-surface uppercase">TurboSync</p>
+<p class="text-on-surface-variant text-sm mt-2">Auto-reconciliation</p>
+</div>
+</div>
+</div>
+<div class="order-1 lg:order-2 space-y-8">
+<h2 class="font-display-lg text-display-lg leading-tight">Engineered for the <span class="text-primary underline decoration-primary/30 underline-offset-8">Unpredictable</span></h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant">
+                            Our proprietary Offline-First architecture ensures your retail operation never sleeps. Whether the ISP is down or the region is in a blackout, ApexCart processes transactions locally and syncs to the cloud the moment connectivity returns.
+                        </p>
+<ul class="space-y-4">
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-success-emerald mt-1">check_circle</span>
+<div>
+<p class="font-body-md font-bold text-on-surface">Unlimited Offline Storage</p>
+<p class="text-on-surface-variant">Buffer thousands of transactions on local storage safely.</p>
+</div>
+</li>
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-success-emerald mt-1">check_circle</span>
+<div>
+<p class="font-body-md font-bold text-on-surface">Hardware Agnostic</p>
+<p class="text-on-surface-variant">Runs on high-end terminals or standard commercial tablets.</p>
+</div>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</section>
+<!-- Trusted By Marquee -->
+<section class="py-20 border-y border-glass bg-surface-container-lowest overflow-hidden">
+<p class="text-center font-label-sm text-label-sm text-on-surface-variant uppercase tracking-[0.3em] mb-12">Empowering Enterprise Giants</p>
+<div class="relative flex overflow-x-hidden">
+<div class="marquee whitespace-nowrap flex items-center">
+<span class="mx-16 font-display-lg text-surface-container-highest/50 font-extrabold uppercase italic">Velox Retail</span>
+<span class="mx-16 font-display-lg text-surface-container-highest/50 font-extrabold uppercase italic">OmniStore</span>
+<span class="mx-16 font-display-lg text-surface-container-highest/50 font-extrabold uppercase italic">Lumina Tech</span>
+<span class="mx-16 font-display-lg text-surface-container-highest/50 font-extrabold uppercase italic">Grid System</span>
+<span class="mx-16 font-display-lg text-surface-container-highest/50 font-extrabold uppercase italic">Apex Global</span>
+<span class="mx-16 font-display-lg text-surface-container-highest/50 font-extrabold uppercase italic">Flux Group</span>
+</div>
+</div>
+</section>
+<!-- CTA Section -->
+<section class="py-32 px-margin-mobile">
+<div class="max-w-4xl mx-auto glass-panel p-12 md:p-20 rounded-[40px] text-center relative overflow-hidden border-primary/20">
+<div class="absolute inset-0 bg-primary/5 -z-10"></div>
+<h2 class="font-display-lg text-display-lg mb-6">Ready to Upgrade your <span class="text-primary">Retail Stack?</span></h2>
+<p class="text-on-surface-variant text-body-lg mb-10 max-w-2xl mx-auto">
+                    Join 5,000+ enterprise retailers leveraging ApexCart to drive revenue and eliminate downtime.
+                </p>
+<div class="flex flex-col sm:flex-row gap-4 justify-center">
+<button onclick="window.location.href='./app.html'" class="bg-primary text-on-primary font-label-md text-label-md uppercase tracking-widest px-10 py-5 rounded-2xl font-bold shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all">
+                        Scale Now
+                    </button>
+<button onclick="window.location.href='./enterprise.html'" class="glass-panel text-on-surface font-label-md text-label-md uppercase tracking-widest px-10 py-5 rounded-2xl border border-glass hover:bg-white/10 transition-all">
+                        Talk to an Architect
+                    </button>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer Shell -->
+<footer class="w-full py-16 bg-surface-container-lowest border-t border-glass">
+<div class="grid grid-cols-2 md:grid-cols-4 gap-gutter px-margin-desktop max-w-container-max mx-auto">
+<div class="col-span-2 md:col-span-1 space-y-6">
+<div class="flex items-center gap-3">
+<img alt="Logo Small" class="w-6 h-6 object-contain" src="./logo.png"/>
+<span class="font-headline-md text-headline-md font-bold text-primary">ApexCart</span>
+</div>
+<p class="text-on-surface-variant text-sm pr-8">
+                    © 2026 ApexCart Enterprise. All rights reserved. Precision Engineering for Modern Retail.
+                </p>
+</div>
+<div class="space-y-4">
+<p class="font-label-md text-label-md uppercase tracking-wider text-on-surface mb-6">Core Ecosystem</p>
+<ul class="space-y-3">
+<li><a class="font-body-md text-body-md text-on-surface-variant hover:text-primary hover:translate-x-1 transition-all inline-block" href="./features.html">POS System</a></li>
+<li><a class="font-body-md text-body-md text-on-surface-variant hover:text-primary hover:translate-x-1 transition-all inline-block" href="./features.html">Inventory Management</a></li>
+<li><a class="font-body-md text-body-md text-on-surface-variant hover:text-primary hover:translate-x-1 transition-all inline-block" href="./features.html">Business Intelligence</a></li>
+<li><a class="font-body-md text-body-md text-on-surface-variant hover:text-primary hover:translate-x-1 transition-all inline-block" href="./features.html">Real-time Analytics</a></li>
+</ul>
+</div>
+<div class="space-y-4">
+<p class="font-label-md text-label-md uppercase tracking-wider text-on-surface mb-6">Resources</p>
+<ul class="space-y-3">
+<li><a class="font-body-md text-body-md text-on-surface-variant hover:text-primary hover:translate-x-1 transition-all inline-block" href="./features.html">Hardware Bundles</a></li>
+<li><a class="font-body-md text-body-md text-on-surface-variant hover:text-primary hover:translate-x-1 transition-all inline-block" href="./features.html">Enterprise API</a></li>
+<li><a class="font-body-md text-body-md text-on-surface-variant hover:text-primary hover:translate-x-1 transition-all inline-block" href="./features.html">Privacy Policy</a></li>
+<li><a class="font-body-md text-body-md text-on-surface-variant hover:text-primary hover:translate-x-1 transition-all inline-block" href="./features.html">Terms of Service</a></li>
+</ul>
+</div>
+<div class="space-y-4">
+<p class="font-label-md text-label-md uppercase tracking-wider text-on-surface mb-6">Status</p>
+<div class="glass-panel p-4 rounded-xl border border-glass">
+<div class="flex items-center gap-2 mb-2">
+<div class="w-2 h-2 rounded-full bg-success-emerald"></div>
+<span class="text-sm font-bold text-success-emerald uppercase">All Systems Nominal</span>
+</div>
+<p class="text-xs text-on-surface-variant">Regional Clusters: 12 Active</p>
+</div>
+</div>
+</div>
+</footer>
+<script>
+        // Smooth scroll for nav links (micro-interaction)
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+
+        // Simple mouse parallax for hero images
+        document.addEventListener('mousemove', (e) => {
+            const moveX = (e.clientX - window.innerWidth / 2) / 100;
+            const moveY = (e.clientY - window.innerHeight / 2) / 100;
+            const heroImage = document.querySelector('.animate-\\[bounce_10s_infinite_ease-in-out\\]');
+            if(heroImage) {
+                heroImage.style.transform = `translate(${moveX}px, ${moveY}px)`;
+            }
+        });
+    </script>
+</body></html>
