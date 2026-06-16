@@ -18,6 +18,7 @@ import {
   PackageCheck,
   Receipt
 } from 'lucide-react';
+import logoImg from '../assets/logo.png';
 
 export default function Sidebar({ 
   activeTab, 
@@ -62,7 +63,7 @@ export default function Sidebar({
       <header style={styles.mobileHeader} className="glass">
         <div style={styles.logoRow}>
           <div style={styles.mobileLogoBox}>
-            <PackageCheck size={20} color="var(--color-primary)" strokeWidth={2.5} />
+            <img src={logoImg} alt="ApexCart" style={{ width: '22px', height: '22px', objectFit: 'contain' }} />
           </div>
           <span style={styles.logoText}>ApexCart</span>
         </div>
@@ -95,7 +96,7 @@ export default function Sidebar({
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', overflow: 'hidden' }}>
               <div style={styles.logoContainer}>
-                <PackageCheck size={24} color="var(--color-primary)" strokeWidth={2.5} />
+                <img src={logoImg} alt="ApexCart" style={{ width: '28px', height: '28px', objectFit: 'contain' }} />
               </div>
               {!isCollapsed && (
                 <motion.div
