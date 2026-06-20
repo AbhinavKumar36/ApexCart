@@ -6,8 +6,8 @@
     <title>ApexCart | Enterprise Retail Solutions</title>
     <link rel="icon" type="image/png" href="./favicon.png" />
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@100..900&family=Inter:wght@100..900&family=JetBrains+Mono:wght@100..900&display=swap" rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700&amp;family=Inter:wght@400;500&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
     <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
@@ -99,85 +99,53 @@
                         "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
                         "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "500"}]
                     }
-                }
+                },
             }
         }
     </script>
     <style>
         .glass-panel {
-            background: rgba(15, 23, 42, 0.75);
+            background: rgba(25, 31, 49, 0.6);
             backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
             border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 0 20px rgba(96, 165, 250, 0.05);
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
         }
-        .glass-panel:hover {
-            border-color: rgba(96, 165, 250, 0.35);
-            background: rgba(15, 23, 42, 0.85);
-            box-shadow: 0 0 30px rgba(96, 165, 250, 0.15);
-            transform: translateY(-4px);
-        }
-        .glow-button {
+        .glow-hover:hover {
             box-shadow: 0 0 20px rgba(96, 165, 250, 0.15);
-            transition: all 0.3s ease;
         }
-        .glow-button:hover {
-            box-shadow: 0 0 30px rgba(96, 165, 250, 0.3);
-        }
-        .marquee {
-            display: flex;
-            width: 200%;
-            animation: scroll 30s linear infinite;
-        }
-        @keyframes scroll {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
-        }
-        .bg-mesh {
-            background-image: 
-                radial-gradient(at 0% 0%, rgba(96, 165, 250, 0.1) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, rgba(47, 58, 163, 0.15) 0px, transparent 50%);
+        .mesh-bg {
+            background-image: radial-gradient(at 0% 0%, hsla(222,47%,11%,1) 0, transparent 50%), 
+                              radial-gradient(at 50% 0%, hsla(217,91%,60%,0.05) 0, transparent 50%), 
+                              radial-gradient(at 100% 0%, hsla(222,47%,11%,1) 0, transparent 50%);
         }
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
             display: inline-block;
             vertical-align: middle;
         }
-        .scroll-reveal {
-            opacity: 0;
-            transform: translateY(30px);
-            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .scroll-reveal.visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
     </style>
 </head>
-<body class="bg-surface text-on-surface font-body-md bg-mesh min-h-screen selection:bg-primary/30">
-<!-- Top Navigation Shell -->
-<nav class="fixed top-0 w-full z-50 bg-surface-glass backdrop-blur-3xl border-b border-glass shadow-sm">
+<body class="bg-background text-on-surface font-body-md overflow-x-hidden mesh-bg selection:bg-primary selection:text-on-primary">
+<!-- TopNavBar Navigation Shell -->
+<nav class="fixed top-0 w-full z-50 bg-surface-glass backdrop-blur-3xl shadow-sm border-b border-glass">
     <div class="flex justify-between items-center px-margin-desktop py-4 max-w-container-max mx-auto">
         <div class="flex items-center gap-3">
-            <div class="w-8 h-8 relative">
-                <img alt="ApexCart Logo" class="w-full h-full object-contain drop-shadow-[0_0_8px_rgba(96,165,250,0.4)]" src="./logo.png"/>
-            </div>
-            <span class="font-headline-md text-headline-md font-bold text-on-surface">ApexCart</span>
+            <img alt="ApexCart Logo" class="w-10 h-10 drop-shadow-[0_0_8px_rgba(96,165,250,0.4)]" src="./logo.png"/>
+            <span class="font-headline-md text-headline-md font-bold text-on-surface drop-shadow-[0_0_8px_rgba(96,165,250,0.4)]">ApexCart</span>
         </div>
-        <div class="hidden md:flex items-center gap-8">
-            <a class="font-label-md text-label-md uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-all duration-300" href="./index.html">Home</a>
-            <a class="font-label-md text-label-md uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-all duration-300" href="./features.html">Features</a>
-            <a class="font-label-md text-label-md uppercase tracking-wider text-primary border-b-2 border-primary pb-1" href="./enterprise.html">Enterprise</a>
+        <div class="hidden md:flex items-center gap-8 font-label-md text-label-md uppercase tracking-wider">
+            <a class="text-on-surface-variant hover:text-on-surface transition-colors" href="./index.html">Home</a>
+            <a class="text-on-surface-variant hover:text-on-surface transition-colors" href="./features.html">Features</a>
+            <a class="text-primary border-b-2 border-primary pb-1" href="./enterprise.html">Enterprise</a>
             <a class="font-label-md text-label-md uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors" href="./about.html">About Us</a>
         </div>
         <div class="flex items-center gap-4">
-            <a class="font-label-md text-label-md uppercase tracking-wider text-on-surface-variant hover:text-on-surface px-4 py-2 hover:bg-white/5 transition-all rounded-lg" href="./app.html">Login</a>
-            <button onclick="document.getElementById('demo').scrollIntoView({ behavior: 'smooth' })" class="bg-primary-container text-on-primary-container font-label-md text-label-md uppercase tracking-wider px-6 py-2.5 rounded-lg glow-button scale-95 active:scale-90 transition-transform">Request Demo</button>
+            <a class="text-on-surface-variant hover:text-on-surface transition-colors font-label-md uppercase" href="./app.html">Login</a>
+            <a class="bg-primary-container text-on-primary-container px-6 py-2 rounded-lg font-label-md uppercase tracking-wide hover:scale-95 active:scale-90 transition-transform glow-hover" href="#demo">Request Demo</a>
         </div>
     </div>
 </nav>
-<main class="pt-24 pb-16 min-h-screen px-margin-desktop">
+<main class="pt-32 pb-16">
     <!-- Hero Section -->
     <section class="px-margin-desktop max-w-container-max mx-auto mb-24 text-center">
         <div class="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-1.5 rounded-full border border-primary/20 mb-6 animate-pulse">
@@ -274,43 +242,8 @@
             </div>
         </div>
     </section>
-
-    <!-- Enterprise Supply Chain & Logistics Control -->
-    <section class="px-margin-desktop max-w-container-max mx-auto mb-24 scroll-reveal">
-        <div class="mb-16 text-center">
-            <h2 class="font-headline-lg text-headline-lg mb-4">Enterprise Supply Chain & Logistics Control</h2>
-            <p class="text-on-surface-variant max-w-2xl mx-auto">Centralized purchasing, atomic multi-outlet routing, and aggregated perishables auditing across branches.</p>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <!-- Supplier PO & Refill loops -->
-            <div class="glass-panel p-8 rounded-3xl relative overflow-hidden group">
-                <div class="w-12 h-12 rounded-lg bg-primary-container/20 flex items-center justify-center text-primary-container mb-6">
-                    <span class="material-symbols-outlined text-3xl">local_shipping</span>
-                </div>
-                <h3 class="font-headline-md text-headline-md text-white mb-2">Automated Supplier PO Logistics</h3>
-                <p class="text-on-surface-variant font-body-md">Draft purchase orders automatically when stock hits the trigger threshold. Tracks individual supplier pricing records and updates unit costs and profit margins dynamically on receipt.</p>
-            </div>
-            <!-- Multi-outlet routing rules -->
-            <div class="glass-panel p-8 rounded-3xl relative overflow-hidden group border-primary/20 bg-primary/5">
-                <div class="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-6">
-                    <span class="material-symbols-outlined text-3xl">sync_alt</span>
-                </div>
-                <h3 class="font-headline-md text-headline-md text-white mb-2">Atomic Multi-Store Transfers</h3>
-                <p class="text-on-surface-variant font-body-md">Ensures stock quantities match exactly between the source and target location. Transfers execute as atomic Firestore writes, meaning zero lost inventory and automatic write-back logs.</p>
-            </div>
-            <!-- Central Expiry Audit Console -->
-            <div class="glass-panel p-8 rounded-3xl relative overflow-hidden group">
-                <div class="w-12 h-12 rounded-lg bg-danger-rose/20 flex items-center justify-center text-danger-rose mb-6">
-                    <span class="material-symbols-outlined text-3xl">hourglass_empty</span>
-                </div>
-                <h3 class="font-headline-md text-headline-md text-white mb-2">Centralized Perishables Audits</h3>
-                <p class="text-on-surface-variant font-body-md">Gives corporate managers an aggregated overview of expiring stock across all retail nodes. Apply remote clearance markdown codes directly from the central dashboard.</p>
-            </div>
-        </div>
-    </section>
-
     <!-- Security Section -->
-    <section class="bg-surface-container-lowest py-24 border-y border-glass scroll-reveal">
+    <section class="bg-surface-container-lowest py-24 border-y border-glass">
         <div class="px-margin-desktop max-w-container-max mx-auto">
             <div class="text-center mb-16">
                 <h2 class="font-headline-lg text-headline-lg mb-4">Fortified Security Framework</h2>
@@ -408,102 +341,81 @@
     </section>
 </main>
 <!-- Footer Shell -->
-<footer class="w-full py-16 bg-surface-container-lowest border-t border-glass">
-<div class="grid grid-cols-2 md:grid-cols-4 gap-gutter px-margin-desktop max-w-container-max mx-auto">
-<div class="col-span-2 md:col-span-1 space-y-6">
-<div class="flex items-center gap-3">
-<img alt="Logo Small" class="w-6 h-6 object-contain" src="./logo.png"/>
-<span class="font-headline-md text-headline-md font-bold text-primary">ApexCart</span>
-</div>
-<p class="text-on-surface-variant text-sm pr-8">
-                    © 2026 ApexCart Enterprise. All rights reserved. Precision Engineering for Modern Retail.
-                </p>
-</div>
-<div class="space-y-4">
-<p class="font-label-md text-label-md uppercase tracking-wider text-on-surface mb-6">Core Ecosystem</p>
-<ul class="space-y-3">
-<li><a class="font-body-md text-body-md text-on-surface-variant hover:text-primary hover:translate-x-1 transition-all inline-block" href="./features.html">POS System</a></li>
-<li><a class="font-body-md text-body-md text-on-surface-variant hover:text-primary hover:translate-x-1 transition-all inline-block" href="./features.html">Inventory Management</a></li>
-<li><a class="font-body-md text-body-md text-on-surface-variant hover:text-primary hover:translate-x-1 transition-all inline-block" href="./features.html">Business Intelligence</a></li>
-<li><a class="font-body-md text-body-md text-on-surface-variant hover:text-primary hover:translate-x-1 transition-all inline-block" href="./features.html">Real-time Analytics</a></li>
-</ul>
-</div>
-<div class="space-y-4">
-<p class="font-label-md text-label-md uppercase tracking-wider text-on-surface mb-6">Resources</p>
-<ul class="space-y-3">
-<li><a class="font-body-md text-body-md text-on-surface-variant hover:text-primary hover:translate-x-1 transition-all inline-block" href="./features.html">Hardware Bundles</a></li>
-<li><a class="font-body-md text-body-md text-on-surface-variant hover:text-primary hover:translate-x-1 transition-all inline-block" href="./features.html">Enterprise API</a></li>
-<li><a class="font-body-md text-body-md text-on-surface-variant hover:text-primary hover:translate-x-1 transition-all inline-block" href="./features.html">Privacy Policy</a></li>
-<li><a class="font-body-md text-body-md text-on-surface-variant hover:text-primary hover:translate-x-1 transition-all inline-block" href="./features.html">Terms of Service</a></li>
-</ul>
-</div>
-<div class="space-y-4">
-<p class="font-label-md text-label-md uppercase tracking-wider text-on-surface mb-6">Status</p>
-<div class="glass-panel p-4 rounded-xl border border-glass">
-<div class="flex items-center gap-2 mb-2">
-<div class="w-2 h-2 rounded-full bg-success-emerald"></div>
-<span class="text-sm font-bold text-success-emerald uppercase">All Systems Nominal</span>
-</div>
-<p class="text-xs text-on-surface-variant">Regional Clusters: 12 Active</p>
-</div>
-</div>
-</div>
+<footer class="bg-surface-container-lowest w-full py-16 border-t border-glass">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-gutter px-margin-desktop max-w-container-max mx-auto">
+        <div class="col-span-2 md:col-span-1">
+            <div class="flex items-center gap-3 mb-6">
+                <img alt="Logo" class="w-8 h-8" src="./logo.png"/>
+                <span class="font-headline-md text-headline-md font-bold text-primary">ApexCart</span>
+            </div>
+            <p class="font-body-md text-body-md text-on-surface-variant mb-4">Precision Engineering for Modern Retail. Redefining the point of sale since 2026.</p>
+        </div>
+        <div class="flex flex-col gap-4">
+            <span class="font-label-md text-primary font-bold uppercase">Solutions</span>
+            <a class="text-on-surface-variant hover:text-primary hover:translate-x-1 transition-transform duration-200" href="./enterprise.html">POS System</a>
+            <a class="text-on-surface-variant hover:text-primary hover:translate-x-1 transition-transform duration-200" href="./features.html">Features</a>
+            <a class="text-on-surface-variant hover:text-primary hover:translate-x-1 transition-transform duration-200" href="./enterprise.html">Business Intelligence</a>
+            <a class="text-on-surface-variant hover:text-primary hover:translate-x-1 transition-transform duration-200" href="./enterprise.html">Real-time Analytics</a>
+        </div>
+        <div class="flex flex-col gap-4">
+            <span class="font-label-md text-primary font-bold uppercase">Enterprise</span>
+            <a class="text-on-surface-variant hover:text-primary hover:translate-x-1 transition-transform duration-200" href="./enterprise.html">Hardware Bundles</a>
+            <a class="text-on-surface-variant hover:text-primary hover:translate-x-1 transition-transform duration-200" href="./enterprise.html">Enterprise API</a>
+            <a class="text-on-surface-variant hover:text-primary hover:translate-x-1 transition-transform duration-200" href="./enterprise.html">Privacy Policy</a>
+            <a class="text-on-surface-variant hover:text-primary hover:translate-x-1 transition-transform duration-200" href="./enterprise.html">Terms of Service</a>
+        </div>
+        <div class="flex flex-col gap-4">
+            <span class="font-label-md text-primary font-bold uppercase">Support</span>
+            <a class="text-on-surface-variant hover:text-primary hover:translate-x-1 transition-transform duration-200" href="./enterprise.html">Documentation</a>
+            <a class="text-on-surface-variant hover:text-primary hover:translate-x-1 transition-transform duration-200" href="./enterprise.html">24/7 Concierge</a>
+            <a class="text-on-surface-variant hover:text-primary hover:translate-x-1 transition-transform duration-200" href="./enterprise.html">Security Audit</a>
+            <a class="text-on-surface-variant hover:text-primary hover:translate-x-1 transition-transform duration-200" href="./enterprise.html">SLA Status</a>
+        </div>
+    </div>
+    <div class="px-margin-desktop max-w-container-max mx-auto mt-16 pt-8 border-t border-glass text-center text-on-surface-variant font-label-sm">
+        © 2026 ApexCart Enterprise. All rights reserved. Precision Engineering for Modern Retail.
+    </div>
 </footer>
 <script>
-        // Smooth scroll for nav links (micro-interaction)
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth'
-                    });
-                }
-            });
+    // Micro-interaction: Scroll Reveal
+    const observerOptions = {
+        threshold: 0.1
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.remove('opacity-0', 'translate-y-10');
+                entry.target.classList.add('opacity-100', 'translate-y-0');
+            }
         });
+    }, observerOptions);
 
-        // Scroll Reveal Intersection Observer
-        const observerOptions = {
-            threshold: 0.1,
-            rootMargin: '0px 0px -50px 0px'
-        };
+    document.querySelectorAll('.glass-panel').forEach(el => {
+        el.classList.add('transition-all', 'duration-700', 'opacity-0', 'translate-y-10');
+        observer.observe(el);
+    });
 
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('visible');
-                }
-            });
-        }, observerOptions);
-
-        document.querySelectorAll('.scroll-reveal').forEach(el => {
-            observer.observe(el);
-        });
-
-        // Form handling micro-interaction
-        const demoForm = document.querySelector('form');
-        if (demoForm) {
-            demoForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const btn = e.target.querySelector('button');
-                const originalText = btn.innerText;
-                btn.innerText = "Processing Request...";
-                btn.classList.add('opacity-80', 'pointer-events-none');
-                
-                setTimeout(() => {
-                    btn.innerText = "Request Sent Successfully";
-                    btn.classList.remove('bg-primary');
-                    btn.classList.add('bg-success-emerald');
-                    setTimeout(() => {
-                        btn.innerText = originalText;
-                        btn.classList.add('bg-primary');
-                        btn.classList.remove('bg-success-emerald', 'opacity-80', 'pointer-events-none');
-                        e.target.reset();
-                    }, 3000);
-                }, 1500);
-            });
-        }
-    </script>
+    // Form handling micro-interaction
+    document.querySelector('form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const btn = e.target.querySelector('button');
+        const originalText = btn.innerText;
+        btn.innerText = "Processing Request...";
+        btn.classList.add('opacity-80', 'pointer-events-none');
+        
+        setTimeout(() => {
+            btn.innerText = "Request Sent Successfully";
+            btn.classList.remove('bg-primary');
+            btn.classList.add('bg-success-emerald');
+            setTimeout(() => {
+                btn.innerText = originalText;
+                btn.classList.add('bg-primary');
+                btn.classList.remove('bg-success-emerald', 'opacity-80', 'pointer-events-none');
+                e.target.reset();
+            }, 3000);
+        }, 1500);
+    });
+</script>
 </body>
 </html>

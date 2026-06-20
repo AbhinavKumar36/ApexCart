@@ -6,8 +6,8 @@
     <title>Features Overview | ApexCart</title>
     <link rel="icon" type="image/png" href="./favicon.png" />
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@100..900&family=Inter:wght@100..900&family=JetBrains+Mono:wght@100..900&display=swap" rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Hanken+Grotesk:wght@600;700;800&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
     <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
@@ -105,44 +105,31 @@
     </script>
     <style>
         .glass-panel {
-            background: rgba(15, 23, 42, 0.75);
+            background: rgba(15, 23, 42, 0.65);
             backdrop-filter: blur(24px);
             -webkit-backdrop-filter: blur(24px);
             border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 0 20px rgba(96, 165, 250, 0.05);
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .glass-panel:hover {
-            border-color: rgba(96, 165, 250, 0.35);
-            background: rgba(15, 23, 42, 0.85);
-            box-shadow: 0 0 30px rgba(96, 165, 250, 0.15);
-            transform: translateY(-4px);
+            border-color: rgba(96, 165, 250, 0.3);
+            background: rgba(15, 23, 42, 0.8);
+            box-shadow: 0 0 30px rgba(96, 165, 250, 0.1);
         }
-        .glow-button {
-            box-shadow: 0 0 20px rgba(96, 165, 250, 0.15);
-            transition: all 0.3s ease;
+        .glow-text {
+            text-shadow: 0 0 12px rgba(96, 165, 250, 0.4);
         }
-        .glow-button:hover {
-            box-shadow: 0 0 30px rgba(96, 165, 250, 0.3);
+        .primary-gradient-bg {
+            background: linear-gradient(135deg, #0060ac 0%, #60a5fa 100%);
         }
-        .marquee {
-            display: flex;
-            width: 200%;
-            animation: scroll 30s linear infinite;
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 24px;
         }
-        @keyframes scroll {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
-        }
-        .bg-mesh {
-            background-image: 
-                radial-gradient(at 0% 0%, rgba(96, 165, 250, 0.1) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, rgba(47, 58, 163, 0.15) 0px, transparent 50%);
-        }
-        .material-symbols-outlined {
-            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-            display: inline-block;
-            vertical-align: middle;
+        .hero-mesh {
+            background-image: radial-gradient(at 0% 0%, rgba(96, 165, 250, 0.15) 0px, transparent 50%),
+                              radial-gradient(at 100% 100%, rgba(13, 30, 140, 0.2) 0px, transparent 50%);
         }
         .scanner-beam {
             position: relative;
@@ -160,351 +147,171 @@
             0% { transform: translateY(0); }
             100% { transform: translateY(100%); }
         }
-        .scroll-reveal {
-            opacity: 0;
-            transform: translateY(30px);
-            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .scroll-reveal.visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
     </style>
 </head>
-<body class="bg-surface text-on-surface font-body-md bg-mesh min-h-screen selection:bg-primary/30">
-<!-- Top Navigation Shell -->
+<body class="bg-background text-on-background font-body-md selection:bg-primary/30 selection:text-primary">
+<!-- Top Navigation Bar -->
 <nav class="fixed top-0 w-full z-50 bg-surface-glass backdrop-blur-3xl border-b border-glass shadow-sm">
     <div class="flex justify-between items-center px-margin-desktop py-4 max-w-container-max mx-auto">
         <div class="flex items-center gap-3">
-            <div class="w-8 h-8 relative">
-                <img alt="ApexCart Logo" class="w-full h-full object-contain drop-shadow-[0_0_8px_rgba(96,165,250,0.4)]" src="./logo.png"/>
-            </div>
-            <span class="font-headline-md text-headline-md font-bold text-on-surface">ApexCart</span>
+            <img alt="ApexCart Logo" class="w-8 h-8 drop-shadow-[0_0_8px_rgba(96,165,250,0.4)]" src="./logo.png"/>
+            <span class="font-headline-md text-headline-md font-bold text-on-surface drop-shadow-[0_0_8px_rgba(96,165,250,0.4)]">ApexCart</span>
         </div>
         <div class="hidden md:flex items-center gap-8">
-            <a class="font-label-md text-label-md uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-all duration-300" href="./index.html">Home</a>
+            <a class="font-label-md text-label-md uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors" href="./index.html">Home</a>
             <a class="font-label-md text-label-md uppercase tracking-wider text-primary border-b-2 border-primary pb-1" href="./features.html">Features</a>
-            <a class="font-label-md text-label-md uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-all duration-300" href="./enterprise.html">Enterprise</a>
+            <a class="font-label-md text-label-md uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors" href="./enterprise.html">Enterprise</a>
             <a class="font-label-md text-label-md uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors" href="./about.html">About Us</a>
         </div>
         <div class="flex items-center gap-4">
-            <a class="font-label-md text-label-md uppercase tracking-wider text-on-surface-variant hover:text-on-surface px-4 py-2 hover:bg-white/5 transition-all rounded-lg" href="./app.html">Login</a>
-            <button onclick="window.location.href='./enterprise.html#demo'" class="bg-primary-container text-on-primary-container font-label-md text-label-md uppercase tracking-wider px-6 py-2.5 rounded-lg glow-button scale-95 active:scale-90 transition-transform">Request Demo</button>
+            <a class="font-label-md text-label-md uppercase tracking-wider text-on-surface-variant hover:text-on-surface px-4 py-2 hover:bg-white/5 transition-all duration-300 rounded-lg" href="./app.html">Login</a>
+            <button onclick="window.location.href='./enterprise.html'" class="primary-gradient-bg px-6 py-2 rounded-lg font-label-md text-label-md uppercase tracking-wider text-white shadow-[0_0_20px_rgba(96,165,250,0.3)] scale-95 active:scale-90 transition-transform">Request Demo</button>
         </div>
     </div>
 </nav>
-<main class="pt-24 pb-16 min-h-screen px-margin-desktop">
+<main class="pt-24 pb-16 min-h-screen hero-mesh px-margin-desktop">
     <div class="max-w-container-max mx-auto">
         <!-- Hero Header -->
-        <div class="mb-12 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8 scroll-reveal">
-            <div class="max-w-2xl">
-                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary font-label-sm text-label-sm mb-4">
-                    <span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
-                    EVOLUTION IN RETAIL
-                </div>
-                <h1 class="font-display-lg text-display-lg text-white mb-4 glow-text">Precision Engineering for <span class="text-primary">Modern Commerce</span></h1>
-                <p class="font-body-lg text-body-lg text-on-surface-variant">Discover the unified ecosystem designed to scale your enterprise from localized shopfronts to global retail operations with real-time intelligence.</p>
+        <div class="mb-16 text-center md:text-left">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary font-label-sm text-label-sm mb-4">
+                <span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+                EVOLUTION IN RETAIL
             </div>
-            <!-- Category Filter Tabs -->
-            <div class="flex flex-wrap gap-2 bg-surface-container-low/60 p-2 rounded-2xl border border-glass self-stretch lg:self-auto justify-start items-center">
-                <button onclick="filterCategory('all', this)" class="category-btn active px-4 py-2 text-xs font-label-md uppercase tracking-wider rounded-xl transition-all duration-300 bg-primary text-on-primary">All Ecosystem</button>
-                <button onclick="filterCategory('pos', this)" class="category-btn px-4 py-2 text-xs font-label-md uppercase tracking-wider rounded-xl transition-all duration-300 text-on-surface-variant hover:text-on-surface hover:bg-white/5">POS Register</button>
-                <button onclick="filterCategory('inventory', this)" class="category-btn px-4 py-2 text-xs font-label-md uppercase tracking-wider rounded-xl transition-all duration-300 text-on-surface-variant hover:text-on-surface hover:bg-white/5">Smart Inventory</button>
-                <button onclick="filterCategory('bi', this)" class="category-btn px-4 py-2 text-xs font-label-md uppercase tracking-wider rounded-xl transition-all duration-300 text-on-surface-variant hover:text-on-surface hover:bg-white/5">Intelligence & BI</button>
-            </div>
+            <h1 class="font-display-lg text-display-lg text-white mb-4 glow-text">Precision Engineering for <span class="text-primary">Modern Commerce</span></h1>
+            <p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">Discover the unified ecosystem designed to scale your enterprise from localized shopfronts to global retail operations with real-time intelligence.</p>
         </div>
-
         <!-- Bento Features Grid -->
         <div class="bento-grid">
             <!-- Feature: Offline-First POS -->
-            <div class="glass-panel col-span-12 md:col-span-8 p-8 rounded-xl group relative overflow-hidden scroll-reveal bento-card" data-category="pos">
-                <div class="flex flex-col lg:flex-row gap-8 items-center h-full">
+            <div class="glass-panel col-span-12 md:col-span-8 p-8 rounded-xl group relative overflow-hidden">
+                <div class="flex flex-col md:flex-row gap-8 items-center h-full">
                     <div class="flex-1 space-y-4">
                         <div class="w-12 h-12 rounded-lg bg-primary-container/20 flex items-center justify-center text-primary-container mb-2">
                             <span class="material-symbols-outlined text-3xl">wifi_off</span>
                         </div>
-                        <h3 class="font-headline-lg text-headline-lg text-white">Offline-First Register</h3>
-                        <p class="text-on-surface-variant font-body-md text-sm">Never miss a sale. Replicates locally and queues transactions automatically, syncing to Cloud Firestore when connection returns.</p>
-                        <div class="flex items-center gap-2 p-2 bg-danger-rose/10 border border-danger-rose/20 rounded-xl max-w-xs text-xs text-danger-rose">
-                            <span class="w-2 h-2 rounded-full bg-danger-rose animate-ping"></span>
-                            <span class="font-label-sm uppercase font-semibold">Network State: Offline Mode</span>
-                        </div>
-                        <div class="flex gap-4 pt-2">
-                            <div class="flex items-center gap-2 text-primary font-label-md text-xs">
-                                <span class="material-symbols-outlined text-sm">bolt</span> High-Speed Engine
+                        <h3 class="font-headline-lg text-headline-lg text-white">Offline-First POS</h3>
+                        <p class="text-on-surface-variant font-body-md">Never miss a sale. Our proprietary local-sync engine allows full transactional capability without an internet connection. Data replicates instantly once connectivity is restored.</p>
+                        <div class="flex gap-4 pt-4">
+                            <div class="flex items-center gap-2 text-primary font-label-md">
+                                <span class="material-symbols-outlined">bolt</span> High-Speed Engine
                             </div>
-                            <div class="flex items-center gap-2 text-primary font-label-md text-xs">
-                                <span class="material-symbols-outlined text-sm">sync</span> Local Queue
+                            <div class="flex items-center gap-2 text-primary font-label-md">
+                                <span class="material-symbols-outlined">sync</span> Real-time Sync
                             </div>
                         </div>
                     </div>
-                    <!-- POS Register Sandbox Mockup -->
-                    <div class="w-full md:w-72 glass-panel rounded-2xl p-5 border border-glass flex flex-col justify-between min-h-[220px]">
-                        <div class="border-b border-glass pb-3 mb-3">
-                            <div class="flex justify-between items-center text-xs text-on-surface-variant">
-                                <span class="text-white font-semibold font-label-sm">POS REGISTER (MOCK)</span>
-                                <span class="font-mono">ID: pos_09</span>
-                            </div>
+                    <div class="w-full md:w-64 h-48 bg-surface-container-highest rounded-lg border border-glass relative flex items-end justify-center overflow-hidden">
+                        <div class="absolute inset-0 opacity-20">
+                            <div class="w-full h-full" style="background-image: radial-gradient(circle, #60a5fa 1px, transparent 1px); background-size: 20px 20px;"></div>
                         </div>
-                        <div class="space-y-2 text-xs flex-1" id="register-items">
-                            <div class="flex justify-between text-on-surface-variant">
-                                <span>Fresh Apple x 1</span>
-                                <span class="text-white font-mono font-bold">$1.50</span>
-                            </div>
-                            <div class="flex justify-between text-on-surface-variant">
-                                <span>Whole Wheat Bread x 1</span>
-                                <span class="text-white font-mono font-bold">$2.50</span>
-                            </div>
-                        </div>
-                        <div class="border-t border-glass pt-3 mt-3 space-y-3">
-                            <div class="flex justify-between text-sm">
-                                <span class="text-white font-bold">Total:</span>
-                                <span class="text-primary font-mono font-bold" id="pos-total">$4.00</span>
-                            </div>
-                            <div class="grid grid-cols-2 gap-2">
-                                <button onclick="addToRegister('apple', 1.5)" class="bg-primary/10 border border-primary/20 text-primary hover:bg-primary hover:text-on-primary transition-all py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider">Add Apple</button>
-                                <button onclick="addToRegister('bread', 2.5)" class="bg-primary/10 border border-primary/20 text-primary hover:bg-primary hover:text-on-primary transition-all py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider">Add Bread</button>
-                            </div>
-                            <button onclick="checkoutRegister()" id="checkout-btn" class="w-full bg-primary text-on-primary font-label-md text-xs font-bold uppercase tracking-widest py-2 rounded-xl hover:brightness-110 active:scale-95 transition-all">Submit Invoice</button>
-                            <p class="text-[9px] text-center text-success-emerald uppercase font-mono tracking-widest hidden" id="pos-status-msg">Queued in Local Storage</p>
-                        </div>
+                        <img class="w-4/5 h-4/5 object-cover rounded-t-lg shadow-2xl translate-y-4 group-hover:translate-y-2 transition-transform duration-500" data-alt="A sleek modern point-of-sale terminal positioned on a high-end dark marble retail counter. The lighting is low-key and dramatic with deep indigo and sapphire blue accents. The interface on the screen displays a complex but clean retail dashboard with glowing data points. The atmosphere is professional, enterprise-grade, and technologically advanced." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCiAX41lAu_6-n8zvxt68Ep4e8ZZIgX_bvc8nBE5VT1GgRzCudiRqjvqRYZRcSafH5lFaDFZdM6TCXDbxRBUMBsWWFNQH2VaEifVPs1OU5EuHik3SDQF5U6sOjgF3O2CGM2AAVbt6nzVkBiZbfXOpKqlfn3aIls4ARomh7--oD1M21WngXAVgwCkBNZGy_Rucw38nqBNbwJm0Wqsg5eOxQr0tH1LDT7_VEK4QvSYNZw-MWpLNMZgaqBX7ItA3cycHVapU4eoeVK130"/>
                     </div>
                 </div>
             </div>
             <!-- Feature: Scanner Feed -->
-            <div class="glass-panel col-span-12 md:col-span-4 p-8 rounded-xl group scroll-reveal bento-card" data-category="pos">
+            <div class="glass-panel col-span-12 md:col-span-4 p-8 rounded-xl group">
                 <div class="space-y-4">
                     <div class="w-12 h-12 rounded-lg bg-secondary-container/20 flex items-center justify-center text-secondary-container mb-2">
                         <span class="material-symbols-outlined text-3xl">qr_code_scanner</span>
                     </div>
-                    <h3 class="font-headline-md text-headline-md text-white">Scanner Lifecycle</h3>
-                    <p class="text-on-surface-variant font-body-md text-sm">Universal compatibility with laser scanners. Native camera scan via html5-qrcode and custom offline buzzer tones (Web Audio API).</p>
-                    <div class="scanner-beam h-24 w-full bg-surface-container-low rounded-lg mt-6 border border-glass relative flex items-center justify-center overflow-hidden">
-                        <div class="absolute inset-0 bg-primary/5"></div>
-                        <div class="absolute top-0 left-0 w-full h-[2px] bg-primary shadow-[0_0_10px_#60a5fa] animate-scan" style="animation: scan 2s infinite linear;"></div>
-                        <span class="material-symbols-outlined text-4xl text-primary/30 font-bold" id="scanner-icon">barcode</span>
-                    </div>
-                    <button onclick="simulateScan()" class="w-full bg-secondary-container/20 border border-secondary-container/30 text-secondary hover:bg-secondary-container hover:text-white transition-all font-label-sm text-xs uppercase tracking-widest py-2 rounded-xl mt-4">Simulate Laser Scan</button>
-                </div>
-            </div>
-            
-            <!-- Feature: High-Fidelity Inventory Control -->
-            <div class="glass-panel col-span-12 p-8 rounded-xl border-primary/20 bg-primary/5 scroll-reveal bento-card" data-category="inventory">
-                <div class="flex flex-col lg:flex-row gap-8 items-center">
-                    <div class="flex-1 space-y-4">
-                        <div class="w-12 h-12 rounded-lg bg-primary-container/20 flex items-center justify-center text-primary-container mb-2">
-                            <span class="material-symbols-outlined text-3xl">inventory_2</span>
-                        </div>
-                        <h3 class="font-headline-lg text-headline-lg text-white">Intelligent Inventory & Replenishment</h3>
-                        <p class="text-on-surface-variant font-body-md text-sm">
-                            Eliminate manual audits and stock shrinkage. ApexCart automates inventory tracking from the moment stock arrives at the warehouse to real-time sales decrements on registers.
-                        </p>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-                            <div class="space-y-1">
-                                <h4 class="text-white font-bold flex items-center gap-1.5"><span class="material-symbols-outlined text-danger-rose text-sm">hourglass_bottom</span> Expiry Controls</h4>
-                                <p class="text-xs text-on-surface-variant">Flags batches with expiration warning indicators. Automatically blocks selling expired goods at the register.</p>
-                            </div>
-                            <div class="space-y-1">
-                                <h4 class="text-white font-bold flex items-center gap-1.5"><span class="material-symbols-outlined text-primary text-sm">psychology</span> Gemini Procurement</h4>
-                                <p class="text-xs text-on-surface-variant">Calculates demand velocity to draft supplier purchase orders, falling back to local formulas offline.</p>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Mockup Console UI -->
-                    <div class="w-full lg:w-96 glass-panel rounded-2xl p-6 border border-glass relative">
-                        <div class="flex items-center justify-between border-b border-glass pb-4 mb-4">
-                            <div>
-                                <h4 class="text-white font-bold text-sm">Perishables Console</h4>
-                                <p class="text-[10px] text-on-surface-variant font-medium">Active Expiry Safeguards</p>
-                            </div>
-                            <span class="bg-primary/20 text-primary text-[9px] px-2 py-0.5 rounded font-label-sm font-semibold">LIVE MONITORING</span>
-                        </div>
-                        <div class="space-y-3">
-                            <div id="expiry-row-1" class="p-3 bg-white/5 rounded-xl border border-glass flex justify-between items-center text-xs transition-all duration-300">
-                                <div>
-                                    <p class="text-white font-semibold">Fresh Strawberries (Batch #8)</p>
-                                    <p id="expiry-status-1" class="text-[10px] text-warning-amber">Expires in 1 day</p>
-                                </div>
-                                <button id="expiry-btn-1" onclick="applyExpiryDiscount()" class="bg-warning-amber/20 text-warning-amber border border-warning-amber/30 px-2 py-1 rounded text-[10px] font-bold hover:bg-warning-amber hover:text-white transition-colors">Apply 40% Off</button>
-                            </div>
-                            <div class="p-3 bg-white/5 rounded-xl border border-glass flex justify-between items-center text-xs">
-                                <div>
-                                    <p class="text-white font-semibold">Organic Butter (Batch #104)</p>
-                                    <p class="text-[10px] text-danger-rose font-medium">Expired (POS Blocked)</p>
-                                </div>
-                                <span class="bg-danger-rose/20 text-danger-rose border border-danger-rose/30 px-2 py-0.5 rounded text-[9px] font-bold font-label-sm">LOCKED</span>
-                            </div>
-                        </div>
+                    <h3 class="font-headline-md text-headline-md text-white">Scanner Integration</h3>
+                    <p class="text-on-surface-variant font-body-md">Universal compatibility with Bluetooth and HID-mode laser scanners. Native mobile camera scanning built-in for rapid stocktaking.</p>
+                    <div class="scanner-beam h-32 w-full bg-surface-container-low rounded-lg mt-6 border border-glass relative flex items-center justify-center">
+                        <span class="material-symbols-outlined text-5xl text-primary/30">barcode</span>
                     </div>
                 </div>
             </div>
-
-            <!-- Feature: Multi-Store Stock Transfer & Auditing -->
-            <div class="glass-panel col-span-12 md:col-span-6 p-8 rounded-xl group scroll-reveal bento-card" data-category="inventory">
-                <div class="space-y-6">
-                    <div class="w-12 h-12 rounded-lg bg-success-emerald/20 flex items-center justify-center text-success-emerald mb-2">
-                        <span class="material-symbols-outlined text-3xl">sync_alt</span>
+            <!-- Feature: Gemini AI Predictions -->
+            <div class="glass-panel col-span-12 md:col-span-4 p-8 rounded-xl border-primary/20 bg-primary/5">
+                <div class="space-y-4">
+                    <div class="flex justify-between items-start">
+                        <div class="w-12 h-12 rounded-lg bg-primary-container/30 flex items-center justify-center text-primary-container">
+                            <span class="material-symbols-outlined text-3xl">model_training</span>
+                        </div>
+                        <span class="bg-primary/20 text-primary px-2 py-1 rounded font-label-sm text-label-sm">BETA</span>
                     </div>
-                    <h3 class="font-headline-md text-headline-md text-white font-semibold">Multi-Store Transfer Ledger</h3>
-                    <p class="text-on-surface-variant font-body-md text-sm">Transfer catalog items atomically across multiple retail locations. Automated limits checks prevent source deficits, compiling to an immutable ledger trail.</p>
-                    
-                    <!-- Visual Flow Diagram -->
-                    <div class="bg-surface-container-lowest/60 p-4 rounded-2xl border border-glass text-xs relative overflow-hidden mt-4">
-                        <div class="flex items-center justify-between relative mb-4">
-                            <div class="text-center z-10">
-                                <span id="store-a-badge" class="bg-primary/20 text-primary px-2.5 py-1 rounded-xl font-bold font-mono border border-primary/30 transition-all duration-300">Store A</span>
-                                <p id="store-a-qty" class="text-[10px] mt-1.5 text-on-surface font-semibold font-mono">120 Units</p>
-                            </div>
-                            
-                            <div class="flex-1 flex flex-col items-center justify-center px-4 relative h-10">
-                                <div class="w-full border-t-2 border-dashed border-outline-variant absolute top-1/2 -translate-y-1/2"></div>
-                                <div id="transfer-progress-bar" class="w-0 border-t-2 border-primary absolute top-1/2 -translate-y-1/2 left-0 transition-all duration-1000 ease-out"></div>
-                                <span id="shipping-truck" class="material-symbols-outlined text-primary text-xl bg-surface-container-low z-10 p-1.5 border border-glass rounded-full absolute left-[10%] top-1/2 -translate-y-1/2 transition-all duration-1000 ease-in-out">local_shipping</span>
-                            </div>
-                            
-                            <div class="text-center z-10">
-                                <span id="store-b-badge" class="bg-outline-variant/40 text-on-surface-variant px-2.5 py-1 rounded-xl font-bold font-mono border border-glass transition-all duration-300">Store B</span>
-                                <p id="store-b-qty" class="text-[10px] mt-1.5 text-on-surface-variant font-semibold font-mono">45 Units</p>
-                            </div>
+                    <h3 class="font-headline-md text-headline-md text-white">Gemini AI Predictions</h3>
+                    <p class="text-on-surface-variant font-body-md">Predict stock depletion before it happens. Gemini models analyze seasonal trends and local events to automate purchase orders.</p>
+                    <div class="pt-4">
+                        <div class="h-2 w-full bg-surface-container rounded-full overflow-hidden">
+                            <div class="h-full bg-primary w-2/3 shadow-[0_0_10px_#60a5fa]"></div>
                         </div>
-
-                        <!-- Routing Steps tracker -->
-                        <div class="grid grid-cols-4 gap-1 text-[8px] text-center font-mono text-on-surface-variant uppercase tracking-wider mb-3">
-                            <div id="step-node-1" class="py-1 rounded border border-glass bg-white/5 transition-all">1. Request</div>
-                            <div id="step-node-2" class="py-1 rounded border border-glass bg-white/5 transition-all">2. Verify</div>
-                            <div id="step-node-3" class="py-1 rounded border border-glass bg-white/5 transition-all">3. Transit</div>
-                            <div id="step-node-4" class="py-1 rounded border border-glass bg-white/5 transition-all">4. Commit</div>
-                        </div>
-
-                        <!-- Status text & action button -->
-                        <div class="flex justify-between items-center gap-3 border-t border-glass pt-3">
-                            <span id="transfer-log" class="text-[9px] text-on-surface-variant font-mono truncate max-w-[160px] md:max-w-[200px]">Idle. Ready for transfer.</span>
-                            <button onclick="initiateTransfer()" id="transfer-btn" class="bg-success-emerald/20 border border-success-emerald/30 text-success-emerald hover:bg-success-emerald hover:text-white transition-all px-3 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-wider whitespace-nowrap">Transfer 15 Qty</button>
-                        </div>
+                        <p class="mt-2 font-label-sm text-label-sm text-primary">Demand Confidence: 88%</p>
                     </div>
                 </div>
             </div>
-
             <!-- Feature: Real-Time BI Reports -->
-            <div class="glass-panel col-span-12 md:col-span-6 p-8 rounded-xl group scroll-reveal bento-card" data-category="bi">
-                <div class="space-y-6">
-                    <div class="flex justify-between items-center">
-                        <div class="w-12 h-12 rounded-lg bg-tertiary-container/20 flex items-center justify-center text-tertiary mb-2">
+            <div class="glass-panel col-span-12 md:col-span-8 p-8 rounded-xl group">
+                <div class="flex flex-col md:flex-row gap-8">
+                    <div class="flex-1 space-y-4">
+                        <div class="w-12 h-12 rounded-lg bg-tertiary-container/20 flex items-center justify-center text-tertiary">
                             <span class="material-symbols-outlined text-3xl">insights</span>
                         </div>
-                        <!-- BI Timeframe Selector -->
-                        <div class="flex bg-white/5 border border-glass rounded-lg p-0.5 text-[10px]">
-                            <button onclick="toggleBI('24h', this)" class="bi-btn active px-2.5 py-1 rounded bg-primary text-on-primary">24H</button>
-                            <button onclick="toggleBI('7d', this)" class="bi-btn px-2.5 py-1 rounded text-on-surface-variant hover:text-on-surface">7D</button>
-                            <button onclick="toggleBI('30d', this)" class="bi-btn px-2.5 py-1 rounded text-on-surface-variant hover:text-on-surface">30D</button>
+                        <h3 class="font-headline-lg text-headline-lg text-white">Real-Time BI Reports</h3>
+                        <p class="text-on-surface-variant font-body-md">Transform raw transactions into executive insights. High-density data visualizations that update per transaction with zero latency.</p>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="p-3 bg-white/5 rounded-lg border border-glass">
+                                <div class="text-label-sm font-label-sm text-on-surface-variant uppercase">GMV Growth</div>
+                                <div class="text-headline-md text-success-emerald">+24.5%</div>
+                            </div>
+                            <div class="p-3 bg-white/5 rounded-lg border border-glass">
+                                <div class="text-label-sm font-label-sm text-on-surface-variant uppercase">Retention</div>
+                                <div class="text-headline-md text-primary">62.8%</div>
+                            </div>
                         </div>
                     </div>
-                    <h3 class="font-headline-md text-headline-md text-white font-semibold">Real-Time BI Reports</h3>
-                    <p class="text-on-surface-variant font-body-md text-sm">Transform raw sales logs into corporate growth insights. High-density charts calculate gross margins and unit values dynamically per transaction with zero-lag databases.</p>
-                    
-                    <!-- SVG Chart Container -->
-                    <div class="h-32 w-full bg-surface-container-lowest/40 rounded-xl border border-glass p-2 relative overflow-hidden mt-4">
-                        <svg class="w-full h-full" viewBox="0 0 300 100" preserveAspectRatio="none">
-                            <defs>
-                                <linearGradient id="chart-grad-24h" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0%" stop-color="#60a5fa" stop-opacity="0.4" />
-                                    <stop offset="100%" stop-color="#60a5fa" stop-opacity="0" />
-                                </linearGradient>
-                                <linearGradient id="chart-grad-7d" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0%" stop-color="#10b981" stop-opacity="0.4" />
-                                    <stop offset="100%" stop-color="#10b981" stop-opacity="0" />
-                                </linearGradient>
-                                <linearGradient id="chart-grad-30d" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0%" stop-color="#bdc2ff" stop-opacity="0.4" />
-                                    <stop offset="100%" stop-color="#bdc2ff" stop-opacity="0" />
-                                </linearGradient>
-                            </defs>
-                            
-                            <!-- 24h Path -->
-                            <path id="chart-path-24h" class="transition-all duration-500 ease-in-out" d="M 0 80 Q 50 60 100 70 T 200 40 T 300 30" fill="none" stroke="#60a5fa" stroke-width="2" />
-                            <path id="chart-area-24h" class="transition-all duration-500 ease-in-out" d="M 0 80 Q 50 60 100 70 T 200 40 T 300 30 L 300 100 L 0 100 Z" fill="url(#chart-grad-24h)" />
-                            
-                            <!-- 7d Path (Hidden by default, transparent opacity) -->
-                            <path id="chart-path-7d" class="transition-all duration-500 ease-in-out opacity-0" d="M 0 90 C 50 80, 100 40, 150 50 C 200 60, 250 20, 300 15" fill="none" stroke="#10b981" stroke-width="2" />
-                            <path id="chart-area-7d" class="transition-all duration-500 ease-in-out opacity-0" d="M 0 90 C 50 80, 100 40, 150 50 C 200 60, 250 20, 300 15 L 300 100 L 0 100 Z" fill="url(#chart-grad-7d)" />
-                            
-                            <!-- 30d Path (Hidden by default, transparent opacity) -->
-                            <path id="chart-path-30d" class="transition-all duration-500 ease-in-out opacity-0" d="M 0 95 Q 75 90 150 60 T 300 10" fill="none" stroke="#bdc2ff" stroke-width="2" />
-                            <path id="chart-area-30d" class="transition-all duration-500 ease-in-out opacity-0" d="M 0 95 Q 75 90 150 60 T 300 10 L 300 100 L 0 100 Z" fill="url(#chart-grad-30d)" />
-                        </svg>
-                        
-                        <!-- Hover metrics info node inside chart -->
-                        <div class="absolute bottom-2 left-2 flex gap-3 text-[9px] font-mono text-on-surface-variant bg-surface/80 px-2 py-0.5 rounded border border-glass">
-                            <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-success-emerald"></span> Peaks Matched</span>
-                            <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-primary"></span> Auto-Sync</span>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4 mt-4">
-                        <div class="p-3 bg-white/5 rounded-lg border border-glass">
-                            <div class="text-label-sm font-label-sm text-on-surface-variant uppercase text-[10px]" id="bi-gmv-label">24H GMV</div>
-                            <div class="text-headline-md text-success-emerald font-bold" id="bi-gmv-val">$12,420</div>
-                        </div>
-                        <div class="p-3 bg-white/5 rounded-lg border border-glass">
-                            <div class="text-label-sm font-label-sm text-on-surface-variant uppercase text-[10px]">Retention</div>
-                            <div class="text-headline-md text-primary font-bold" id="bi-ret-val">62.8%</div>
-                        </div>
+                    <div class="flex-1 min-h-[200px] bg-surface-container-highest rounded-lg overflow-hidden border border-glass relative">
+                        <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" data-alt="A macro shot of a high-resolution data visualization screen displaying neon blue and green line charts on a deep midnight black background. The interface is futuristic, showing financial candlesticks and enterprise performance metrics. The scene is shot with a shallow depth of field, emphasizing the crisp digital lines and the soft glow emanating from the screen into a dark retail office space." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDJQyHnItkMYPlBlSU7JsoP2EOH9MpKqN_BzNK7R40Svs0hfZn-IAjvD30a9T5Cq6lMDSeeSlnjj94WYTPsXPcrQXMz_VwVaoFhAyhVCAi5Wypm1kdryagYth_1RYyxpSnIbOhJyZjzpKuby83VrPdswzhQBB2q4nwvZCOsZaIywmOrfSaMISEVsDjKybQzRDMrJomBtHDRyNaGTBoVS_3JuT-oNjgieNLVoCSvTvWP-Ee3dBptJQMI4B8JbXDlJckkc9b33T_Bv8s"/>
                     </div>
                 </div>
             </div>
-
             <!-- Standout: Smart Chatbot -->
-            <div class="glass-panel col-span-12 p-12 rounded-3xl relative overflow-hidden bg-gradient-to-br from-background to-surface-container-low border-primary/30 scroll-reveal bento-card animate-glow" data-category="bi">
+            <div class="glass-panel col-span-12 p-12 rounded-3xl relative overflow-hidden bg-gradient-to-br from-background to-surface-container-low border-primary/30">
                 <div class="absolute -right-20 -top-20 w-80 h-80 bg-primary/10 blur-[100px] rounded-full"></div>
                 <div class="absolute -left-20 -bottom-20 w-80 h-80 bg-secondary/10 blur-[100px] rounded-full"></div>
-                <div class="relative flex flex-col lg:flex-row items-center gap-12">
+                <div class="relative flex flex-col md:flex-row items-center gap-12">
                     <div class="flex-1 space-y-6">
-                        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/20 text-primary font-label-sm text-label-sm font-semibold">
+                        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/20 text-primary font-label-sm text-label-sm">
                             <span class="material-symbols-outlined text-[14px]">chat_bubble</span>
                             STANDOUT FEATURE
                         </div>
                         <h2 class="font-display-lg text-display-lg text-white glow-text">Meet your virtual Operations Manager</h2>
-                        <p class="font-body-lg text-body-lg text-on-surface-variant">The Apex Smart Chatbot isn't just for FAQ. Click any prompt query below to see simulated database insights dynamically.</p>
-                        
-                        <!-- Chatbot Prompt Toggles -->
-                        <div class="flex flex-col sm:flex-row gap-3 pt-2">
-                            <button onclick="triggerAIChat('low_stock', this)" class="glass-panel text-left p-3 rounded-xl border border-glass hover:bg-white/10 text-xs font-semibold text-primary transition-all flex items-center gap-2">
-                                <span class="material-symbols-outlined text-sm">inventory</span> SKU Stock Alert
-                            </button>
-                            <button onclick="triggerAIChat('sales_peak', this)" class="glass-panel text-left p-3 rounded-xl border border-glass hover:bg-white/10 text-xs font-semibold text-primary transition-all flex items-center gap-2">
-                                <span class="material-symbols-outlined text-sm">trending_up</span> Sales Velocity Peak
-                            </button>
-                            <button onclick="triggerAIChat('expiring', this)" class="glass-panel text-left p-3 rounded-xl border border-glass hover:bg-white/10 text-xs font-semibold text-primary transition-all flex items-center gap-2">
-                                <span class="material-symbols-outlined text-sm">schedule</span> Expiring Batches
-                            </button>
-                        </div>
+                        <p class="font-body-lg text-body-lg text-on-surface-variant">The Apex Smart Chatbot isn't just for FAQ. Use natural language to query your database. "Which SKU is underperforming in the Seattle branch?" or "Generate a stock report for the electronics department."</p>
+                        <button onclick="window.location.href='./app.html'" class="flex items-center gap-2 font-label-md text-label-md text-primary group">
+                            EXPLORE AI CAPABILITIES <span class="material-symbols-outlined group-hover:translate-x-2 transition-transform">arrow_forward</span>
+                        </button>
                     </div>
                     <!-- Chatbot Interface Mockup -->
-                    <div class="w-full lg:w-[400px] h-[450px] glass-panel rounded-2xl p-6 shadow-2xl relative flex flex-col justify-between overflow-hidden">
-                        <div>
-                            <div class="flex items-center justify-between border-b border-glass pb-4 mb-4">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center">
-                                        <span class="material-symbols-outlined text-white">smart_toy</span>
-                                    </div>
-                                    <div>
-                                        <div class="text-on-surface font-body-md font-semibold text-sm">Apex AI Core</div>
-                                        <div class="text-success-emerald text-[9px] font-label-sm uppercase font-semibold">Active • Ready</div>
-                                    </div>
-                                </div>
-                                <span class="bg-primary/20 text-primary text-[8px] px-2 py-0.5 rounded font-label-sm font-semibold">Gemini 3.5</span>
+                    <div class="w-full md:w-[400px] h-[500px] glass-panel rounded-2xl p-6 shadow-2xl relative flex flex-col">
+                        <div class="flex items-center gap-3 border-b border-glass pb-4 mb-4">
+                            <div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center">
+                                <span class="material-symbols-outlined text-white">smart_toy</span>
                             </div>
-                            <div class="space-y-4 max-h-[260px] overflow-y-auto pr-1" id="chat-messages">
-                                <div class="flex gap-2">
-                                    <div class="p-3 bg-white/5 rounded-2xl rounded-tl-none border border-glass text-xs text-on-surface-variant">
-                                        Welcome to Apex AI. How can I assist you with store operations today?
-                                    </div>
+                            <div>
+                                <div class="text-on-surface font-body-md font-semibold">Apex AI Core</div>
+                                <div class="text-success-emerald text-[10px] font-label-sm uppercase">Active • Analyzing</div>
+                            </div>
+                        </div>
+                        <div class="flex-1 space-y-4 overflow-hidden">
+                            <div class="flex gap-2">
+                                <div class="p-3 bg-white/5 rounded-2xl rounded-tl-none border border-glass max-w-[80%] text-on-surface-variant font-body-md">
+                                    "How are my sales for the last 24 hours?"
+                                </div>
+                            </div>
+                            <div class="flex gap-2 justify-end">
+                                <div class="p-3 bg-primary/10 rounded-2xl rounded-tr-none border border-primary/20 max-w-[80%] text-primary font-body-md">
+                                    Sales are up by 12% compared to yesterday. Primary driver: Holiday electronics promotion.
+                                </div>
+                            </div>
+                            <div class="flex gap-2">
+                                <div class="p-3 bg-white/5 rounded-2xl rounded-tl-none border border-glass max-w-[80%] text-on-surface-variant font-body-md">
+                                    "Show me the top selling product in the Midwest region."
                                 </div>
                             </div>
                         </div>
-                        <div class="mt-4 p-3 bg-surface-container-highest rounded-xl border border-glass flex items-center gap-3 text-xs text-on-surface-variant font-mono">
-                            <span class="material-symbols-outlined text-sm">keyboard</span>
-                            <span id="chat-typing-indicator">Select a prompt to run analysis...</span>
+                        <div class="mt-4 p-3 bg-surface-container-highest rounded-xl border border-glass flex items-center gap-3">
+                            <span class="material-symbols-outlined text-on-surface-variant">keyboard</span>
+                            <span class="text-on-surface-variant text-label-md">Analyze Q3 logistics...</span>
                         </div>
                     </div>
                 </div>
@@ -512,483 +319,69 @@
         </div>
     </div>
 </main>
-<!-- Footer Shell -->
-<footer class="w-full py-16 bg-surface-container-lowest border-t border-glass">
-<div class="grid grid-cols-2 md:grid-cols-4 gap-gutter px-margin-desktop max-w-container-max mx-auto">
-<div class="col-span-2 md:col-span-1 space-y-6">
-<div class="flex items-center gap-3">
-<img alt="Logo Small" class="w-6 h-6 object-contain" src="./logo.png"/>
-<span class="font-headline-md text-headline-md font-bold text-primary">ApexCart</span>
-</div>
-<p class="text-on-surface-variant text-sm pr-8">
-                    © 2026 ApexCart Enterprise. All rights reserved. Precision Engineering for Modern Retail.
-                </p>
-</div>
-<div class="space-y-4">
-<p class="font-label-md text-label-md uppercase tracking-wider text-on-surface mb-6">Core Ecosystem</p>
-<ul class="space-y-3">
-<li><a class="font-body-md text-body-md text-on-surface-variant hover:text-primary hover:translate-x-1 transition-all inline-block" href="./features.html">POS System</a></li>
-<li><a class="font-body-md text-body-md text-on-surface-variant hover:text-primary hover:translate-x-1 transition-all inline-block" href="./features.html">Inventory Management</a></li>
-<li><a class="font-body-md text-body-md text-on-surface-variant hover:text-primary hover:translate-x-1 transition-all inline-block" href="./features.html">Business Intelligence</a></li>
-<li><a class="font-body-md text-body-md text-on-surface-variant hover:text-primary hover:translate-x-1 transition-all inline-block" href="./features.html">Real-time Analytics</a></li>
-</ul>
-</div>
-<div class="space-y-4">
-<p class="font-label-md text-label-md uppercase tracking-wider text-on-surface mb-6">Resources</p>
-<ul class="space-y-3">
-<li><a class="font-body-md text-body-md text-on-surface-variant hover:text-primary hover:translate-x-1 transition-all inline-block" href="./features.html">Hardware Bundles</a></li>
-<li><a class="font-body-md text-body-md text-on-surface-variant hover:text-primary hover:translate-x-1 transition-all inline-block" href="./features.html">Enterprise API</a></li>
-<li><a class="font-body-md text-body-md text-on-surface-variant hover:text-primary hover:translate-x-1 transition-all inline-block" href="./features.html">Privacy Policy</a></li>
-<li><a class="font-body-md text-body-md text-on-surface-variant hover:text-primary hover:translate-x-1 transition-all inline-block" href="./features.html">Terms of Service</a></li>
-</ul>
-</div>
-<div class="space-y-4">
-<p class="font-label-md text-label-md uppercase tracking-wider text-on-surface mb-6">Status</p>
-<div class="glass-panel p-4 rounded-xl border border-glass">
-<div class="flex items-center gap-2 mb-2">
-<div class="w-2 h-2 rounded-full bg-success-emerald"></div>
-<span class="text-sm font-bold text-success-emerald uppercase">All Systems Nominal</span>
-</div>
-<p class="text-xs text-on-surface-variant">Regional Clusters: 12 Active</p>
-</div>
-</div>
-</div>
+<!-- Footer -->
+<footer class="bg-surface-container-lowest py-16 border-t border-glass">
+    <div class="max-w-container-max mx-auto px-margin-desktop">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-gutter mb-12">
+            <div class="col-span-2 md:col-span-1 space-y-6">
+                <div class="flex items-center gap-2">
+                    <img alt="Logo" class="w-6 h-6" src="./logo.png"/>
+                    <span class="font-headline-md text-headline-md font-bold text-primary">ApexCart</span>
+                </div>
+                <p class="text-on-surface-variant text-body-md max-w-xs">Precision Engineering for Modern Retail. Redefining how enterprises manage scale.</p>
+            </div>
+            <div class="space-y-4">
+                <h4 class="text-white font-label-md uppercase tracking-widest">Solutions</h4>
+                <ul class="space-y-2">
+                    <li><a class="text-on-surface-variant hover:text-primary transition-transform duration-200 hover:translate-x-1 block" href="./index.html">POS System</a></li>
+                    <li><a class="text-on-surface-variant hover:text-primary transition-transform duration-200 hover:translate-x-1 block" href="./features.html">Features</a></li>
+                    <li><a class="text-on-surface-variant hover:text-primary transition-transform duration-200 hover:translate-x-1 block" href="./index.html">Business Intelligence</a></li>
+                </ul>
+            </div>
+            <div class="space-y-4">
+                <h4 class="text-white font-label-md uppercase tracking-widest">Platform</h4>
+                <ul class="space-y-2">
+                    <li><a class="text-on-surface-variant hover:text-primary transition-transform duration-200 hover:translate-x-1 block" href="./index.html">Real-time Analytics</a></li>
+                    <li><a class="text-on-surface-variant hover:text-primary transition-transform duration-200 hover:translate-x-1 block" href="./index.html">Hardware Bundles</a></li>
+                    <li><a class="text-on-surface-variant hover:text-primary transition-transform duration-200 hover:translate-x-1 block" href="./index.html">Enterprise API</a></li>
+                </ul>
+            </div>
+            <div class="space-y-4">
+                <h4 class="text-white font-label-md uppercase tracking-widest">Legal</h4>
+                <ul class="space-y-2">
+                    <li><a class="text-on-surface-variant hover:text-primary transition-transform duration-200 hover:translate-x-1 block" href="./index.html">Privacy Policy</a></li>
+                    <li><a class="text-on-surface-variant hover:text-primary transition-transform duration-200 hover:translate-x-1 block" href="./index.html">Terms of Service</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 text-on-surface-variant text-body-md opacity-80">
+            <p>© 2026 ApexCart Enterprise. All rights reserved.</p>
+            <div class="flex gap-6">
+                <a class="material-symbols-outlined hover:text-primary transition-colors" href="./index.html">language</a>
+                <a class="material-symbols-outlined hover:text-primary transition-colors" href="./index.html">contact_support</a>
+            </div>
+        </div>
+    </div>
 </footer>
 <script>
-        // Web Audio API Beep Generator
-        let audioCtx = null;
-        function playBeep(frequency = 880, duration = 0.1, type = 'sine') {
-            try {
-                if (!audioCtx) {
-                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                }
-                if (audioCtx.state === 'suspended') {
-                    audioCtx.resume();
-                }
-                const osc = audioCtx.createOscillator();
-                const gainNode = audioCtx.createGain();
-                
-                osc.type = type;
-                osc.frequency.setValueAtTime(frequency, audioCtx.currentTime);
-                
-                gainNode.gain.setValueAtTime(0.04, audioCtx.currentTime); // keep volume subtle
-                gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
-                
-                osc.connect(gainNode);
-                gainNode.connect(audioCtx.destination);
-                
-                osc.start();
-                osc.stop(audioCtx.currentTime + duration);
-            } catch (e) {
-                console.warn("AudioContext init error: ", e);
+    // Subtle interaction: Reveal glass cards on scroll
+    const observerOptions = {
+        threshold: 0.1
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('opacity-100', 'translate-y-0');
+                entry.target.classList.remove('opacity-0', 'translate-y-8');
             }
-        }
-
-        // Category Filter
-        function filterCategory(category, button) {
-            playBeep(700, 0.05);
-            
-            document.querySelectorAll('.category-btn').forEach(btn => {
-                btn.classList.remove('bg-primary', 'text-on-primary');
-                btn.classList.add('text-on-surface-variant', 'hover:text-on-surface', 'hover:bg-white/5');
-            });
-            button.classList.add('bg-primary', 'text-on-primary');
-            button.classList.remove('text-on-surface-variant', 'hover:text-on-surface', 'hover:bg-white/5');
-            
-            const cards = document.querySelectorAll('.bento-card');
-            cards.forEach(card => {
-                const cat = card.getAttribute('data-category');
-                if (category === 'all' || cat === category) {
-                    card.classList.remove('hidden');
-                    requestAnimationFrame(() => {
-                        card.style.opacity = '1';
-                        card.style.transform = 'scale(1)';
-                    });
-                } else {
-                    card.style.opacity = '0';
-                    card.style.transform = 'scale(0.95)';
-                    setTimeout(() => {
-                        if (card.style.opacity === '0') {
-                            card.classList.add('hidden');
-                        }
-                    }, 300);
-                }
-            });
-        }
-
-        // POS Register Simulator
-        let registerCart = [
-            { name: 'Fresh Apple', price: 1.5, qty: 1 },
-            { name: 'Whole Wheat Bread', price: 2.5, qty: 1 }
-        ];
-
-        function updateRegisterDOM() {
-            const list = document.getElementById('register-items');
-            const totalEl = document.getElementById('pos-total');
-            if (!list || !totalEl) return;
-            
-            list.innerHTML = '';
-            let total = 0;
-            registerCart.forEach(item => {
-                const itemTotal = item.price * item.qty;
-                total += itemTotal;
-                
-                const row = document.createElement('div');
-                row.className = 'flex justify-between text-on-surface-variant';
-                row.innerHTML = `
-                    <span>${item.name} x ${item.qty}</span>
-                    <span class="text-white font-mono font-bold">$${itemTotal.toFixed(2)}</span>
-                `;
-                list.appendChild(row);
-            });
-            totalEl.textContent = `$${total.toFixed(2)}`;
-        }
-
-        function addToRegister(type, price) {
-            playBeep(880, 0.08);
-            const name = type === 'apple' ? 'Fresh Apple' : 'Whole Wheat Bread';
-            const existing = registerCart.find(item => item.name === name);
-            if (existing) {
-                existing.qty += 1;
-            } else {
-                registerCart.push({ name, price, qty: 1 });
-            }
-            updateRegisterDOM();
-            
-            const statusMsg = document.getElementById('pos-status-msg');
-            if (statusMsg) statusMsg.classList.add('hidden');
-        }
-
-        function checkoutRegister() {
-            if (registerCart.length === 0) return;
-            
-            playBeep(880, 0.08);
-            setTimeout(() => playBeep(1320, 0.1), 80);
-            
-            const checkoutBtn = document.getElementById('checkout-btn');
-            const statusMsg = document.getElementById('pos-status-msg');
-            
-            checkoutBtn.disabled = true;
-            checkoutBtn.classList.add('opacity-50');
-            
-            statusMsg.classList.remove('hidden');
-            statusMsg.textContent = 'Queued in Local Storage';
-            
-            setTimeout(() => {
-                registerCart = [];
-                updateRegisterDOM();
-                statusMsg.textContent = 'Synced with Cloud Firestore!';
-                
-                setTimeout(() => {
-                    statusMsg.classList.add('hidden');
-                    checkoutBtn.disabled = false;
-                    checkoutBtn.classList.remove('opacity-50');
-                }, 1500);
-            }, 2000);
-        }
-
-        // Scanner Simulator
-        let scanActive = false;
-        function simulateScan() {
-            if (scanActive) return;
-            scanActive = true;
-            
-            playBeep(1200, 0.12);
-            
-            const icon = document.getElementById('scanner-icon');
-            const container = icon.parentElement;
-            
-            container.classList.add('border-success-emerald/50');
-            icon.textContent = 'check_circle';
-            icon.className = 'material-symbols-outlined text-4xl text-success-emerald font-bold animate-bounce';
-            
-            // Add custom milk item
-            const name = 'Organic Milk';
-            const price = 3.20;
-            const existing = registerCart.find(item => item.name === name);
-            if (existing) {
-                existing.qty += 1;
-            } else {
-                registerCart.push({ name, price, qty: 1 });
-            }
-            updateRegisterDOM();
-            
-            const statusMsg = document.getElementById('pos-status-msg');
-            if (statusMsg) statusMsg.classList.add('hidden');
-
-            setTimeout(() => {
-                container.classList.remove('border-success-emerald/50');
-                icon.textContent = 'barcode';
-                icon.className = 'material-symbols-outlined text-4xl text-primary/30 font-bold';
-                scanActive = false;
-            }, 1500);
-        }
-
-        // Expiry Console Markdown Discount
-        function applyExpiryDiscount() {
-            playBeep(650, 0.08);
-            
-            const row = document.getElementById('expiry-row-1');
-            const status = document.getElementById('expiry-status-1');
-            const btn = document.getElementById('expiry-btn-1');
-            
-            row.classList.add('border-success-emerald/40', 'bg-success-emerald/5');
-            status.textContent = '40% Off Applied (Synced with POS)';
-            status.className = 'text-[10px] text-success-emerald font-semibold';
-            
-            btn.disabled = true;
-            btn.className = 'bg-success-emerald/20 text-success-emerald border border-success-emerald/30 px-2 py-1 rounded text-[10px] font-bold cursor-not-allowed';
-            btn.textContent = 'Applied';
-            
-            const name = 'Fresh Strawberries (Promo)';
-            const price = 2.10;
-            const existing = registerCart.find(item => item.name === name);
-            if (existing) {
-                existing.qty += 1;
-            } else {
-                registerCart.push({ name, price, qty: 1 });
-            }
-            updateRegisterDOM();
-        }
-
-        // Multi-Store Transfer Ledger
-        let transferActive = false;
-        function initiateTransfer() {
-            if (transferActive) return;
-            transferActive = true;
-            
-            const truck = document.getElementById('shipping-truck');
-            const progressBar = document.getElementById('transfer-progress-bar');
-            const storeAQty = document.getElementById('store-a-qty');
-            const storeBQty = document.getElementById('store-b-qty');
-            const storeABadge = document.getElementById('store-a-badge');
-            const storeBBadge = document.getElementById('store-b-badge');
-            const log = document.getElementById('transfer-log');
-            const btn = document.getElementById('transfer-btn');
-            
-            const s1 = document.getElementById('step-node-1');
-            const s2 = document.getElementById('step-node-2');
-            const s3 = document.getElementById('step-node-3');
-            const s4 = document.getElementById('step-node-4');
-            
-            btn.disabled = true;
-            btn.classList.add('opacity-50');
-            progressBar.style.width = '0%';
-            truck.style.left = '10%';
-            
-            s1.className = 'py-1 rounded border border-glass bg-white/5 transition-all';
-            s2.className = 'py-1 rounded border border-glass bg-white/5 transition-all';
-            s3.className = 'py-1 rounded border border-glass bg-white/5 transition-all';
-            s4.className = 'py-1 rounded border border-glass bg-white/5 transition-all';
-            
-            storeABadge.className = 'bg-primary/20 text-primary px-2.5 py-1 rounded-xl font-bold font-mono border border-primary/30 transition-all duration-300';
-            storeBBadge.className = 'bg-outline-variant/40 text-on-surface-variant px-2.5 py-1 rounded-xl font-bold font-mono border border-glass transition-all duration-300';
-            
-            playBeep(440, 0.05);
-            
-            setTimeout(() => {
-                s1.className = 'py-1 rounded border border-primary/30 bg-primary/10 text-primary transition-all font-semibold';
-                log.textContent = 'Ledger Transfer requested: Store A -> Store B (15 units)';
-                playBeep(523, 0.05);
-            }, 400);
-
-            setTimeout(() => {
-                s2.className = 'py-1 rounded border border-primary/30 bg-primary/10 text-primary transition-all font-semibold';
-                log.textContent = 'Checking limit: Store A holds 120 (Limit: 10). Verification passed.';
-                playBeep(587, 0.05);
-            }, 1200);
-
-            setTimeout(() => {
-                s3.className = 'py-1 rounded border border-primary/30 bg-primary/10 text-primary transition-all font-semibold';
-                log.textContent = 'Deducting Store A stock... Cargo in transit.';
-                storeAQty.textContent = '105 Units';
-                storeAQty.className = 'text-[10px] mt-1.5 text-danger-rose font-semibold font-mono animate-pulse';
-                
-                truck.style.left = '75%';
-                progressBar.style.width = '75%';
-                playBeep(659, 0.1);
-            }, 2200);
-
-            setTimeout(() => {
-                s4.className = 'py-1 rounded border border-success-emerald/30 bg-success-emerald/10 text-success-emerald transition-all font-semibold';
-                log.textContent = 'Store B received stock. Ledger entry committed.';
-                storeAQty.className = 'text-[10px] mt-1.5 text-on-surface-variant font-semibold font-mono';
-                
-                storeBQty.textContent = '60 Units';
-                storeBQty.className = 'text-[10px] mt-1.5 text-success-emerald font-semibold font-mono animate-pulse';
-                
-                storeBBadge.className = 'bg-success-emerald/20 text-success-emerald px-2.5 py-1 rounded-xl font-bold font-mono border border-success-emerald/30 transition-all duration-300';
-                
-                playBeep(880, 0.15);
-            }, 3500);
-
-            setTimeout(() => {
-                storeBQty.className = 'text-[10px] mt-1.5 text-on-surface font-semibold font-mono';
-                btn.disabled = false;
-                btn.classList.remove('opacity-50');
-                transferActive = false;
-            }, 4500);
-        }
-
-        // Real-Time BI Timeframe Toggle
-        function toggleBI(timeframe, button) {
-            document.querySelectorAll('.bi-btn').forEach(btn => {
-                btn.classList.remove('bg-primary', 'text-on-primary');
-                btn.classList.add('text-on-surface-variant', 'hover:text-on-surface');
-            });
-            button.classList.add('bg-primary', 'text-on-primary');
-            button.classList.remove('text-on-surface-variant', 'hover:text-on-surface');
-            
-            const gmvVal = document.getElementById('bi-gmv-val');
-            const retVal = document.getElementById('bi-ret-val');
-            const gmvLabel = document.getElementById('bi-gmv-label');
-            
-            const path24 = document.getElementById('chart-path-24h');
-            const area24 = document.getElementById('chart-area-24h');
-            const path7d = document.getElementById('chart-path-7d');
-            const area7d = document.getElementById('chart-area-7d');
-            const path30 = document.getElementById('chart-path-30d');
-            const area30 = document.getElementById('chart-area-30d');
-            
-            path24.classList.add('opacity-0');
-            area24.classList.add('opacity-0');
-            path7d.classList.add('opacity-0');
-            area7d.classList.add('opacity-0');
-            path30.classList.add('opacity-0');
-            area30.classList.add('opacity-0');
-            
-            playBeep(600, 0.03);
-            
-            if (timeframe === '24h') {
-                gmvLabel.textContent = '24H GMV';
-                gmvVal.textContent = '$12,420';
-                retVal.textContent = '62.8%';
-                path24.classList.remove('opacity-0');
-                area24.classList.remove('opacity-0');
-            } else if (timeframe === '7d') {
-                gmvLabel.textContent = '7D GMV';
-                gmvVal.textContent = '$98,150';
-                retVal.textContent = '64.1%';
-                path7d.classList.remove('opacity-0');
-                area7d.classList.remove('opacity-0');
-            } else if (timeframe === '30d') {
-                gmvLabel.textContent = '30D GMV';
-                gmvVal.textContent = '$412,600';
-                retVal.textContent = '67.5%';
-                path30.classList.remove('opacity-0');
-                area30.classList.remove('opacity-0');
-            }
-        }
-
-        // Operations Manager AI Assistant Mockup
-        let chatTyping = false;
-        function triggerAIChat(promptType, button) {
-            if (chatTyping) return;
-            
-            playBeep(600, 0.05);
-            chatTyping = true;
-            
-            const typingIndicator = document.getElementById('chat-typing-indicator');
-            const chatMessages = document.getElementById('chat-messages');
-            
-            let userText = "";
-            let aiText = "";
-            
-            if (promptType === 'low_stock') {
-                userText = "Identify low-stock SKUs and generate purchase orders.";
-                aiText = "Analyzing sales velocity... 3 items under reorder point: Organic Milk (Qty: 2), Organic Butter (Qty: 0), Fresh Strawberries (Qty: 4). Drafted PO #1289 for Supplier A. Syncing draft offline... OK.";
-            } else if (promptType === 'sales_peak') {
-                userText = "Show me the sales velocity peaks for today.";
-                aiText = "Analyzing hourly sales transactions... Hourly sales peaked at 12:00 PM - 2:00 PM with $2,450 GMV. Top category: Fresh Produce (+15%). Recommendation: Keep 2 registers active during peak hours.";
-            } else if (promptType === 'expiring') {
-                userText = "Check for expiring batches.";
-                aiText = "Scanning perishables console logs... Batch #8 (Fresh Strawberries) expires tomorrow. Triggered automatic clearance markdown suggestion of 40%. Batch #104 (Organic Butter) is expired; locked checkout sales.";
-            }
-            
-            // Add User message
-            const userMsg = document.createElement('div');
-            userMsg.className = 'flex justify-end gap-2';
-            userMsg.innerHTML = `
-                <div class="p-3 bg-primary/10 text-primary rounded-2xl rounded-tr-none border border-primary/20 text-xs max-w-[85%]">
-                    ${userText}
-                </div>
-            `;
-            chatMessages.appendChild(userMsg);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-            
-            typingIndicator.textContent = "Apex AI is thinking...";
-            
-            setTimeout(() => {
-                typingIndicator.textContent = "Apex AI is typing...";
-                
-                const aiMsg = document.createElement('div');
-                aiMsg.className = 'flex gap-2';
-                aiMsg.innerHTML = `
-                    <div class="w-8 h-8 rounded-full bg-primary-container flex-shrink-0 flex items-center justify-center">
-                        <span class="material-symbols-outlined text-white text-base">smart_toy</span>
-                    </div>
-                    <div class="p-3 bg-white/5 rounded-2xl rounded-tl-none border border-glass text-xs text-on-surface-variant max-w-[80%] font-sans" id="temp-typing-node"></div>
-                `;
-                chatMessages.appendChild(aiMsg);
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-                
-                const typingNode = document.getElementById('temp-typing-node');
-                let index = 0;
-                
-                function typeChar() {
-                    if (index < aiText.length) {
-                        typingNode.textContent += aiText.charAt(index);
-                        index++;
-                        chatMessages.scrollTop = chatMessages.scrollHeight;
-                        if (index % 4 === 0) {
-                            playBeep(900 + Math.random() * 200, 0.01);
-                        }
-                        setTimeout(typeChar, 15);
-                    } else {
-                        typingNode.removeAttribute('id');
-                        typingIndicator.textContent = "Select a prompt to run analysis...";
-                        chatTyping = false;
-                    }
-                }
-                typeChar();
-            }, 800);
-        }
-
-        // Initialize elements and observer
-        window.addEventListener('load', () => {
-            updateRegisterDOM();
         });
+    }, observerOptions);
 
-        // Smooth scroll for nav links (micro-interaction)
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth'
-                    });
-                }
-            });
-        });
-
-        // Scroll Reveal Intersection Observer
-        const observerOptions = {
-            threshold: 0.1,
-            rootMargin: '0px 0px -50px 0px'
-        };
-
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('visible');
-                }
-            });
-        }, observerOptions);
-
-        document.querySelectorAll('.scroll-reveal').forEach(el => {
-            observer.observe(el);
-        });
-    </script>
+    document.querySelectorAll('.glass-panel').forEach(card => {
+        card.classList.add('opacity-0', 'translate-y-8', 'transition-all', 'duration-700');
+        observer.observe(card);
+    });
+</script>
 </body>
 </html>
